@@ -5,6 +5,10 @@ var Cell = function() {
     // at http://www.quirksmode.org/js/this.html
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
 
+    this.getRbgaFromColorWithOpacity = function(opacity) {
+        return 'rgba(' + this.color.join(',') + ',' + opacity + ')';
+    };
+
     // We're going to want to know what row, column, and depth I'm at, but we won't 'til I'm added to a cube
     this.row = null;
     this.column = null;
@@ -30,11 +34,14 @@ var Cell = function() {
         },
         'set': function(rgbDictionary) {
             // A custom setter which both updates our color attribute and renders that color
+            var led = me.html.querySelector('.led'); // the LED's HTML
             if (this.on) {
                 _color = rgbDictionary;
-                var led = me.html.querySelector('.led'); // the LED's HTML
-                led.style.backgroundColor = 'rgba(' + this.color.join(',') + ',' + '1' + ')';
-                me.html.style.backgroundColor = 'rgba(' + this.color.join(',') + ',' + '0.125' + ')';
+                led.style.backgroundColor = me.getRbgaFromColorWithOpacity(1);
+                me.html.style.backgroundColor =  me.getRbgaFromColorWithOpacity(0.125);
+            } else
+            {
+                me.html.style.backgroundColor = null;
             }
         }
     });
@@ -55,10 +62,10 @@ var Cell = function() {
                 this.color = this.defaultColor;
                 me.html.style.opacity = 1;
             } else {
+                _on = turnOn;
                 this.led.classList.remove('on');
                 this.color = [0, 0, 0];
-                _on = turnOn;
-                me.html.style.opacity = 0.375;
+                me.html.style.opacity = null;   // inherit from stylesheet
             }
         }
     });

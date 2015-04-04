@@ -35,7 +35,7 @@
     height: 50px;
     border: 1px solid rgba(0, 0, 0, 0);
     background-color: rgba(0, 0, 0, 0);
-    opacity: 0.375;
+    opacity: 0.8;
 }
 
 .cell:after {
@@ -50,6 +50,15 @@
     bottom: 0;
     right: calc(50%);
     border: 1px solid #ccc;
+}
+
+.cell:not([data-depth="0"])  {
+    /*
+     * @amirmikhak
+     * The top row needs to cut the "stick" in half because it doesn't continue above
+     * the LED in the actual box.
+     */
+     opacity: 0.2;
 }
 
 .cell[data-row="0"]:after  {
