@@ -3,36 +3,19 @@
 
 <head>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="css/cube.css" />
-    <link href='http://fonts.googleapis.com/css?family=Codystar' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="css/cube.css" />
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Codystar">
 </head>
 
 <body class="l3d">
     <div id="container">
         <div id="controls">
-            <div id='play'>Play</div>
+            <div id="play">Play</div>
         </div>
     </div>
-    <script src='js/cell.js'></script>
-    <script src='js/cube.js'></script>
-    <script src='js/script.js'></script>
-    <script>
-    window.addEventListener('load', function(event) {
-        var cube = new Cube(8);
-        document.getElementById('play').addEventListener('click', function(event) {
-            var numShifts = 0;
-            var animateBack = setInterval(function() {
-                cube.shiftPlane('Z');
-                numShifts++;
-                if (numShifts == 7) {
-                    numShifts = 0;
-                    clearInterval(animateBack);
-                }
-            }, 250);
-
-        });
-    });
-    </script>
+    <script src="js/cell.js"></script>
+    <script src="js/cube.js"></script>
+    <script src="js/script.js"></script>
 </body>
 
 </html>

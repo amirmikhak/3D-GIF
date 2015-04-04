@@ -1,4 +1,18 @@
 window.addEventListener('load', function() { // When everything is loaded
+    var cube = new Cube(8);
+    document.getElementById('play').addEventListener('click', function(event) {
+        var numShifts = 0;
+        var animateBack = setInterval(function() {
+            cube.shiftPlane('Z');
+            numShifts++;
+            if (numShifts == 7) {
+                numShifts = 0;
+                clearInterval(animateBack);
+            }
+        }, 250);
+
+    });
+
     var xAngle = 0,
         yAngle = 0;
 
