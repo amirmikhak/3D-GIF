@@ -189,7 +189,7 @@ Cube.prototype.play = function(mode, options) {
         var animateBack = setInterval(function() {
             cube.shiftPlane('Z');
             numShifts++;
-            if (numShifts == 7) {
+            if (numShifts == (cube.size - 1)) {
                 numShifts = 0;
                 clearInterval(animateBack);
             }
