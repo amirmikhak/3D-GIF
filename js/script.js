@@ -1,35 +1,29 @@
 window.addEventListener('load', function() { // When everything is loaded
 
+
+    var cubeWrapper = document.getElementById('cube-wrapper');
     var playButton = document.getElementById('play');
     var clearButton = document.getElementById('clear');
 
-    var cube = new Cube(8, playButton, clearButton);
+    var cube = new Cube(8, cubeWrapper, playButton, clearButton, {
+        size: 50,
+    });
 
-    var xAngle = 0,
-        yAngle = 0;
-
-    document.body.addEventListener("keydown", function(event) {
-        var nudgeAngle = 11.25;
+    var KEY_LISTEN_RATE = 10;   // in milliseconds
+    document.body.addEventListener("keydown", _.throttle(function(event) {
         switch (event.keyCode) {
             case 37: // left
-                yAngle -= nudgeAngle;
+                cube.nudge('left');
                 break;
-
             case 38: // up
-                xAngle += nudgeAngle;
+                cube.nudge('up');
                 break;
-
             case 39: // right
-                yAngle += nudgeAngle;
+                cube.nudge('right');
                 break;
-
             case 40: // down
-                xAngle -= nudgeAngle;
+                cube.nudge('down');
                 break;
         };
-        document.getElementById('cube').style.transform = [
-            'rotateX(' + xAngle + 'deg' + ')',
-            'rotateY(' + yAngle + 'deg' + ')'
-        ].join(' ')
-    }, false);
+    }, KEY_LISTEN_RATE), false);
 });

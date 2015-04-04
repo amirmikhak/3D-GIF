@@ -1,10 +1,21 @@
-var Cube = function(size, playButton, clearButton) {
+var Cube = function(size, parentElement, playButton, clearButton, cellOptions) {
     var me = this;
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
     // at http://www.quirksmode.org/js/this.html
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
+
+    // CONFIGURE FOR ARGUMENTS
+    if (!(parentElement instanceof HTMLElement))
+    {
+        parentElement = document.getElementsByTag('body');
+        parentElement = parentElement.length ? parentElement[0] : null;
+        if (!parentElement)
+        {
+            throw Error('No parent element for the cube');
+        }
+    }
 
     if (playButton instanceof HTMLElement)
     {
@@ -20,13 +31,33 @@ var Cube = function(size, playButton, clearButton) {
         });
     }
 
+    var defaultCellOptions = {
+        size: 50,
+    };
+
+    cellOptions = typeof cellOptions !== 'undefined' ? cellOptions : defaultCellOptions;
+
+    // SET UP REST OF SELF
+
     this.size = size; // How many rows and columns do I have?
 
-    this.resolution = 50; // size of our cells in pixels
+    this.resolution = cellOptions.size ? cellOptions.size : defaultCellOptions.size; // size of our cells in pixels
+
+    var outerDimensions = this.size * this.resolution;
 
     // The HTML display of the cube istelf
     this.html = document.createElement('div');
     this.html.id = 'cube';
+
+    this.html.style.height = outerDimensions + 'px';
+    this.html.style.width = outerDimensions + 'px';
+    this.html.style.transformStyle = 'preserve-3d';
+    this.html.style.transformOrigin = [
+        'calc(' + outerDimensions + 'px/2)',
+        'calc(' + outerDimensions + 'px/2)',
+        'calc(-1 * ' + outerDimensions + 'px/2)'
+    ].join(' ');
+
 
     this.cells = [];
     for (var depth = 0; depth < this.size; depth++) {
@@ -37,7 +68,7 @@ var Cube = function(size, playButton, clearButton) {
                 // Iterate over each column
 
                 // Create a cell
-                var cell = new Cell();
+                var cell = new Cell(this.resolution);
                 cell.depth = depth;
                 cell.column = column;
                 cell.row = row;
@@ -64,7 +95,7 @@ var Cube = function(size, playButton, clearButton) {
         }
     }
 
-    document.querySelector('#container').appendChild(this.html); // Actually render the cube
+    parentElement.appendChild(this.html); // Actually render the cube
 
     return this;
 };
@@ -77,7 +108,7 @@ Cube.prototype.shiftPlane = function(direction) {
         var shiftedCoords = {
             'X': [], // Not yet implemented
             'Y': [], // Not yet implemented
-            'Z': [cell.row, cell.column, (cell.depth - 1) >= 0 ? (cell.depth - 1) % 8 : (8 + cell.depth - 1) % 8]
+            'Z': [cell.row, cell.column, (cell.depth - 1) >= 0 ? (cell.depth - 1) % me.size : (me.size + cell.depth - 1) % me.size]
         }[direction];
 
         // Once we have it, grab its on status and coolor and return it
@@ -99,6 +130,33 @@ Cube.prototype.shiftPlane = function(direction) {
 
 Cube.prototype.getCellAt = function(row, column, depth) {
     return this.cells[depth * this.size * this.size + row * this.size + column];
+};
+
+Cube.prototype.nudge = function(direction, amount) {
+    amount = !isNaN(parseFloat(amount, 10)) ? amount : 1;
+
+    this.yAngle = this.yAngle ? this.yAngle : 0;
+    this.xAngle = this.xAngle ? this.xAngle : 0;
+
+    switch (direction) {
+        case 'left':
+            this.yAngle -= amount;
+            break;
+        case 'up':
+            this.xAngle += amount;
+            break;
+        case 'right':
+            this.yAngle += amount;
+            break;
+        case 'down':
+            this.xAngle -= amount;
+            break;
+    };
+
+    this.html.style.transform = [
+        'rotateX(' + this.xAngle + 'deg' + ')',
+        'rotateY(' + this.yAngle + 'deg' + ')'
+    ].join(' ');
 };
 
 Cube.prototype.play = function(mode, options) {

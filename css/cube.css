@@ -4,9 +4,7 @@
 }
 
 #controls {
-    position: absolute;
     width: 100%;
-    top: calc(100% - (100% - 400px)/2 + 2.5em/2*1.5);
     font-family: 'Codystar', cursive;
     font-size: 2.5em;
     letter-spacing: 0.125em;
@@ -22,21 +20,10 @@
 #cube {
     position: relative;
     margin: 100px auto;
-    height: 400px;
-    width: 400px;
-    transition: transform 0.25s linear;
-    /* Tells CSS we want to work in 3D */
-
-    transform-style: preserve-3d;
-    /* This moves the origin of all our transforms to the center of our cube */
-
-    transform-origin: calc(400px/2) calc(400px/2) calc(-1 * 400px/2);
 }
 
 .cell {
     position: absolute;
-    width: 50px;
-    height: 50px;
     border: 1px solid rgba(0, 0, 0, 0);
     background-color: rgba(0, 0, 0, 0);
     opacity: 0.8;
@@ -96,13 +83,17 @@
     position: relative;
     width: 15%;
     height: 15%;
-    border-radius: 100px;
-    /* Setting this to something too large, since border-radius doesn't let you calculate with % */
-
+    border-radius: 50%;
     top: 50%;
     left: 50%;
-    transform: translateY(-50%) translateX(-50%);
     /* Center the led vertically and horizontally in the cell; you can read more about the technique at http://zerosixthree.se/vertical-align-anything-with-just-3-lines-of-css/ */
+    transform: translateY(-50%) translateX(-50%);
+
+    /*
+     * @amirmikhak
+     * Show the LED "in front" of the "stick" that holds the LEDs.
+     */
+    z-index: 1;
 }
 
 .led.on {

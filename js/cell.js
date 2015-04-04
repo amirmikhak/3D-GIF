@@ -1,4 +1,4 @@
-var Cell = function() {
+var Cell = function(size) {
     var me = this; // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
@@ -20,6 +20,11 @@ var Cell = function() {
     // Let's make the HTML that'll display me
     me.html = document.createElement('div');
     me.html.classList.add('cell');
+
+    // The cube tells us how big we are
+    this.size = parseInt(size, 10);
+    me.html.style.width = this.size + 'px';
+    me.html.style.height = this.size + 'px';
 
     this.led = document.createElement('div');
     this.led.classList.add('led');
