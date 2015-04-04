@@ -34,15 +34,12 @@ var Cell = function() {
         },
         'set': function(rgbDictionary) {
             // A custom setter which both updates our color attribute and renders that color
+            _color = rgbDictionary;
             var led = me.html.querySelector('.led'); // the LED's HTML
-            if (this.on) {
-                _color = rgbDictionary;
-                led.style.backgroundColor = me.getRbgaFromColorWithOpacity(1);
-                me.html.style.backgroundColor =  me.getRbgaFromColorWithOpacity(0.125);
-            } else
-            {
-                me.html.style.backgroundColor = null;
-            }
+            led.style.backgroundColor = me.getRbgaFromColorWithOpacity(1);
+            me.html.style.backgroundColor = this.on ?
+                me.getRbgaFromColorWithOpacity(0.125) :
+                null;
         }
     });
     // Initialize our color
