@@ -1,10 +1,24 @@
-var Cube = function(size) {
+var Cube = function(size, playButton, clearButton) {
     var me = this;
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
     // at http://www.quirksmode.org/js/this.html
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
+
+    if (playButton instanceof HTMLElement)
+    {
+        playButton.addEventListener('click', function(event) {
+            me.play();
+        });
+    }
+
+    if (clearButton instanceof HTMLElement)
+    {
+        clearButton.addEventListener('click', function(event) {
+            me.clear();
+        });
+    }
 
     this.size = size; // How many rows and columns do I have?
 
@@ -85,4 +99,48 @@ Cube.prototype.shiftPlane = function(direction) {
 
 Cube.prototype.getCellAt = function(row, column, depth) {
     return this.cells[depth * this.size * this.size + row * this.size + column];
+};
+
+Cube.prototype.play = function(mode, options) {
+    var cube = this;
+
+    var defaultOptions = {
+        delay: 250,
+    };
+
+    mode = typeof mode !== 'undefined' ? mode : 'back';
+    options = typeof options !== 'undefined' ? options : defaultOptions;
+
+    switch(mode)
+    {
+        case 'someYetToBeDefinedOtherMode':
+            // placeholder for future playback modes
+            break;
+        case 'back':
+        default:
+            doAnimateBack();
+    }
+
+    /**
+     * @amirmikhak
+     * These functions can be "defined" after they are "called" above because of javascript's "hoisting".
+     * Learn more: http://code.tutsplus.com/tutorials/javascript-hoisting-explained--net-15092
+     */
+    function doAnimateBack() {
+        var numShifts = 0;
+        var animateBack = setInterval(function() {
+            cube.shiftPlane('Z');
+            numShifts++;
+            if (numShifts == 7) {
+                numShifts = 0;
+                clearInterval(animateBack);
+            }
+        }, options.delay ? options.delay : 250);
+    };
+};
+
+Cube.prototype.clear = function() {
+    this.cells.forEach(function(cell) {
+        cell.on = false;
+    });
 };

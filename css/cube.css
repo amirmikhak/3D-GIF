@@ -15,6 +15,10 @@
     cursor: pointer;
 }
 
+#controls > div + div {
+    margin-top: 1em;
+}
+
 #cube {
     position: relative;
     margin: 100px auto;
