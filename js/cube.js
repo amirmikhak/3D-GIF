@@ -1,10 +1,49 @@
-var Cube = function(size, parentElement, playButton, clearButton, cellOptions) {
-    var me = this;
+var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
     // at http://www.quirksmode.org/js/this.html
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
+    var me = this;
+
+    // DEFINE SOME PROPERTIES
+    var defaultPlaybackOptions = {
+        delay: 100,
+        action: 'slide',
+        direction: 'back',
+        wrap: false,
+    };
+
+    var defaultCellOptions = {
+        size: 50,
+    };
+
+    var playbackOptions = _.extend({}, defaultPlaybackOptions);
+    var cellOptions = _.extend({}, defaultCellOptions);
+
+    Object.defineProperty(this, 'playbackOptions', {
+        get: function() {
+            return playbackOptions;
+        },
+        set: function(newOptions) {
+            _.extend(playbackOptions, newOptions);
+        }
+    });
+
+    Object.defineProperty(this, 'cellOptions', {
+        get: function() {
+            return cellOptions;
+        },
+        set: function(newOptions) {
+            _.extend(cellOptions, newOptions);
+        }
+    });
+
+    // @amirmikhak
+    // Note: there has _got_ to be a "nicer" way to do this. This code feels smelly.
+    this.cellOptions = defaultCellOptions;  // copy in the default options
+    this.cellOptions = typeof cellOpts !== 'undefined' ? cellOpts : {}; // copy in what the user wanted
+
 
     // CONFIGURE FOR ARGUMENTS
     if (!(parentElement instanceof HTMLElement))
@@ -31,17 +70,10 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOptions) {
         });
     }
 
-    var defaultCellOptions = {
-        size: 50,
-    };
-
-    cellOptions = typeof cellOptions !== 'undefined' ? cellOptions : defaultCellOptions;
-
     // SET UP REST OF SELF
-
     this.size = size; // How many rows and columns do I have?
 
-    this.resolution = cellOptions.size ? cellOptions.size : defaultCellOptions.size; // size of our cells in pixels
+    this.resolution = this.cellOptions.size; // size of our cells in pixels
 
     var outerDimensions = this.size * this.resolution;
 
@@ -217,42 +249,72 @@ Cube.prototype.nudge = function(direction, amount) {
     ].join(' ');
 };
 
-Cube.prototype.play = function(mode, options) {
+Cube.prototype.play = function(opts) {
     var cube = this;
 
-    var defaultOptions = {
-        delay: 250,
-    };
+    opts = typeof opts !== 'undefined' ? opts : {};
 
-    mode = typeof mode !== 'undefined' ? mode : 'back';
-    options = typeof options !== 'undefined' ? options : defaultOptions;
+    this.playbackOptions = opts;
 
-    switch(mode)
+    if (this.playbackOptions.action === 'slide')
     {
-        case 'someYetToBeDefinedOtherMode':
-            // placeholder for future playback modes
-            break;
-        case 'back':
-        default:
-            doAnimateBack();
+        switch(this.playbackOptions.direction)
+        {
+            case 'up':
+                loopOverCubeSize(function() {
+                    cube.shiftPlane('X', 1, cube.playbackOptions.wrap);
+                });
+                break;
+            case 'down':
+                loopOverCubeSize(function() {
+                    cube.shiftPlane('X', -1, cube.playbackOptions.wrap);
+                });
+                break;
+            case 'left':
+                loopOverCubeSize(function() {
+                    cube.shiftPlane('Y', 1, cube.playbackOptions.wrap);
+                });
+                break;
+            case 'right':
+                loopOverCubeSize(function() {
+                    cube.shiftPlane('Y', -1, cube.playbackOptions.wrap);
+                });
+                break;
+            case 'forward':
+                loopOverCubeSize(function() {
+                    cube.shiftPlane('Z', 1, cube.playbackOptions.wrap);
+                });
+                break;
+            case 'back':
+            default:
+                loopOverCubeSize(function() {
+                    cube.shiftPlane('Z', -1, cube.playbackOptions.wrap);
+                });
+        }
+    } else
+    {
+        console.error('animation action not supported');
     }
+
+
+    var animateInterval;
 
     /**
      * @amirmikhak
      * These functions can be "defined" after they are "called" above because of javascript's "hoisting".
      * Learn more: http://code.tutsplus.com/tutorials/javascript-hoisting-explained--net-15092
      */
-    function doAnimateBack() {
-        var numShifts = 0;
-        var animateBack = setInterval(function() {
-            cube.shiftPlane('Z');
-            numShifts++;
-            if (numShifts == (cube.size - 1)) {
-                numShifts = 0;
-                clearInterval(animateBack);
+    function loopOverCubeSize(func) {
+        var numOps = 0;
+        clearInterval(animateInterval);
+        animateInterval = setInterval(function() {
+            func.apply(this);
+            if (++numOps == cube.size)
+            {
+                clearInterval(animateInterval);
             }
-        }, options.delay ? options.delay : 250);
-    };
+        }, cube.playbackOptions.delay);
+    }
 };
 
 Cube.prototype.clear = function() {
@@ -260,3 +322,52 @@ Cube.prototype.clear = function() {
         cell.on = false;
     });
 };
+
+Cube.prototype.buildPlaybackControls = function(parentEl) {
+    var cube = this;
+
+    parentEl.innerHTML = (
+        '<div>' +
+            'Direction: ' +
+            '<select>' +
+                '<option value="forward">Forward</option>' +
+                '<option value="back">Back</option>' +
+                '<option value="left">Left</option>' +
+                '<option value="right">Right</option>' +
+                '<option value="up">Up</option>' +
+                '<option value="down">Down</option>' +
+            '</select><br>' +
+            '<label>Wrap?: <input type="checkbox"></label>' +
+        '</div>'
+        );
+
+    parentEl.addEventListener('change', function(e) {
+        if (e.target.nodeName === 'SELECT')
+        {
+            cube.playbackOptions = {
+                direction: e.target.value,
+            };
+        } else if (e.target.nodeName === 'INPUT')
+        {
+            cube.playbackOptions = {
+                wrap: e.target.checked,
+            };
+        }
+    });
+
+    parentEl.addEventListener('start', function(e) {
+
+    });
+
+    function arrize(thing) {
+        return Array.prototype.slice.apply(thing);
+    }
+
+    arrize(parentEl.querySelectorAll('select option')).forEach(function(el) {
+        el.selected = (el.value == cube.playbackOptions.direction);
+    });
+
+    arrize(parentEl.querySelectorAll('input')).forEach(function(el) {
+        el.checked = cube.playbackOptions.wrap;
+    });
+}

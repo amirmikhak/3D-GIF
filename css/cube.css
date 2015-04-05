@@ -14,7 +14,14 @@
 }
 
 #controls > div + div {
-    margin-top: 1em;
+    margin-top: 32px;
+}
+
+#playback-controls,
+#playback-controls select,
+#playback-controls input {
+    font-family: 'Helvetica Neue';
+    font-size: 20px;
 }
 
 #cube {

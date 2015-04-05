@@ -10,6 +10,8 @@ window.addEventListener('load', function() { // When everything is loaded
         size: 50,
     });
 
+    cube.buildPlaybackControls(document.getElementById('playback-controls'));
+
     var KEY_LISTEN_RATE = 10;   // in milliseconds
     document.body.addEventListener("keydown", _.throttle(function(event) {
         switch (event.keyCode) {
