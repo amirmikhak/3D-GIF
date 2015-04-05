@@ -355,10 +355,6 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
         }
     });
 
-    parentEl.addEventListener('start', function(e) {
-
-    });
-
     function arrize(thing) {
         return Array.prototype.slice.apply(thing);
     }
