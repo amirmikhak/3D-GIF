@@ -366,4 +366,68 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
     arrize(parentEl.querySelectorAll('input')).forEach(function(el) {
         el.checked = cube.playbackOptions.wrap;
     });
-}
+};
+
+Cube.prototype.readSlice = function(face, offset, output) {
+    var cube = this;
+
+    var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+    var validOutputs = ['object', 'json'];
+
+    offset = (typeof offset !== 'undefined') ?
+        Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :
+        0;
+    face = (typeof face !== 'undefined') && (validFaces.indexOf(face) !== -1) ?
+        face :
+        'front';
+    output = (typeof output !== 'undefined') && (validOutputs.indexOf(output) !== -1) ?
+        output :
+        'object';
+
+    var cells = [];
+
+    if ((face === 'front') || (face === 'back'))
+    {
+        var depth = (face === 'back') ?
+            (cube.size - 1) - offset :
+            offset;
+        for (var row = 0; row < cube.size; row++)
+        {
+            for (var column = 0; column < cube.size; column++)
+            {
+                cells.push(cube.getCellAt(column, row, depth));
+            }
+        }
+    } else if ((face === 'left') || (face === 'right'))
+    {
+        var column = (face === 'right') ?
+            (cube.size - 1) - offset :
+            offset;
+        for (var depth = cube.size; depth > 0; --depth)
+        {
+            for (var row = 0; row < cube.size; row++)
+            {
+                cells.push(cube.getCellAt(column, row, depth));
+            }
+        }
+    } else if ((face === 'top') || (face === 'bottom'))
+    {
+        var row = (face === 'bottom') ?
+            (cube.size - 1) - offset :
+            offset;
+        for (var column = 0; row < cube.size; row++)
+        {
+            for (var depth = cube.size; depth > 0; --depth)
+            {
+                cells.push(cube.getCellAt(column, row, depth));
+            }
+        }
+    }
+
+    if (output === 'json')
+    {
+        return JSON.stringify(cells);
+    }
+
+    return cells;
+};
