@@ -229,6 +229,7 @@ Cube.prototype.setCellAt = function(row, column, depth, newCell) {
         (column < 0) || (column > this.size - 1) ||
         (depth < 0) ||  (depth > this.size - 1))
     {
+        console.error('Invalid Coord', row, column, depth, newCell);
         throw 'Invalid coordinate';
     }
 
@@ -391,7 +392,7 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
 };
 
 Cube.prototype.affectXSlice = function(column, fn) {
-    for (var depth = cube.size; depth > 0; --depth)
+    for (var depth = cube.size - 1; depth >= 0; depth--)
     {
         for (var row = 0; row < cube.size; row++)
         {
@@ -401,9 +402,9 @@ Cube.prototype.affectXSlice = function(column, fn) {
 };
 
 Cube.prototype.affectYSlice = function(row, fn) {
-    for (var column = 0; row < this.size; row++)
+    for (var column = 0; column < this.size; column++)
     {
-        for (var depth = this.size; depth > 0; --depth)
+        for (var depth = this.size - 1; depth >= 0; depth--)
         {
             fn.apply(this, [row, column, depth]);
         }
@@ -411,9 +412,9 @@ Cube.prototype.affectYSlice = function(row, fn) {
 };
 
 Cube.prototype.affectZSlice = function(depth, fn) {
-    for (var row = 0; row < cube.size; row++)
+    for (var column = 0; column < cube.size; column++)
     {
-        for (var column = 0; column < cube.size; column++)
+        for (var row = 0; row < cube.size; row++)
         {
             fn.apply(this, [row, column, depth]);
         }
