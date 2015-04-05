@@ -12,6 +12,8 @@ window.addEventListener('load', function() { // When everything is loaded
 
     cube.buildPlaybackControls(document.getElementById('playback-controls'));
 
+    cube.listenForKeystrokes();
+
     var KEY_LISTEN_RATE = 10;   // in milliseconds
     document.body.addEventListener("keydown", _.throttle(function(event) {
         switch (event.keyCode) {

@@ -18,8 +18,20 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         size: 50,
     };
 
+    var defaultKeyListenerOptions = {
+        keys: 'all',                // values: alpha, num, alphanum, all
+        letterColor: [0, 0, 255],   // color of letter pixels on generated frame: rgb array
+        backgroundColor: [0, 0, 0], // color of non-leter pixels on generated frame: rgb array
+        startFace: 'front',         // values: front, back, left, right, bottom, top
+        endFace: 'back',            // values: front, back, left, right, bottom, top
+        animate: true,              // animate from frontFace to backFace: boolean
+        animateRate: 100,           // delay between each playback frame
+        stepSize: 1,                // number of steps for each animation
+    };
+
     var playbackOptions = _.extend({}, defaultPlaybackOptions);
     var cellOptions = _.extend({}, defaultCellOptions);
+    var keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
     Object.defineProperty(this, 'playbackOptions', {
         get: function() {
@@ -36,6 +48,16 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         },
         set: function(newOptions) {
             _.extend(cellOptions, newOptions);
+        }
+    });
+
+
+    Object.defineProperty(this, 'keyListenerOptions', {
+        get: function() {
+            return keyListenerOptions;
+        },
+        set: function(newOptions) {
+            _.extend(keyListenerOptions, newOptions);
         }
     });
 
@@ -367,3 +389,169 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
         el.checked = cube.playbackOptions.wrap;
     });
 }
+
+Cube.prototype.charVoxelMap = {
+    'a': [],
+    'b': [],
+    'c': [],
+    'd': [],
+    'e': [],
+    'f': [],
+    'g': [],
+    'h': [],
+    'i': [],
+    'j': [],
+    'k': [],
+    'l': [],
+    'm': [],
+    'n': [],
+    'o': [],
+    'p': [],
+    'q': [],
+    'r': [],
+    's': [],
+    't': [],
+    'u': [],
+    'v': [],
+    'q': [],
+    'r': [],
+    's': [],
+    't': [],
+    'u': [],
+    'v': [],
+    'w': [],
+    'x': [],
+    'y': [],
+    'z': [],
+    'A': [],
+    'B': [],
+    'C': [],
+    'D': [],
+    'E': [],
+    'F': [],
+    'G': [],
+    'H': [],
+    'I': [],
+    'J': [],
+    'K': [],
+    'L': [],
+    'M': [],
+    'N': [],
+    'O': [],
+    'P': [],
+    'Q': [],
+    'R': [],
+    'S': [],
+    'T': [],
+    'U': [],
+    'V': [],
+    'Q': [],
+    'R': [],
+    'S': [],
+    'T': [],
+    'U': [],
+    'V': [],
+    'W': [],
+    'X': [],
+    'Y': [],
+    'Z': [],
+    '0': [],
+    '1': [],
+    '2': [],
+    '3': [],
+    '4': [],
+    '5': [],
+    '6': [],
+    '7': [],
+    '8': [],
+    '9': [],
+    '~': [],
+    '`': [],
+    '!': [],
+    '@': [],
+    '#': [],
+    '$': [],
+    '%': [],
+    '^': [],
+    '&': [],
+    '*': [],
+    '(': [],
+    ')': [],
+    '_': [],
+    '+': [],
+    '[': [],
+    ']': [],
+    '\\': [],
+    ';': [],
+    '\'': [],
+    ',': [],
+    '.': [],
+    '/': [],
+    '{': [],
+    '}': [],
+    '|': [],
+    ':': [],
+    '"': [],
+    ',': [],
+    '.': [],
+    '/': [],
+};
+
+Cube.prototype.listenForKeystrokes = function(opts) {
+    var cube = this;
+
+    this.keyListenerOptions = opts;
+
+    var validKeyFns = {
+        alpha: function(e) {
+            return e.keyCode >= 65 && e.keyCode <= 90;
+        },
+        num: function(e) {
+            return (
+                (e.keyCode >= 48 && e.keyCode <= 57) || // top row
+                (e.keyCode >= 96 && e.keyCode <= 105)   // num pad
+            );
+        },
+        symbols: function(e) {
+            return (
+                (e.keyCode >= 106 && e.keyCode <= 111) ||  // math operators
+                (e.keyCode >= 186 && e.keyCode <= 222) ||  // punctuation
+                (e.shiftKey && e.keyCode >= 48 && e.keyCode <= 57)    // "uppercase" numbers
+            );
+        },
+        alphanum: function(e) {
+            return validKeyFns.alpha(e) || validKeyFns.num(e);
+        },
+        all: function(e) {
+            return validKeyFns.alphanum(e) || validKeyFns.symbols(e);
+        },
+    }
+
+    this.keyListenerFn = function(e) {
+        if (validKeyFns[cube.keyListenerOptions.keys](e))
+        {
+            var char = e.shiftKey ?
+                String.fromCharCode(e.keyCode) :
+                String.fromCharCode(e.keyCode).toLowerCase();
+            console.log('listener for key matched', e.shiftKey, char);
+        } else
+        {
+            console.log('listener for key NOT matched', e.shiftKey);
+        }
+    };
+
+    if (!this.listeningForKeystrokes)
+    {
+        document.addEventListener('keydown', this.keyListenerFn);
+        this.listeningForKeystrokes = true;
+    }
+};
+
+Cube.prototype.stopListeningForKeystrokes = function() {
+    if (this.keyListenerFn instanceof Function)
+    {
+        document.removeEventListener('keydown', this.keyListenerFn);
+        this.listeningForKeystrokes = false;
+    }
+};
+
