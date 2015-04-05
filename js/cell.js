@@ -14,9 +14,6 @@ var Cell = function(size) {
     this.column = null;
     this.depth = null;
 
-    // Connection to a cube
-    this.cube = null;
-
     // Let's make the HTML that'll display me
     me.html = document.createElement('div');
     me.html.classList.add('cell');
@@ -34,10 +31,11 @@ var Cell = function(size) {
     this.defaultColor = [0, 0, 255];
     var _color = [0, 0, 0]; // we start out off
     Object.defineProperty(this, 'color', {
-        'get': function() {
+        enumerable: true,
+        get: function() {
             return _color;
         },
-        'set': function(rgbDictionary) {
+        set: function(rgbDictionary) {
             // A custom setter which both updates our color attribute and renders that color
             _color = rgbDictionary;
             var led = me.html.querySelector('.led'); // the LED's HTML
@@ -47,16 +45,17 @@ var Cell = function(size) {
                 null;
         }
     });
+
     // Initialize our color
     this.led.style.backgroundColor = 'rgba(' + this.color.join(',') + ',' + '1)';
 
-
     var _on = false;
     Object.defineProperty(this, 'on', {
-        'get': function() {
+        enumerable: true,
+        get: function() {
             return _on;
         },
-        'set': function(turnOn) {
+        set: function(turnOn) {
             // A custom setter for my on status which both toggles my on status and changes my color to black
             if (turnOn) {
                 _on = turnOn;
@@ -83,3 +82,18 @@ var Cell = function(size) {
 
     return this;
 };
+
+Cell.prototype.setFromCell = function(otherCell) {
+    this.color = otherCell.color;
+    this.on = otherCell.on;
+};
+
+Cell.prototype.toJSON = function() {
+    return {
+        row: this.row,
+        column: this.column,
+        depth: this.depth,
+        color: this.color,
+        on: this.on,
+    };
+}
