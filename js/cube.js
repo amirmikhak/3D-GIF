@@ -106,35 +106,35 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
 
     var me = this;
 
-    var nextState = me.cells.map(function(cell) {
-        function getNewValueForShift(cell, axis) {
-            if ((cell[axis] + stepSize) >= 0 && (cell[axis] + stepSize) < me.size)
-            {   // your new coord originated from inside of bounds
-                return (cell[axis] + stepSize) % me.size;
+    function getNewValueForShift(cell, axis) {
+        if ((cell[axis] + stepSize) >= 0 && (cell[axis] + stepSize) < me.size)
+        {   // your new coord originated from inside of bounds
+            return (cell[axis] + stepSize) % me.size;
+        } else
+        {   // your new coord originated from outside of bounds
+            if (wrap)
+            {   // reach around the other side
+                return (me.size + cell[axis] + stepSize) % me.size;
             } else
-            {   // your new coord originated from outside of bounds
-                if (wrap)
-                {   // reach around the other side
-                    return (me.size + cell[axis] + stepSize) % me.size;
-                } else
-                {   // screw it, your new value is nothing
-                    return -1;
-                }
+            {   // screw it, your new value is nothing
+                return -1;
             }
-        };
-
-        function getNewRowForXShift(cell) {
-            return getNewValueForShift(cell, 'row');
         }
+    };
 
-        function getNewColForYShift(cell) {
-            return getNewValueForShift(cell, 'column');
-        }
+    function getNewRowForXShift(cell) {
+        return getNewValueForShift(cell, 'row');
+    }
 
-        function getNewDepthForZShift(cell) {
-            return getNewValueForShift(cell, 'depth');
-        }
+    function getNewColForYShift(cell) {
+        return getNewValueForShift(cell, 'column');
+    }
 
+    function getNewDepthForZShift(cell) {
+        return getNewValueForShift(cell, 'depth');
+    }
+
+    var nextState = me.cells.map(function(cell) {
         // We want to calculate the coordinates of the 'previous' cell along various directions
         var shiftedCoords = {
             'X': [
