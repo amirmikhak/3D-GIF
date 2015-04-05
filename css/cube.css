@@ -10,11 +10,35 @@
     letter-spacing: 0.125em;
     text-align: center;
     text-transform: uppercase;
-    cursor: pointer;
 }
 
 #controls > div + div {
     margin-top: 32px;
+}
+
+#play, #clear {
+    padding: 0.5em 1em;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    display: inline-block;
+    width: auto;
+    -webkit-user-select: none;
+}
+
+#clear:hover {
+    background-color: rgba(255, 200, 200, 1);
+}
+
+#clear:active {
+    background-color: rgba(255, 150, 150, 1);
+}
+
+#play:hover {
+    background-color: rgba(200, 255, 200, 1);
+}
+
+#play:active {
+    background-color: rgba(150, 255, 150, 1);
 }
 
 #playback-controls,
