@@ -4,7 +4,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
     // at http://www.quirksmode.org/js/this.html
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
-    var me = this;
+    var cube = this;
 
     // DEFINE SOME PROPERTIES
     var defaultPlaybackOptions = {
@@ -15,13 +15,14 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     };
 
     var defaultCellOptions = {
-        size: 50,
+        size: 50, // size of our cells in pixels
     };
 
     var playbackOptions = _.extend({}, defaultPlaybackOptions);
     var cellOptions = _.extend({}, defaultCellOptions);
 
     Object.defineProperty(this, 'playbackOptions', {
+        enumerable: true,
         get: function() {
             return playbackOptions;
         },
@@ -31,6 +32,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     });
 
     Object.defineProperty(this, 'cellOptions', {
+        enumerable: true,
         get: function() {
             return cellOptions;
         },
@@ -52,30 +54,28 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         parentElement = parentElement.length ? parentElement[0] : null;
         if (!parentElement)
         {
-            throw Error('No parent element for the cube');
+            throw 'No parent element for the cube';
         }
     }
 
     if (playButton instanceof HTMLElement)
     {
         playButton.addEventListener('click', function(event) {
-            me.play();
+            cube.play();
         });
     }
 
     if (clearButton instanceof HTMLElement)
     {
         clearButton.addEventListener('click', function(event) {
-            me.clear();
+            cube.clear();
         });
     }
 
     // SET UP REST OF SELF
     this.size = size; // How many rows and columns do I have?
 
-    this.resolution = this.cellOptions.size; // size of our cells in pixels
-
-    var outerDimensions = this.size * this.resolution;
+    var outerDimensions = this.size * this.cellOptions.size;
 
     // The HTML display of the cube istelf
     this.html = document.createElement('div');
@@ -100,7 +100,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
                 // Iterate over each column
 
                 // Create a cell
-                var cell = new Cell(this.resolution);
+                var cell = new Cell(this.cellOptions.size);
                 cell.depth = depth;
                 cell.column = column;
                 cell.row = row;
@@ -114,15 +114,15 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
                 // Manually position the cell in the right location via CSS
                 cell.html.style.transform = ['X', 'Y', 'Z'].map(function(direction) {
                     var translation = {
-                        'X': me.resolution * cell.column,
-                        'Y': me.resolution * cell.row,
-                        'Z': -1 * me.resolution * cell.depth
+                        'X': cube.cellOptions.size * cell.column,
+                        'Y': cube.cellOptions.size * cell.row,
+                        'Z': -1 * cube.cellOptions.size * cell.depth
                     };
                     return 'translate' + direction + '(' + translation[direction] + 'px' + ')';
                 }).join(' ');
 
-                me.cells.push(cell);
-                me.html.appendChild(cell.html); // Actually render the cell
+                cube.cells.push(cell);
+                cube.html.appendChild(cell.html); // Actually render the cell
             }
         }
     }
@@ -136,17 +136,17 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     stepSize = typeof stepSize !== 'undefined' ? stepSize : -1;
     wrap = typeof wrap !== 'undefined' ? !!wrap : true;
 
-    var me = this;
+    var cube = this;
 
     function getNewValueForShift(cell, axis) {
-        if ((cell[axis] + stepSize) >= 0 && (cell[axis] + stepSize) < me.size)
+        if ((cell[axis] + stepSize) >= 0 && (cell[axis] + stepSize) < cube.size)
         {   // your new coord originated from inside of bounds
-            return (cell[axis] + stepSize) % me.size;
+            return (cell[axis] + stepSize) % cube.size;
         } else
         {   // your new coord originated from outside of bounds
             if (wrap)
             {   // reach around the other side
-                return (me.size + cell[axis] + stepSize) % me.size;
+                return (cube.size + cell[axis] + stepSize) % cube.size;
             } else
             {   // screw it, your new value is nothing
                 return -1;
@@ -166,7 +166,7 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
         return getNewValueForShift(cell, 'depth');
     }
 
-    var nextState = me.cells.map(function(cell) {
+    var nextState = cube.cells.map(function(cell) {
         // We want to calculate the coordinates of the 'previous' cell along various directions
         var shiftedCoords = {
             'X': [
@@ -188,13 +188,13 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
 
         // Once we have it, grab its on status and color and return it
         return {
-            'on': me.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]).on,
-            'color': me.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]).color
+            'on': cube.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]).on,
+            'color': cube.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]).color
         };
     });
 
     // Iterate over all the cells and change their on status and color to their 'previous' neighbor's
-    me.cells.forEach(function(cell, index) {
+    cube.cells.forEach(function(cell, index) {
         cell.on = false;
         cell.on = nextState[index].on;
         if (cell.on) {
@@ -219,7 +219,29 @@ Cube.prototype.getCellAt = function(row, column, depth) {
             color: [0, 0, 0],
         }
     }
-    return this.cells[depth * this.size * this.size + row * this.size + column];
+
+    var cellIndex = (depth * this.size * this.size) + (row * this.size) + column;
+    return this.cells[cellIndex];
+};
+
+Cube.prototype.setCellAt = function(row, column, depth, newCell) {
+    if ((row < 0) || (row > this.size - 1) ||
+        (column < 0) || (column > this.size - 1) ||
+        (depth < 0) ||  (depth > this.size - 1))
+    {
+        throw 'Invalid coordinate';
+    }
+
+    var cellIndex = (depth * this.size * this.size) + (row * this.size) + column;
+    var matchedCell = this.cells[cellIndex];
+
+    matchedCell.setFromCell(newCell);
+
+    return matchedCell;
+};
+
+Cube.prototype.applyCell = function(newCell) {
+    return this.setCellAt(newCell.row, newCell.column, newCell.depth, newCell);
 };
 
 Cube.prototype.nudge = function(direction, amount) {
@@ -368,7 +390,84 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
     });
 };
 
+Cube.prototype.affectXSlice = function(column, fn) {
+    for (var depth = cube.size; depth > 0; --depth)
+    {
+        for (var row = 0; row < cube.size; row++)
+        {
+            fn.apply(this, [row, column, depth]);
+        }
+    }
+};
+
+Cube.prototype.affectYSlice = function(row, fn) {
+    for (var column = 0; row < this.size; row++)
+    {
+        for (var depth = this.size; depth > 0; --depth)
+        {
+            fn.apply(this, [row, column, depth]);
+        }
+    }
+};
+
+Cube.prototype.affectZSlice = function(depth, fn) {
+    for (var row = 0; row < cube.size; row++)
+    {
+        for (var column = 0; column < cube.size; column++)
+        {
+            fn.apply(this, [row, column, depth]);
+        }
+    }
+};
+
 Cube.prototype.readSlice = function(face, offset, output) {
+    var cube = this;
+
+    var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+    var validOutputs = ['object', 'object-deep', 'json'];
+
+    offset = (typeof offset !== 'undefined') ?
+        Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :
+        0;
+    face = (typeof face !== 'undefined') && (validFaces.indexOf(face) !== -1) ?
+        face :
+        'front';
+    output = (typeof output !== 'undefined') && (validOutputs.indexOf(output) !== -1) ?
+        output :
+        'object-deep';
+
+    var cells = [];
+
+    function captureCell(r, c, d) {
+        var cell = (output === 'object-deep') ?
+            _.cloneDeep(this.getCellAt(r, c, d)) :
+            this.getCellAt(r, c, d);
+        cells.push(cell);
+    }
+
+    if ((face === 'front') || (face === 'back'))
+    {
+        var depth = (face === 'back') ? (cube.size - 1) - offset : offset;
+        this.affectZSlice(depth, captureCell);
+    } else if ((face === 'top') || (face === 'bottom'))
+    {
+        var row = (face === 'bottom') ? (this.size - 1) - offset : offset;
+        this.affectYSlice(row, captureCell);
+    } else if ((face === 'left') || (face === 'right'))
+    {
+        var column = (face === 'right') ? (cube.size - 1) - offset : offset;
+        this.affectXSlice(column, captureCell);
+    }
+
+    if (output === 'json')
+    {
+        return JSON.stringify(cells);
+    }
+
+    return cells;
+};
+
+Cube.prototype.writeSlice = function(data, face, offset) {
     var cube = this;
 
     var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
@@ -380,54 +479,46 @@ Cube.prototype.readSlice = function(face, offset, output) {
     face = (typeof face !== 'undefined') && (validFaces.indexOf(face) !== -1) ?
         face :
         'front';
-    output = (typeof output !== 'undefined') && (validOutputs.indexOf(output) !== -1) ?
-        output :
-        'object';
 
-    var cells = [];
+    try
+    {   // handle different types of data input: JSON or raw object
+        data = JSON.parse(data);    // throws SyntaxError if not valid JSON string
+    } catch (err)
+    {   // pass
+    }
+
+    if (!(data instanceof Array) || (data.length !== Math.pow(this.size, 2)))
+    {
+        throw 'Malformed data';
+    }
+
+    var cells = data.slice();
+
+    function writeCellFromData(r, c, d) {
+        var cell = cells.shift();
+        this.setCellAt(r, c, d, cell);
+    };
 
     if ((face === 'front') || (face === 'back'))
     {
-        var depth = (face === 'back') ?
-            (cube.size - 1) - offset :
-            offset;
-        for (var row = 0; row < cube.size; row++)
-        {
-            for (var column = 0; column < cube.size; column++)
-            {
-                cells.push(cube.getCellAt(column, row, depth));
-            }
-        }
-    } else if ((face === 'left') || (face === 'right'))
-    {
-        var column = (face === 'right') ?
-            (cube.size - 1) - offset :
-            offset;
-        for (var depth = cube.size; depth > 0; --depth)
-        {
-            for (var row = 0; row < cube.size; row++)
-            {
-                cells.push(cube.getCellAt(column, row, depth));
-            }
-        }
+        var depth = (face === 'back') ? (cube.size - 1) - offset : offset;
+        this.affectZSlice(depth, writeCellFromData);
     } else if ((face === 'top') || (face === 'bottom'))
     {
-        var row = (face === 'bottom') ?
-            (cube.size - 1) - offset :
-            offset;
-        for (var column = 0; row < cube.size; row++)
-        {
-            for (var depth = cube.size; depth > 0; --depth)
-            {
-                cells.push(cube.getCellAt(column, row, depth));
-            }
-        }
-    }
-
-    if (output === 'json')
+        var row = (face === 'bottom') ? (this.size - 1) - offset : offset;
+        this.affectYSlice(row, writeCellFromData);
+    } else if ((face === 'left') || (face === 'right'))
     {
-        return JSON.stringify(cells);
+        var column = (face === 'right') ? (cube.size - 1) - offset : offset;
+        this.affectXSlice(column, writeCellFromData);
     }
+};
 
-    return cells;
+Cube.prototype.toJSON = function() {
+    return {
+        size: this.size,
+        cells: this.cells,
+        playbackOptions: this.playbackOptions,
+        cellOptions: this.cellOptions,
+    };
 };
