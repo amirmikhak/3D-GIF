@@ -167,21 +167,40 @@ var charVoxelMap = {
 window.addEventListener('load', function() {
     setupCanvas();
 
-    var i = 0;
-    var slices = [];
-
     var chars = Object.keys(charVoxelMap).slice();
-    var charDrawInterval = setInterval(function() {
+
+    function playChars(i) {
+        if ((i < 0) || (i >= chars.length))
+        {
+            return;
+        }
+
         var char = chars[i];
         drawChar(char);
         charVoxelMap[char] = grabPixels();
-        slices.push(charVoxelMap[char]);
-        // console.log(charVoxelMap[char]);
-        cube.writeSlice(charVoxelMap[char], 'front');
 
-        if (++i == chars.length)
-        {
-            clearInterval(charDrawInterval);
+        function getRandomAnimationConfig() {
+            var faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+            var directions = ['back', 'forward', 'right', 'left', 'down', 'up'];
+
+            return {
+                face: faces[Math.floor(Math.random() * faces.length)],
+                direction: directions[Math.floor(Math.random() * directions.length)]
+            };
         }
-    }, 10);
+
+        var randAnim = getRandomAnimationConfig();
+
+        cube.writeSlice(charVoxelMap[char], randAnim.face);
+        cube.play({
+            direction: randAnim.direction,
+            delay: 50,
+        }).then(function() {
+            playChars(i + 1);
+        });
+    }
+
+    setTimeout(function() {
+        playChars(0);
+    }, 4000)
 });
