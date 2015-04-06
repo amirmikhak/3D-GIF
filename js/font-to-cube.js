@@ -5,6 +5,100 @@ var CHAR_SIZE = 8;
 var c;
 var ctx;
 
+var charVoxelMap = {
+    '0': [],
+    '1': [],
+    '2': [],
+    '3': [],
+    '4': [],
+    '5': [],
+    '6': [],
+    '7': [],
+    '8': [],
+    '9': [],
+    '!': [],
+    '"': [],
+    '#': [],
+    '$': [],
+    '%': [],
+    '&': [],
+    '\'': [],
+    '(': [],
+    ')': [],
+    '*': [],
+    '+': [],
+    ',': [],
+    '.': [],
+    '/': [],
+    ':': [],
+    ';': [],
+    '@': [],
+    'A': [],
+    'B': [],
+    'C': [],
+    'D': [],
+    'E': [],
+    'F': [],
+    'G': [],
+    'H': [],
+    'I': [],
+    'J': [],
+    'K': [],
+    'L': [],
+    'M': [],
+    'N': [],
+    'O': [],
+    'P': [],
+    'Q': [],
+    'R': [],
+    'S': [],
+    'T': [],
+    'U': [],
+    'V': [],
+    'W': [],
+    'X': [],
+    'Y': [],
+    'Z': [],
+    '[': [],
+    '\\': [],
+    ']': [],
+    '^': [],
+    '_': [],
+    '`': [],
+    'a': [],
+    'b': [],
+    'c': [],
+    'd': [],
+    'e': [],
+    'f': [],
+    'g': [],
+    'h': [],
+    'i': [],
+    'j': [],
+    'k': [],
+    'l': [],
+    'm': [],
+    'n': [],
+    'o': [],
+    'p': [],
+    'q': [],
+    'r': [],
+    's': [],
+    't': [],
+    'u': [],
+    'v': [],
+    'w': [],
+    'x': [],
+    'y': [],
+    'z': [],
+    '{': [],
+    '|': [],
+    '}': [],
+    '~': [],
+};
+
+var chars = Object.keys(charVoxelMap).slice();
+
 function setupCanvas() {
     c = document.createElement('canvas');
     c.id = "c";
@@ -57,152 +151,50 @@ function grabPixels() {
     return JSON.stringify(cells);
 }
 
-var charVoxelMap = {
-    'a': [],
-    'b': [],
-    'c': [],
-    'd': [],
-    'e': [],
-    'f': [],
-    'g': [],
-    'h': [],
-    'i': [],
-    'j': [],
-    'k': [],
-    'l': [],
-    'm': [],
-    'n': [],
-    'o': [],
-    'p': [],
-    'q': [],
-    'r': [],
-    's': [],
-    't': [],
-    'u': [],
-    'v': [],
-    'q': [],
-    'r': [],
-    's': [],
-    't': [],
-    'u': [],
-    'v': [],
-    'w': [],
-    'x': [],
-    'y': [],
-    'z': [],
-    'A': [],
-    'B': [],
-    'C': [],
-    'D': [],
-    'E': [],
-    'F': [],
-    'G': [],
-    'H': [],
-    'I': [],
-    'J': [],
-    'K': [],
-    'L': [],
-    'M': [],
-    'N': [],
-    'O': [],
-    'P': [],
-    'Q': [],
-    'R': [],
-    'S': [],
-    'T': [],
-    'U': [],
-    'V': [],
-    'Q': [],
-    'R': [],
-    'S': [],
-    'T': [],
-    'U': [],
-    'V': [],
-    'W': [],
-    'X': [],
-    'Y': [],
-    'Z': [],
-    '0': [],
-    '1': [],
-    '2': [],
-    '3': [],
-    '4': [],
-    '5': [],
-    '6': [],
-    '7': [],
-    '8': [],
-    '9': [],
-    '~': [],
-    '`': [],
-    '!': [],
-    '@': [],
-    '#': [],
-    '$': [],
-    '%': [],
-    '^': [],
-    '&': [],
-    '*': [],
-    '(': [],
-    ')': [],
-    '_': [],
-    '+': [],
-    '[': [],
-    ']': [],
-    '\\': [],
-    ';': [],
-    '\'': [],
-    ',': [],
-    '.': [],
-    '/': [],
-    '{': [],
-    '}': [],
-    '|': [],
-    ':': [],
-    '"': [],
-    ',': [],
-    '.': [],
-    '/': [],
-};
+function getRandomAnimationConfig() {
+    var faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+    var directions = ['back', 'forward', 'right', 'left', 'down', 'up'];
+
+    return {
+        face: faces[Math.floor(Math.random() * faces.length)],
+        direction: directions[Math.floor(Math.random() * directions.length)]
+    };
+}
+
+function renderFont() {
+    for (var i = 0; i < chars.length; i++)
+    {
+        var char = chars[i];
+        drawChar(char);
+        charVoxelMap[char] = grabPixels();
+    }
+}
+
+function playChars(i) {
+    if ((i < 0) || (i >= chars.length))
+    {
+        return;
+    }
+
+    var randAnim = getRandomAnimationConfig();
+
+    cube.writeSlice(charVoxelMap[chars[i]], randAnim.face);
+    cube.play({
+        direction: randAnim.direction,
+        delay: 50,
+    }).then(function() {
+        playChars(i + 1);
+    });
+}
 
 window.addEventListener('load', function() {
     setupCanvas();
 
-    var chars = Object.keys(charVoxelMap).slice();
-
-    function playChars(i) {
-        if ((i < 0) || (i >= chars.length))
-        {
-            return;
-        }
-
-        var char = chars[i];
-        drawChar(char);
-        charVoxelMap[char] = grabPixels();
-
-        function getRandomAnimationConfig() {
-            var faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
-            var directions = ['back', 'forward', 'right', 'left', 'down', 'up'];
-
-            return {
-                face: faces[Math.floor(Math.random() * faces.length)],
-                direction: directions[Math.floor(Math.random() * directions.length)]
-            };
-        }
-
-        var randAnim = getRandomAnimationConfig();
-
-        cube.writeSlice(charVoxelMap[char], randAnim.face);
-        cube.play({
-            direction: randAnim.direction,
-            delay: 50,
-        }).then(function() {
-            playChars(i + 1);
-        });
-    }
+    renderFont();
 
     setTimeout(function() {
         cube.xAngle = -30;
         cube.yAngle = 30;
         playChars(0);
-    }, 4000)
+    }, 10);
 });
