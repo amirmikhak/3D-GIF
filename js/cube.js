@@ -301,6 +301,14 @@ Cube.prototype.play = function(opts) {
 
     this.playbackOptions = opts;
 
+    var playbackCompleteFn;
+    var playbackFailedFn;
+
+    var promise = new Promise(function(resolve, reject) {
+        playbackCompleteFn = resolve;
+        playbackFailedFn = reject;
+    });
+
     if (this.playbackOptions.action === 'slide')
     {
         switch(this.playbackOptions.direction)
@@ -357,9 +365,12 @@ Cube.prototype.play = function(opts) {
             if (++numOps == cube.size)
             {
                 clearInterval(animateInterval);
+                playbackCompleteFn();
             }
         }, cube.playbackOptions.delay);
     }
+
+    return promise;
 };
 
 Cube.prototype.clear = function() {
