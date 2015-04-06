@@ -27,6 +27,8 @@ function drawChar(char) {
 
 function grabPixels() {
     // http://stackoverflow.com/questions/667045/getpixel-from-html-canvas
+    var ALPHA_THRESHOLD = 150;
+
     var imgd = ctx.getImageData(0, 0, CUBE_SIZE, CUBE_SIZE);
     var pix = imgd.data;
 
@@ -34,7 +36,7 @@ function grabPixels() {
 
     // Loop over each pixel and invert the color.
     for (var i = 0, n = pix.length; i < n; i += 4) {
-        var cellIsOn = pix[i + 3] > 200;
+        var cellIsOn = pix[i + 3] > ALPHA_THRESHOLD;
         pixelStates.push(cellIsOn);
     }
 
