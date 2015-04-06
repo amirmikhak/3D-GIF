@@ -11,6 +11,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         delay: 100,
         action: 'slide',
         direction: 'back',
+        stepSize: 1,
         wrap: false,
     };
 
@@ -20,12 +21,12 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
 
     var defaultKeyListenerOptions = {
         keys: 'all',                // values: alpha, num, alphanum, all
-        letterColor: [0, 0, 255],   // color of letter pixels on generated frame: rgb array
-        backgroundColor: [0, 0, 0], // color of non-leter pixels on generated frame: rgb array
-        startFace: 'front',         // values: front, back, left, right, bottom, top
-        endFace: 'back',            // values: front, back, left, right, bottom, top
+        // letterColor: [0, 0, 255],   // NOT IMPLEMENTED: color of letter pixels on generated frame: rgb array
+        // backgroundColor: [0, 0, 0], // NOT IMPLEMENTED: color of non-leter pixels on generated frame: rgb array
+        // startFace: 'front',         // NOT IMPLEMENTED: values: front, back, left, right, bottom, top
+        // endFace: 'back',            // NOT IMPLEMENTED: values: front, back, left, right, bottom, top
         animate: true,              // animate from frontFace to backFace: boolean
-        animateRate: 100,           // delay between each playback frame
+        animateRate: 125,           // delay between each playback frame
         stepSize: 1,                // number of steps for each animation
     };
 
@@ -494,33 +495,57 @@ Cube.prototype.play = function(opts) {
         {
             case 'up':
                 loopOverCubeSize(function() {
-                    cube.shiftPlane('X', 1, cube.playbackOptions.wrap);
+                    cube.shiftPlane(
+                        'X',
+                        cube.playbackOptions.stepSize,
+                        cube.playbackOptions.wrap
+                    );
                 });
                 break;
             case 'down':
                 loopOverCubeSize(function() {
-                    cube.shiftPlane('X', -1, cube.playbackOptions.wrap);
+                    cube.shiftPlane(
+                        'X',
+                        -1 * cube.playbackOptions.stepSize,
+                        cube.playbackOptions.wrap
+                    );
                 });
                 break;
             case 'left':
                 loopOverCubeSize(function() {
-                    cube.shiftPlane('Y', 1, cube.playbackOptions.wrap);
+                    cube.shiftPlane(
+                        'Y',
+                        cube.playbackOptions.stepSize,
+                        cube.playbackOptions.wrap
+                    );
                 });
                 break;
             case 'right':
                 loopOverCubeSize(function() {
-                    cube.shiftPlane('Y', -1, cube.playbackOptions.wrap);
+                    cube.shiftPlane(
+                        'Y',
+                        -1 * cube.playbackOptions.stepSize,
+                        cube.playbackOptions.wrap
+                    );
                 });
                 break;
             case 'forward':
                 loopOverCubeSize(function() {
-                    cube.shiftPlane('Z', 1, cube.playbackOptions.wrap);
+                    cube.shiftPlane(
+                        'Z',
+                        cube.playbackOptions.stepSize,
+                        cube.playbackOptions.wrap
+                    );
                 });
                 break;
             case 'back':
             default:
                 loopOverCubeSize(function() {
-                    cube.shiftPlane('Z', -1, cube.playbackOptions.wrap);
+                    cube.shiftPlane(
+                        'Z',
+                        -1 * cube.playbackOptions.stepSize,
+                        cube.playbackOptions.wrap
+                    );
                 });
         }
     } else
@@ -633,22 +658,36 @@ Cube.prototype.listenForKeystrokes = function(opts) {
         },
     }
 
-    this.keyListenerFn = function(e) {
+    this.validKeyFilterFn = function(e) {
         if (validKeyFns[cube.keyListenerOptions.keys](e))
         {
-            var char = e.shiftKey ?
-                String.fromCharCode(e.keyCode) :
-                String.fromCharCode(e.keyCode).toLowerCase();
-            // console.log('listener for key matched', e.shiftKey, char);
-        } else
+            return true;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+
+    this.keyListenerFn = function(e) {
+        char = String.fromCharCode(e.which);
+
+        cube.writeSlice(cube.charVoxelMap[char], 'front');
+
+        if (cube.keyListenerOptions.animate)
         {
-            // console.log('listener for key NOT matched', e.shiftKey);
+            cube.play({
+                direction: 'back',
+                stepSize: cube.keyListenerOptions.stepSize,
+                delay: cube.keyListenerOptions.animateRate,
+            });
         }
     };
 
     if (!this.listeningForKeystrokes)
     {
-        document.addEventListener('keydown', this.keyListenerFn);
+        document.addEventListener('keydown', this.validKeyFilterFn);
+        document.addEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = true;
     }
 };
@@ -656,7 +695,8 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 Cube.prototype.stopListeningForKeystrokes = function() {
     if (this.keyListenerFn instanceof Function)
     {
-        document.removeEventListener('keydown', this.keyListenerFn);
+        document.removeEventListener('keydown', this.validKeyFilterFn);
+        document.removeEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = false;
     }
 };
