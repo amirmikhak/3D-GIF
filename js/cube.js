@@ -556,10 +556,10 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             var char = e.shiftKey ?
                 String.fromCharCode(e.keyCode) :
                 String.fromCharCode(e.keyCode).toLowerCase();
-            console.log('listener for key matched', e.shiftKey, char);
+            // console.log('listener for key matched', e.shiftKey, char);
         } else
         {
-            console.log('listener for key NOT matched', e.shiftKey);
+            // console.log('listener for key NOT matched', e.shiftKey);
         }
     };
 
@@ -659,7 +659,6 @@ Cube.prototype.writeSlice = function(data, face, offset) {
     var cube = this;
 
     var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
-    var validOutputs = ['object', 'json'];
 
     offset = (typeof offset !== 'undefined') ?
         Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :

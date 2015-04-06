@@ -1,7 +1,6 @@
 var cube;
 window.addEventListener('load', function() { // When everything is loaded
 
-
     var cubeWrapper = document.getElementById('cube-wrapper');
     var playButton = document.getElementById('play');
     var clearButton = document.getElementById('clear');
