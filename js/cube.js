@@ -554,7 +554,7 @@ Cube.prototype.play = function(opts) {
     }
 
 
-    var animateInterval;
+    this.animateInterval = null;
 
     /**
      * @amirmikhak
@@ -563,12 +563,12 @@ Cube.prototype.play = function(opts) {
      */
     function loopOverCubeSize(func) {
         var numOps = 0;
-        clearInterval(animateInterval);
-        animateInterval = setInterval(function() {
+        clearInterval(this.animateInterval);
+        this.animateInterval = setInterval(function() {
             func.apply(this);
             if (++numOps == cube.size)
             {
-                clearInterval(animateInterval);
+                clearInterval(this.animateInterval);
                 playbackCompleteFn();
             }
         }, cube.playbackOptions.delay);
