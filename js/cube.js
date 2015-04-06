@@ -33,6 +33,17 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     var cellOptions = _.extend({}, defaultCellOptions);
     var keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
+    var xAngle = 0;
+    var yAngle = 0;
+    var transitionTransforms;
+
+    var htmlReadySuccessFn;
+    var htmlReadyFailedFn;
+    this.htmlReady = new Promise(function(resolve, reject) {
+        htmlReadySuccessFn = resolve;
+        htmlReadyFailedFn = reject;
+    });
+
     Object.defineProperty(this, 'playbackOptions', {
         enumerable: true,
         get: function() {
@@ -55,6 +66,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
 
 
     Object.defineProperty(this, 'keyListenerOptions', {
+        enumerable: true,
         get: function() {
             return keyListenerOptions;
         },
@@ -63,11 +75,62 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         }
     });
 
+    Object.defineProperty(this, 'xAngle', {
+        enumerable: true,
+        get: function() {
+            return xAngle;
+        },
+        set: function(newAngle) {
+            xAngle = newAngle;
+            this.htmlReady.then(function() {
+                cube.html.style.transform = [
+                    'rotateX(' + cube.xAngle + 'deg' + ')',
+                    'rotateY(' + cube.yAngle + 'deg' + ')'
+                ].join(' ');
+            });
+        }
+    });
+
+    Object.defineProperty(this, 'yAngle', {
+        enumerable: true,
+        get: function() {
+            return yAngle;
+        },
+        set: function(newAngle) {
+            yAngle = newAngle;
+
+            this.htmlReady.then(function() {
+                cube.html.style.transform = [
+                    'rotateX(' + cube.xAngle + 'deg' + ')',
+                    'rotateY(' + cube.yAngle + 'deg' + ')'
+                ].join(' ');
+            });
+        }
+    });
+
+    Object.defineProperty(this, 'transitionTransforms', {
+        enumerable: false,
+        get: function() {
+            return transitionTransforms;
+        },
+        set: function(shouldTransition) {
+            var TRANSITION_DURATION = '300ms';
+            var TRANSITION_EASING = 'ease-in-out';
+
+            this.htmlReady.then(function() {
+                cube.html.style.transition = shouldTransition ?
+                    ['transform', TRANSITION_DURATION, TRANSITION_EASING].join(' ') :
+                    null;
+            });
+        }
+    });
+
+    this.transitionTransforms = true;
+
     // @amirmikhak
     // Note: there has _got_ to be a "nicer" way to do this. This code feels smelly.
     this.cellOptions = defaultCellOptions;  // copy in the default options
     this.cellOptions = typeof cellOpts !== 'undefined' ? cellOpts : {}; // copy in what the user wanted
-
 
     // CONFIGURE FOR ARGUMENTS
     if (!(parentElement instanceof HTMLElement))
@@ -99,19 +162,22 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
 
     var outerDimensions = this.size * this.cellOptions.size;
 
-    // The HTML display of the cube istelf
-    this.html = document.createElement('div');
-    this.html.id = 'cube';
+    (function buildHTML() {
+        // The HTML display of the cube istelf
+        cube.html = document.createElement('div');
+        cube.html.id = 'cube';
 
-    this.html.style.height = outerDimensions + 'px';
-    this.html.style.width = outerDimensions + 'px';
-    this.html.style.transformStyle = 'preserve-3d';
-    this.html.style.transformOrigin = [
-        'calc(' + outerDimensions + 'px/2)',
-        'calc(' + outerDimensions + 'px/2)',
-        'calc(-1 * ' + outerDimensions + 'px/2)'
-    ].join(' ');
+        cube.html.style.height = outerDimensions + 'px';
+        cube.html.style.width = outerDimensions + 'px';
+        cube.html.style.transformStyle = 'preserve-3d';
+        cube.html.style.transformOrigin = [
+            'calc(' + outerDimensions + 'px/2)',
+            'calc(' + outerDimensions + 'px/2)',
+            'calc(-1 * ' + outerDimensions + 'px/2)'
+        ].join(' ');
 
+        htmlReadySuccessFn();
+    }());
 
     this.cells = [];
     for (var depth = 0; depth < this.size; depth++) {
@@ -270,9 +336,6 @@ Cube.prototype.applyCell = function(newCell) {
 Cube.prototype.nudge = function(direction, amount) {
     amount = !isNaN(parseFloat(amount, 10)) ? amount : 1;
 
-    this.yAngle = this.yAngle ? this.yAngle : 0;
-    this.xAngle = this.xAngle ? this.xAngle : 0;
-
     switch (direction) {
         case 'left':
             this.yAngle -= amount;
@@ -287,11 +350,6 @@ Cube.prototype.nudge = function(direction, amount) {
             this.xAngle -= amount;
             break;
     };
-
-    this.html.style.transform = [
-        'rotateX(' + this.xAngle + 'deg' + ')',
-        'rotateY(' + this.yAngle + 'deg' + ')'
-    ].join(' ');
 };
 
 Cube.prototype.play = function(opts) {

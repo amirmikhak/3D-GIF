@@ -201,6 +201,8 @@ window.addEventListener('load', function() {
     }
 
     setTimeout(function() {
+        cube.xAngle = -30;
+        cube.yAngle = 30;
         playChars(0);
     }, 4000)
 });
