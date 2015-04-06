@@ -13,21 +13,45 @@ window.addEventListener('load', function() { // When everything is loaded
 
     cube.listenForKeystrokes();
 
+    var prevTransitionDuration;
+
     var KEY_LISTEN_RATE = 10;   // in milliseconds
-    document.body.addEventListener("keydown", _.throttle(function(event) {
+    document.body.addEventListener('keydown', _.throttle(function(event) {
+        var keyDirectionMap = {
+            37: 'left',
+            38: 'up',
+            39: 'right',
+            40: 'down',
+        };
+
+        var direction = keyDirectionMap[event.keyCode];
+        if (direction)
+        {
+            if (parseInt(cube.html.style.transitionDuration, 10) > 0)
+            {
+                prevTransitionDuration = cube.html.style.transitionDuration;
+                cube.html.style.transitionDuration = 0;
+            }
+            cube.nudge(direction);
+        }
+    }, KEY_LISTEN_RATE), false);
+
+    document.body.addEventListener('keyup', function(event) {
         switch (event.keyCode) {
             case 37: // left
-                cube.nudge('left');
-                break;
             case 38: // up
-                cube.nudge('up');
-                break;
             case 39: // right
-                cube.nudge('right');
-                break;
             case 40: // down
-                cube.nudge('down');
+                console.log('restoring duration', prevTransitionDuration);
+                cube.html.style.transitionDuration = prevTransitionDuration;
                 break;
         };
-    }, KEY_LISTEN_RATE), false);
+    }, false);
+
+    var prevTransitionDuration = cube.html.style.transitionDuration;
+
+    cube.html.style.transitionDuration = 0;
+
+    cube.html.style.transitionDuration = prevTransitionDuration;
+
 });

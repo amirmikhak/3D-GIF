@@ -76,6 +76,17 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         }
     });
 
+    function applyCameraAngle() {
+        /**
+         * @amirmikhak
+         * Helper function for xAngle and yAngle properties
+         */
+        cube.html.style.transform = [
+            'rotateX(' + cube.xAngle + 'deg' + ')',
+            'rotateY(' + cube.yAngle + 'deg' + ')'
+        ].join(' ');
+    }
+
     Object.defineProperty(this, 'xAngle', {
         enumerable: true,
         get: function() {
@@ -83,12 +94,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         },
         set: function(newAngle) {
             xAngle = newAngle;
-            this.htmlReady.then(function() {
-                cube.html.style.transform = [
-                    'rotateX(' + cube.xAngle + 'deg' + ')',
-                    'rotateY(' + cube.yAngle + 'deg' + ')'
-                ].join(' ');
-            });
+            this.htmlReady.then(applyCameraAngle);
         }
     });
 
@@ -100,12 +106,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         set: function(newAngle) {
             yAngle = newAngle;
 
-            this.htmlReady.then(function() {
-                cube.html.style.transform = [
-                    'rotateX(' + cube.xAngle + 'deg' + ')',
-                    'rotateY(' + cube.yAngle + 'deg' + ')'
-                ].join(' ');
-            });
+            this.htmlReady.then(applyCameraAngle);
         }
     });
 
@@ -119,9 +120,17 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
             var TRANSITION_EASING = 'ease-in-out';
 
             this.htmlReady.then(function() {
-                cube.html.style.transition = shouldTransition ?
-                    ['transform', TRANSITION_DURATION, TRANSITION_EASING].join(' ') :
-                    null;
+                if (shouldTransition)
+                {
+                    cube.html.style.transitionProperty = 'transform';
+                    cube.html.style.transitionDuration = TRANSITION_DURATION;
+                    cube.html.style.transitionTimingFunction = TRANSITION_EASING;
+                } else
+                {
+                    cube.html.style.transitionProperty = null;
+                    cube.html.style.transitionDuration = null;
+                    cube.html.style.transitionTimingFunction = null;
+                }
             });
         }
     });
