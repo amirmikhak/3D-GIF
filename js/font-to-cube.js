@@ -47,7 +47,7 @@ function grabPixels() {
         for (var row = 0; row < CUBE_SIZE; row++)
         {
             var cell = new Cell(50);
-            cell.on = pixelStates.shift();
+            cell.on = pixelStates[(row * CUBE_SIZE) + column];
             cell.color = [0, 0, 255];
             cell.depth = 0;
             cells.push(cell);
