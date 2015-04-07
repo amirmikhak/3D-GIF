@@ -39,10 +39,10 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     var transitionTransforms;
 
     var htmlReadySuccessFn;
-    var htmlReadyFailedFn;
+    var htmlReadyFailureFn;
     this.htmlReady = new Promise(function(resolve, reject) {
         htmlReadySuccessFn = resolve;
-        htmlReadyFailedFn = reject;
+        htmlReadyFailureFn = reject;
     });
 
     Object.defineProperty(this, 'playbackOptions', {
@@ -295,20 +295,20 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
 
     (function buildHTML() {
         // The HTML display of the cube istelf
-        cube.html = document.createElement('div');
-        cube.html.id = 'cube';
+        this.html = document.createElement('div');
+        this.html.id = 'cube';
 
-        cube.html.style.height = outerDimensions + 'px';
-        cube.html.style.width = outerDimensions + 'px';
-        cube.html.style.transformStyle = 'preserve-3d';
-        cube.html.style.transformOrigin = [
+        this.html.style.height = outerDimensions + 'px';
+        this.html.style.width = outerDimensions + 'px';
+        this.html.style.transformStyle = 'preserve-3d';
+        this.html.style.transformOrigin = [
             'calc(' + outerDimensions + 'px/2)',
             'calc(' + outerDimensions + 'px/2)',
             'calc(-1 * ' + outerDimensions + 'px/2)'
         ].join(' ');
 
         htmlReadySuccessFn();
-    }());
+    }.bind(this)());
 
     this.cells = [];
     for (var depth = 0; depth < this.size; depth++) {
@@ -319,29 +319,21 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
                 // Iterate over each column
 
                 // Create a cell
-                var cell = new Cell(this.cellOptions.size);
-                cell.depth = depth;
-                cell.column = column;
-                cell.row = row;
-
-                // Store the cell's coordinates in data attributes
-                ['depth', 'column', 'row'].forEach(function(dimension) {
-                    var attribute = 'data' + '-' + dimension;
-                    cell.html.setAttribute(attribute, cell[dimension]);
+                var cell = new Cell({
+                    size: this.cellOptions.size,
+                    depth: depth,
+                    column: column,
+                    row: row,
+                    clickable: depth === 0,
                 });
 
-                // Manually position the cell in the right location via CSS
-                cell.html.style.transform = ['X', 'Y', 'Z'].map(function(direction) {
-                    var translation = {
-                        'X': cube.cellOptions.size * cell.column,
-                        'Y': cube.cellOptions.size * cell.row,
-                        'Z': -1 * cube.cellOptions.size * cell.depth
-                    };
-                    return 'translate' + direction + '(' + translation[direction] + 'px' + ')';
-                }).join(' ');
+                this.cells.push(cell);
 
-                cube.cells.push(cell);
-                cube.html.appendChild(cell.html); // Actually render the cell
+                this.htmlReady.then(function() {
+                    this.cells.forEach(function(cell) {
+                        this.html.appendChild(cell.html); // Actually render the cell
+                    }.bind(this));
+                }.bind(this));
             }
         }
     }
