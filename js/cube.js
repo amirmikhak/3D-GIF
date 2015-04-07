@@ -37,6 +37,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     var _xAngle = 0;
     var _yAngle = 0;
     var _transitionTransforms = false;
+    var _rotateCells = false;
 
     var htmlReadySuccessFn;
     var htmlReadyFailureFn;
@@ -87,11 +88,20 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
                 'rotateY(' + cube.yAngle + 'deg' + ')'
             ].join(' ');
 
-            cube.cells.forEach(function(cell) {
-                cell.applyOptions({
-                    // rotation: [-1 * cube.xAngle, -1 * cube.yAngle, 0],
+            if (cube.rotateCells)
+            {
+                /**
+                 * @amirmikhak
+                 * Only apply rotations if we need to because iterating over the cells
+                 * is very expensive and reduces performance significantly. See the
+                 * rotateCells property on "this" for more information.
+                 */
+                cube.cells.forEach(function(cell) {
+                    cell.applyOptions({
+                        rotation: [-1 * cube.xAngle, -1 * cube.yAngle, 0],
+                    });
                 });
-            });
+            }
         });
     }
 
@@ -153,6 +163,33 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     });
 
     this.transitionTransforms = true;
+
+    Object.defineProperty(this, 'rotateCells', {
+        enumerable: true,
+        get: function() {
+            return _rotateCells;
+        },
+        set: function(shouldRotate) {
+            _rotateCells = shouldRotate;
+            if (!_rotateCells)
+            {
+                /**
+                 * @amirmikhak
+                 * To improve performance of applyCameraAngle(), we only iterate over
+                 * the cells if we need to rotate them. Thus, if we are not rotating
+                 * the cells but were previously, we need to "clear" their rotation
+                 * manually because applyCameraAngle() won't if the property is false.
+                 */
+                cube.cells.forEach(function(cell) {
+                    cell.applyOptions({
+                        rotation: [0, 0, 0],
+                    });
+                });
+            }
+
+            applyCameraAngle();
+        }
+    });
 
     Object.defineProperty(this, 'charVoxelMap', {
         /**
