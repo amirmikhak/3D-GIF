@@ -13,6 +13,8 @@ var Cell = function(opts) {
         on: false,
         size: 50,
         clickable: false,
+        rotation: [0, 0, 0],
+        transitionTransforms: true,
     };
 
     var _row;
@@ -22,6 +24,11 @@ var Cell = function(opts) {
     var _on;
     var _size;
     var _clickable;
+    var _rotation;
+    var _transitionTransforms;
+
+    var TRANSITION_DURATION = '300ms';
+    var TRANSITION_EASING = 'ease-in-out';
 
     var _options = _.extend({}, defaultOptions, opts);
 
@@ -38,6 +45,18 @@ var Cell = function(opts) {
 
     function render() {
         cell.htmlReady.then(function() {
+            if (_transitionTransforms)
+            {
+                this.html.style.transitionProperty = 'transform';
+                this.html.style.transitionDuration = TRANSITION_DURATION;
+                this.html.style.transitionTimingFunction = TRANSITION_EASING;
+            } else
+            {
+                this.html.style.transitionProperty = null;
+                this.html.style.transitionDuration = null;
+                this.html.style.transitionTimingFunction = null;
+            }
+
             // render the LED's on-ness
             this.led.classList.toggle('on', _on);
             this.html.style.opacity = _on ? 1 : null;
@@ -62,9 +81,24 @@ var Cell = function(opts) {
                 var translation = {
                     'X': this.size * this.column,
                     'Y': this.size * this.row,
-                    'Z': -1 * this.size * this.depth
+                    'Z': -1 * this.size * this.depth,
                 };
-                return 'translate' + direction + '(' + translation[direction] + 'px' + ')';
+
+                var rotation = {
+                    'X': this.rotation[0],
+                    'Y': this.rotation[1],
+                    'Z': this.rotation[2],
+                };
+
+                var translate = [
+                    'translate', direction, '(', translation[direction], 'px', ')',
+                ].join('');
+
+                var rotate = [
+                    'rotate', direction, '(', rotation[direction], 'deg', ')',
+                ].join('');
+
+                return [translate, rotate].join(' ');
             }.bind(this)).join(' ');
         }.bind(cell));
     }
@@ -169,6 +203,38 @@ var Cell = function(opts) {
                     cell.html.removeEventListener('click', clickHandler);
                 }
             }.bind(this));
+        }
+    });
+
+    Object.defineProperty(this, 'rotation', {
+        enumerable: true,
+        get: function() {
+            return _rotation;
+        },
+        set: function(newRotation) {
+            var invalidValueChecker = function(axisValue) {
+                return isNaN(parseFloat(axisValue));
+            };
+            if (!(newRotation instanceof Array) ||
+                (newRotation.length !== 3) ||
+                newRotation.some(invalidValueChecker))
+            {
+                throw 'Bad value for cell.rotation: ' + newRotation;
+            }
+
+            _rotation = _options.rotation = newRotation;
+            render();
+        }
+    });
+
+    Object.defineProperty(this, 'transitionTransforms', {
+        enumerable: false,
+        get: function() {
+            return _transitionTransforms;
+        },
+        set: function(shouldTransition) {
+            _transitionTransforms = _options.transitionTransforms = shouldTransition;
+            render();
         }
     });
 
