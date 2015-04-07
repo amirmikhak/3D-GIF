@@ -81,10 +81,18 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
          * @amirmikhak
          * Helper function for xAngle and yAngle properties
          */
-        cube.html.style.transform = [
-            'rotateX(' + cube.xAngle + 'deg' + ')',
-            'rotateY(' + cube.yAngle + 'deg' + ')'
-        ].join(' ');
+        cube.htmlReady.then(function() {
+            cube.html.style.transform = [
+                'rotateX(' + cube.xAngle + 'deg' + ')',
+                'rotateY(' + cube.yAngle + 'deg' + ')'
+            ].join(' ');
+
+            cube.cells.forEach(function(cell) {
+                cell.applyOptions({
+                    // rotation: [-1 * cube.xAngle, -1 * cube.yAngle, 0],
+                });
+            });
+        });
     }
 
     Object.defineProperty(this, 'xAngle', {
@@ -93,8 +101,12 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
             return xAngle;
         },
         set: function(newAngle) {
-            xAngle = newAngle;
-            this.htmlReady.then(applyCameraAngle);
+            var parsedAngle = parseFloat(newAngle);
+            if (!isNaN(parsedAngle))
+            {
+                xAngle = parsedAngle;
+                applyCameraAngle();
+            }
         }
     });
 
@@ -104,9 +116,12 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
             return yAngle;
         },
         set: function(newAngle) {
-            yAngle = newAngle;
-
-            this.htmlReady.then(applyCameraAngle);
+            var parsedAngle = parseFloat(newAngle);
+            if (!isNaN(parsedAngle))
+            {
+                yAngle = parsedAngle;
+                applyCameraAngle();
+            }
         }
     });
 
