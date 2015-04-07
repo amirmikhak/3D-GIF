@@ -30,13 +30,13 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         stepSize: 1,                // number of steps for each animation
     };
 
-    var playbackOptions = _.extend({}, defaultPlaybackOptions);
-    var cellOptions = _.extend({}, defaultCellOptions);
-    var keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
+    var _playbackOptions = _.extend({}, defaultPlaybackOptions);
+    var _cellOptions = _.extend({}, defaultCellOptions);
+    var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
-    var xAngle = 0;
-    var yAngle = 0;
-    var transitionTransforms;
+    var _xAngle = 0;
+    var _yAngle = 0;
+    var _transitionTransforms = false;
 
     var htmlReadySuccessFn;
     var htmlReadyFailureFn;
@@ -48,20 +48,20 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     Object.defineProperty(this, 'playbackOptions', {
         enumerable: true,
         get: function() {
-            return playbackOptions;
+            return _playbackOptions;
         },
         set: function(newOptions) {
-            _.extend(playbackOptions, newOptions);
+            _.extend(_playbackOptions, newOptions);
         }
     });
 
     Object.defineProperty(this, 'cellOptions', {
         enumerable: true,
         get: function() {
-            return cellOptions;
+            return _cellOptions;
         },
         set: function(newOptions) {
-            _.extend(cellOptions, newOptions);
+            _.extend(_cellOptions, newOptions);
         }
     });
 
@@ -69,10 +69,10 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     Object.defineProperty(this, 'keyListenerOptions', {
         enumerable: true,
         get: function() {
-            return keyListenerOptions;
+            return _keyListenerOptions;
         },
         set: function(newOptions) {
-            _.extend(keyListenerOptions, newOptions);
+            _.extend(_keyListenerOptions, newOptions);
         }
     });
 
@@ -98,13 +98,13 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     Object.defineProperty(this, 'xAngle', {
         enumerable: true,
         get: function() {
-            return xAngle;
+            return _xAngle;
         },
         set: function(newAngle) {
             var parsedAngle = parseFloat(newAngle);
             if (!isNaN(parsedAngle))
             {
-                xAngle = parsedAngle;
+                _xAngle = parsedAngle;
                 applyCameraAngle();
             }
         }
@@ -113,13 +113,13 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     Object.defineProperty(this, 'yAngle', {
         enumerable: true,
         get: function() {
-            return yAngle;
+            return _yAngle;
         },
         set: function(newAngle) {
             var parsedAngle = parseFloat(newAngle);
             if (!isNaN(parsedAngle))
             {
-                yAngle = parsedAngle;
+                _yAngle = parsedAngle;
                 applyCameraAngle();
             }
         }
@@ -128,9 +128,11 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     Object.defineProperty(this, 'transitionTransforms', {
         enumerable: false,
         get: function() {
-            return transitionTransforms;
+            return _transitionTransforms;
         },
         set: function(shouldTransition) {
+            _transitionTransforms = shouldTransition;
+
             var TRANSITION_DURATION = '300ms';
             var TRANSITION_EASING = 'ease-in-out';
 
