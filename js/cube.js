@@ -51,12 +51,30 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         htmlReadyFailureFn = reject;
     });
 
+    this.hasPlaybackControls = false;
+
     Object.defineProperty(this, 'playbackOptions', {
         enumerable: true,
         get: function() {
             return _playbackOptions;
         },
         set: function(newOptions) {
+            var validDirections = ['forward', 'back', 'up', 'down', 'left', 'right'];
+            if (this.hasPlaybackControls &&
+                newOptions.direction &&
+                validDirections.indexOf(newOptions.direction) !== -1)
+            {
+                var radioSelector = 'input[type="radio"][name="direction"]';
+                var radiosElList = this.playbackControlsContainerEl.querySelectorAll(radioSelector)
+                var radioElArray = Array.prototype.slice.apply(radiosElList);
+                radioElArray.forEach(function(input) {
+                    input.checked = (input.value == newOptions.direction);
+                });
+            } else
+            {
+                delete(newOptions.direction);
+            }
+
             _.extend(_playbackOptions, newOptions);
         }
     });
@@ -687,46 +705,41 @@ Cube.prototype.clear = function() {
 Cube.prototype.buildPlaybackControls = function(parentEl) {
     var cube = this;
 
-    parentEl.innerHTML = (
-        '<div>' +
-            'Direction: ' +
-            '<select>' +
-                '<option value="forward">Forward</option>' +
-                '<option value="back">Back</option>' +
-                '<option value="left">Left</option>' +
-                '<option value="right">Right</option>' +
-                '<option value="up">Up</option>' +
-                '<option value="down">Down</option>' +
-            '</select><br>' +
-            '<label>Wrap?: <input type="checkbox"></label>' +
+    this.hasPlaybackControls = true;
+    this.playbackControlsContainerEl = document.createElement('div');
+    this.playbackControlsContainerEl.classList.add('playback-controls');
+    this.playbackControlsContainerEl.innerHTML = (
+        'Direction<br>' +
+        '<div class="radio-tabs">' +
+            '<input id="direction-radio-up" type="radio" name="direction" value="up" />' +
+            '<label for="direction-radio-up" class="radio-tab">Up</label>' +
+            '<input id="direction-radio-right" type="radio" name="direction" value="right" />' +
+            '<label for="direction-radio-right" class="radio-tab">Right</label>' +
+            '<input id="direction-radio-down" type="radio" name="direction" value="down" />' +
+            '<label for="direction-radio-down" class="radio-tab">Down</label>' +
+            '<input id="direction-radio-left" type="radio" name="direction" value="left" />' +
+            '<label for="direction-radio-left" class="radio-tab">Left</label>' +
+            '<input id="direction-radio-forward" type="radio" name="direction" value="forward" />' +
+            '<label for="direction-radio-forward" class="radio-tab">Forward</label>' +
+            '<input id="direction-radio-back" type="radio" name="direction" value="back" />' +
+            '<label for="direction-radio-back" class="radio-tab">Back</label>' +
         '</div>'
-        );
+    );
 
-    parentEl.addEventListener('change', function(e) {
-        if (e.target.nodeName === 'SELECT')
+    this.playbackControlsContainerEl.addEventListener('change', function(e) {
+        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'direction'))
         {
             cube.playbackOptions = {
                 direction: e.target.value,
             };
-        } else if (e.target.nodeName === 'INPUT')
-        {
-            cube.playbackOptions = {
-                wrap: e.target.checked,
-            };
         }
     });
 
-    function arrize(thing) {
-        return Array.prototype.slice.apply(thing);
+    parentEl.appendChild(this.playbackControlsContainerEl);
+
+    this.playbackOptions = {
+        direction: this.playbackOptions.direction,  // trigger sync of DOM with state
     }
-
-    arrize(parentEl.querySelectorAll('select option')).forEach(function(el) {
-        el.selected = (el.value == cube.playbackOptions.direction);
-    });
-
-    arrize(parentEl.querySelectorAll('input')).forEach(function(el) {
-        el.checked = cube.playbackOptions.wrap;
-    });
 }
 
 Cube.prototype.listenForKeystrokes = function(opts) {
