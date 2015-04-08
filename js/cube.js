@@ -751,18 +751,18 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
     this.playbackControlsContainerEl.innerHTML = (
         'Direction<br>' +
         '<div class="radio-tabs">' +
-            '<input id="direction-radio-up" type="radio" name="direction" value="up" />' +
-            '<label for="direction-radio-up" class="radio-tab">Up</label>' +
-            '<input id="direction-radio-right" type="radio" name="direction" value="right" />' +
-            '<label for="direction-radio-right" class="radio-tab">Right</label>' +
-            '<input id="direction-radio-down" type="radio" name="direction" value="down" />' +
-            '<label for="direction-radio-down" class="radio-tab">Down</label>' +
-            '<input id="direction-radio-left" type="radio" name="direction" value="left" />' +
-            '<label for="direction-radio-left" class="radio-tab">Left</label>' +
-            '<input id="direction-radio-forward" type="radio" name="direction" value="forward" />' +
-            '<label for="direction-radio-forward" class="radio-tab">Forward</label>' +
             '<input id="direction-radio-back" type="radio" name="direction" value="back" />' +
             '<label for="direction-radio-back" class="radio-tab">Back</label>' +
+            '<input id="direction-radio-left" type="radio" name="direction" value="left" />' +
+            '<label for="direction-radio-left" class="radio-tab">Left</label>' +
+            '<input id="direction-radio-up" type="radio" name="direction" value="up" />' +
+            '<label for="direction-radio-up" class="radio-tab">Up</label>' +
+            '<input id="direction-radio-down" type="radio" name="direction" value="down" />' +
+            '<label for="direction-radio-down" class="radio-tab">Down</label>' +
+            '<input id="direction-radio-right" type="radio" name="direction" value="right" />' +
+            '<label for="direction-radio-right" class="radio-tab">Right</label>' +
+            '<input id="direction-radio-forward" type="radio" name="direction" value="forward" />' +
+            '<label for="direction-radio-forward" class="radio-tab">Forward</label>' +
         '</div>'
     );
 
