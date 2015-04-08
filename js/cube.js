@@ -783,56 +783,16 @@ Cube.prototype.nudge = function(direction, amount) {
 };
 
 Cube.prototype.play = function(opts) {
-    var cube = this;
-
     opts = typeof opts !== 'undefined' ? opts : {};
 
     this.playbackOptions = opts;
 
-    this.playbackCompleteFn = undefined;
-    this.playbackFailedFn = undefined;
+    this.isPlaying = true;
 
-    this.playbackPromise = new Promise(function(resolve, reject) {
-        var that = this;
-        cube.isPlaying = true;
-        cube.playbackCompleteFn = function() {
-            cube.isPlaying = false;
-            resolve.apply(that, arguments);
-        };
-        cube.playbackFailedFn = function() {
-            cube.isPlaying = false;
-            reject.apply(that, arguments);
-        };
-    });
-
-    clearInterval(cube.animateInterval);
-    cube.animateInterval = null;
-
-    if (!this.animationCb)
-    {
-        throw 'Invalid animation requested: not many are supported.';
-    }
-
-    loopOverCubeSize(this.animationCb);
-
-    /**
-     * @amirmikhak
-     * These functions can be "defined" after they are "called" above because of javascript's "hoisting".
-     * Learn more: http://code.tutsplus.com/tutorials/javascript-hoisting-explained--net-15092
-     */
-    function loopOverCubeSize(func) {
-        var numOps = 0;
-        cube.animateInterval = setInterval(function() {
-            func.apply(cube);
-            if (++numOps == cube.size)
-            {
-                clearInterval(cube.animateInterval);
-                cube.playbackCompleteFn({reason: 'done'});
-            }
-        }, cube.playbackOptions.delay);
-    }
-
-    return this.playbackPromise;
+    clearInterval(this.animateInterval);
+    this.animateInterval = setInterval(function() {
+        this.animationCb.apply(this);
+    }.bind(this), this.playbackOptions.delay);
 };
 
 Cube.prototype.step = function(numSteps) {
@@ -865,11 +825,8 @@ Cube.prototype.step = function(numSteps) {
 }
 
 Cube.prototype.pause = function() {
+    this.isPlaying = false;
     clearInterval(cube.animateInterval);
-    if (this.playbackCompleteFn)
-    {
-        this.playbackCompleteFn({reason: 'paused'});
-    }
     return this;
 };
 
@@ -1212,7 +1169,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 stepSize: cube.keyListenerOptions.stepSize,
                 delay: cube.keyListenerOptions.animateRate,
             });
-        } else if (!cube.isPlaying)
+        } else
         {
             cube.writeSlice(cube.getCharacterRender(char), 'front');
         }

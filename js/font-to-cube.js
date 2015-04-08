@@ -188,12 +188,16 @@ function playChars(i) {
     var randAnim = getRandomAnimationConfig();
 
     cube.writeSlice(charVoxelMap[chars[i]], randAnim.face);
-    cube.play({
-        direction: randAnim.direction,
-        delay: 50,
-    }).then(function() {
-        playChars(i + 1);
-    });
+    /**
+     * @amirmikhak
+     * This code breaks with changes to cube.play(): removing the returned promise value
+     */
+    // cube.play({
+    //     direction: randAnim.direction,
+    //     delay: 50,
+    // }).then(function() {
+    //     playChars(i + 1);
+    // });
 }
 
 window.addEventListener('load', function() {
