@@ -670,7 +670,10 @@ Cube.prototype.play = function(opts) {
 
 Cube.prototype.pause = function() {
     clearInterval(cube.animateInterval);
-    this.playbackCompleteFn({reason: 'paused'});
+    if (this.playbackCompleteFn)
+    {
+        this.playbackCompleteFn({reason: 'paused'});
+    }
     return this;
 };
 
