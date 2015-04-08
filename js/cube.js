@@ -67,6 +67,11 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
         },
         set: function(newOptions) {
             var validDirections = ['forward', 'back', 'up', 'down', 'left', 'right'];
+
+            var resumePlayingAfterChange = cube.isPlaying;
+
+            cube.pause();
+
             if (this.hasPlaybackControls &&
                 newOptions.direction &&
                 validDirections.indexOf(newOptions.direction) !== -1)
@@ -83,6 +88,11 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
             }
 
             _.extend(_playbackOptions, newOptions);
+
+            if (resumePlayingAfterChange)
+            {
+                cube.play();
+            }
         }
     });
 
