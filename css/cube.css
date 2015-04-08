@@ -1,3 +1,14 @@
+@-webkit-keyframes breathingBackground {
+    0% { background-size: 200%; }
+    50% { background-size: 100%; }
+    100% { background-size: 200%; }
+}
+
+@-webkit-keyframes rightSlidingBackground {
+    from { background-position-x: 0; }
+    to { background-position-x: 100%; }
+}
+
 #container {
     perspective: 3000px;
     /* This places the z=0 plane away from us, so the entire cube is in front of us; you can read more at https://developer.mozilla.org/en-US/docs/Web/CSS/perspective */
@@ -17,24 +28,70 @@
 }
 
 #play, #clear {
+    position: relative;
     padding: 0.5em 1em;
     border: 1px solid #ccc;
     cursor: pointer;
     display: inline-block;
     width: auto;
+    color: #fff;
+    font-weight: 600;
     -webkit-user-select: none;
 }
 
-#clear:hover {
+#play:after, #clear:after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding-top: 20px;
+    background-color: rgba(20, 20, 20, 0.5);
+    opacity: 1;
+    transition: opacity 100ms ease-in-out;
+}
+
+#clear {
     background-color: rgba(255, 200, 200, 1);
+    background-image: url('../imgs/bg-clear.jpg');
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+}
+
+#clear:hover {
+    -webkit-animation: breathingBackground 3s ease-in-out infinite;
 }
 
 #clear:active {
     background-color: rgba(255, 150, 150, 1);
 }
 
-#play:hover {
+#clear:after {
+    content: 'Clear';
+}
+
+#play {
     background-color: rgba(200, 255, 200, 1);
+    background-image: url('../imgs/bg-playing.jpg');
+    background-position-y: 55%;
+    background-repeat: repeat-x;
+}
+
+#play.playing,
+#play.playing:hover {
+    -webkit-animation: rightSlidingBackground 1s linear infinite;
+}
+
+#play.playing:after {
+    opacity: 0;
+}
+
+#play:after {
+    content: 'Play';
+}
+
+#play:hover {
+    -webkit-animation: rightSlidingBackground 5s linear infinite;
 }
 
 #play:active {
