@@ -1,10 +1,12 @@
-var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
+var Cube = function(size, parentElement, stepButton, playButton, clearButton, cellOpts) {
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
     // at http://www.quirksmode.org/js/this.html
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
     var cube = this;
+
+    var NOOP = function() {};   // does nothing, but useful to pass as argument to things expecting functions
 
     // DEFINE SOME PROPERTIES
     var defaultPlaybackOptions = {
@@ -35,6 +37,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     var _cellOptions = _.extend({}, defaultCellOptions);
     var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
+    var _stepButton;
     var _playButton;
     var _clearButton;
     var _isPlaying;
@@ -214,6 +217,77 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         }
     });
 
+    Object.defineProperty(this, 'animationSteps', {
+        writable: false,
+        enumerable: false,
+        value: {
+            shiftX: function() {
+                cube.shiftPlane(
+                    'X',
+                    cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            unshiftX: function() {
+                cube.shiftPlane(
+                    'X',
+                    -1 * cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            shiftY: function() {
+                cube.shiftPlane(
+                    'Y',
+                    cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            unshiftY: function() {
+                cube.shiftPlane(
+                    'Y',
+                    -1 * cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            shiftZ: function() {
+                cube.shiftPlane(
+                    'Z',
+                    cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            unshiftZ: function() {
+                cube.shiftPlane(
+                    'Z',
+                    -1 * cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+        }
+    });
+
+    Object.defineProperty(this, 'animationCb', {
+        enumerable: false,
+        set: NOOP,
+        get: function() {
+            if (this.playbackOptions.action === 'slide')
+            {
+                var slideDirectionAnimationMap = {
+                    'up': this.animationSteps.shiftX,
+                    'down': this.animationSteps.unshiftX,
+                    'left': this.animationSteps.shiftY,
+                    'right': this.animationSteps.unshiftY,
+                    'forward': this.animationSteps.shiftZ,
+                    'back': this.animationSteps.unshiftZ,
+                };
+
+                return slideDirectionAnimationMap[this.playbackOptions.direction];
+            }
+
+            return undefined;   // just being explicit about this
+        }
+    })
+
     Object.defineProperty(this, 'charVoxelMap', {
         /**
          * @amirmikhak
@@ -367,10 +441,23 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         }
     }
 
+    if (stepButton instanceof HTMLElement)
+    {
+        _stepButton = stepButton;
+        _stepButton.addEventListener('click', function(event) {
+            if (cube.isPlaying)
+            {
+                cube.pause();
+            }
+
+            cube.step();
+        });
+    }
+
     if (playButton instanceof HTMLElement)
     {
         _playButton = playButton;
-        playButton.addEventListener('click', function(event) {
+        _playButton.addEventListener('click', function(event) {
             if (cube.isPlaying)
             {
                 cube.pause();
@@ -384,7 +471,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     if (clearButton instanceof HTMLElement)
     {
         _clearButton = clearButton;
-        clearButton.addEventListener('click', function(event) {
+        _clearButton.addEventListener('click', function(event) {
             cube.clear();
         });
     }
@@ -602,69 +689,12 @@ Cube.prototype.play = function(opts) {
     clearInterval(cube.animateInterval);
     cube.animateInterval = null;
 
-    if (this.playbackOptions.action === 'slide')
+    if (!this.animationCb)
     {
-        switch(this.playbackOptions.direction)
-        {
-            case 'up':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'X',
-                        cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'down':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'X',
-                        -1 * cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'left':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'Y',
-                        cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'right':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'Y',
-                        -1 * cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'forward':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'Z',
-                        cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'back':
-            default:
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'Z',
-                        -1 * cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-        }
-    } else
-    {
-        console.error('animation action not supported');
+        throw 'Invalid animation requested: not many are supported.';
     }
+
+    loopOverCubeSize(this.animationCb);
 
     /**
      * @amirmikhak
@@ -686,6 +716,16 @@ Cube.prototype.play = function(opts) {
     return this.playbackPromise;
 };
 
+Cube.prototype.step = function(numSteps) {
+    var DEFAULT_NUM_STEPS = 1;
+    numSteps = typeof numSteps !== 'undefined' ? parseInt(numSteps, 10) || DEFAULT_NUM_STEPS : DEFAULT_NUM_STEPS;
+
+    for (var i = 0; i < numSteps; i++)
+    {
+        this.animationCb();
+    }
+}
+
 Cube.prototype.pause = function() {
     clearInterval(cube.animateInterval);
     if (this.playbackCompleteFn)
@@ -706,7 +746,7 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
     var cube = this;
 
     this.hasPlaybackControls = true;
-    this.playbackControlsContainerEl = document.createElement('div');
+    this.playbackControlsContainerEl = parentEl;
     this.playbackControlsContainerEl.classList.add('playback-controls');
     this.playbackControlsContainerEl.innerHTML = (
         'Direction<br>' +
@@ -734,8 +774,6 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
             };
         }
     });
-
-    parentEl.appendChild(this.playbackControlsContainerEl);
 
     this.playbackOptions = {
         direction: this.playbackOptions.direction,  // trigger sync of DOM with state

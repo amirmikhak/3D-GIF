@@ -2,10 +2,12 @@ var cube;
 window.addEventListener('load', function() { // When everything is loaded
 
     var cubeWrapper = document.getElementById('cube-wrapper');
+
+    var stepButton = document.getElementById('step');
     var playButton = document.getElementById('play');
     var clearButton = document.getElementById('clear');
 
-    cube = new Cube(8, cubeWrapper, playButton, clearButton, {
+    cube = new Cube(8, cubeWrapper, stepButton, playButton, clearButton, {
         size: 50,
     });
 
