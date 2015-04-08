@@ -436,22 +436,37 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
         }
     });
 
+    Object.defineProperty(this, 'colors', {
+        enumerable: true,
+        writable: false,
+        value: {
+            indigo: [75, 0, 130],
+            blue: [0, 0, 255],
+            cyan: [0, 255, 255],
+            yellow: [255, 255, 0],
+            green: [0, 255, 0],
+            magenta: [255, 0, 255],
+            orange: [255, 127, 0],
+            red: [255, 0, 0],
+            white: [255, 255, 255],
+            gray: [125, 125, 125],
+            black: [0, 0, 0],
+        }
+    });
+
+    Object.defineProperty(this, 'colorNames', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            return Object.keys(this.colors);
+        },
+    });
+
     Object.defineProperty(this, 'penColorRgb', {
         enumerable: true,
         set: NOOP,
         get: function() {
-            var colorNameRgbMap = {
-                indigo: [75, 0, 130],
-                blue: [0, 0, 255],
-                cyan: [0, 255, 255],
-                yellow: [255, 255, 0],
-                green: [0, 255, 0],
-                majenta: [255, 0, 255],
-                orange: [255, 127, 0],
-                red: [255, 0, 0],
-            };
-
-            return colorNameRgbMap[this.penColor] || [255, 255, 255];
+            return this.colors[this.penColor];
         },
     });
 
@@ -461,7 +476,14 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
             return _penColor;
         },
         set: function(newColor) {
+            if (this.colorNames.indexOf(newColor) === -1)
+            {
+                console.error('Invalid color. Known colors: ' + this.colorNames.join(', '));
+                return;
+            }
+
             _penColor = newColor;
+
             if (this.hasColorPicker)
             {
                 var radioSelector = 'input[type="radio"][name="color"]';
@@ -995,7 +1017,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 cube.clear();   // clear whole cube
             } else
             {
-                cube.writeSlice(cube.charVoxelMap[' '], 'front');   // "space" character
+                cube.writeSlice(cube.getCharacterRender(' '), 'front');   // "space" character
             }
         } else if (!e.shiftKey && keyIsArrow(e))
         {
@@ -1027,7 +1049,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
         if (cube.keyListenerOptions.animate)
         {
-            cube.writeSlice(cube.charVoxelMap[char], 'front');
+            cube.writeSlice(cube.getCharacterRender(char), 'front');
 
             cube.play({
                 direction: 'back',
@@ -1036,7 +1058,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             });
         } else if (!cube.isPlaying)
         {
-            cube.writeSlice(cube.charVoxelMap[char], 'front');
+            cube.writeSlice(cube.getCharacterRender(char), 'front');
         }
     };
 
@@ -1056,6 +1078,34 @@ Cube.prototype.stopListeningForKeystrokes = function() {
         document.removeEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = false;
     }
+};
+
+Cube.prototype.getCharacterRender = function(char, desiredColor) {
+    desiredColor = typeof desiredColor !== 'undefined' ? desiredColor : this.penColorRgb;
+    var invalidRgbValueFn = function(val) {
+        return val < 0 || val > 255;
+    }
+
+    if (!(desiredColor instanceof Array) ||
+        desiredColor.length !== 3 ||
+        desiredColor.some(invalidRgbValueFn))
+    {
+        console.log(
+            'Invalid desired color: ', desiredColor,
+            'Defaulted to this.penColor: ', this.penColorRgb
+        );
+        desiredColor = this.penColorRgb;
+    }
+
+    var charData = JSON.parse(cube.charVoxelMap[char]);
+    charData.forEach(function(cell) {
+        if (cell.on)
+        {
+            cell.color = desiredColor;
+        }
+    });
+
+    return charData;
 };
 
 Cube.prototype.affectXSlice = function(column, fn) {
