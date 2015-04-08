@@ -36,7 +36,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
 
     var _xAngle = 0;
     var _yAngle = 0;
-    var _transitionTransforms = false;
+    var _transitionTransforms;
     var _rotateCells = false;
 
     var htmlReadySuccessFn;

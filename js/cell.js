@@ -14,7 +14,7 @@ var Cell = function(opts) {
         size: 50,
         clickable: false,
         rotation: [0, 0, 0],
-        transitionTransforms: true,
+        transitionTransforms: false,
     };
 
     var _row;
@@ -77,29 +77,16 @@ var Cell = function(opts) {
             this.html.style.height = _size + 'px';
 
             // position the cell
-            this.html.style.transform = ['X', 'Y', 'Z'].map(function(direction) {
-                var translation = {
-                    'X': this.size * this.column,
-                    'Y': this.size * this.row,
-                    'Z': -1 * this.size * this.depth,
-                };
+            var xform = [
+                ['translateX(', (this.size * this.column), 'px)'].join(''),
+                ['translateY(', (this.size * this.row), 'px)'].join(''),
+                ['translateZ(', (-1 * this.size * this.depth), 'px)'].join(''),
+                ['rotateX(', this.rotation[0], 'deg)'].join(''),
+                ['rotateY(', this.rotation[1], 'deg)'].join(''),
+                ['rotateZ(', this.rotation[2], 'deg)'].join(''),
+            ];
 
-                var rotation = {
-                    'X': this.rotation[0],
-                    'Y': this.rotation[1],
-                    'Z': this.rotation[2],
-                };
-
-                var translate = [
-                    'translate', direction, '(', translation[direction], 'px', ')',
-                ].join('');
-
-                var rotate = [
-                    'rotate', direction, '(', rotation[direction], 'deg', ')',
-                ].join('');
-
-                return [translate, rotate].join(' ');
-            }.bind(this)).join(' ');
+            this.html.style.transform = xform.join(' ');
         }.bind(cell));
     }
 
