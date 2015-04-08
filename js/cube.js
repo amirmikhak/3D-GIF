@@ -1186,6 +1186,17 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 stepSize: cube.keyListenerOptions.stepSize,
                 delay: cube.keyListenerOptions.animateRate,
             });
+        } else if (e.ctrlKey && e.keyCode >= 48 && e.keyCode <= 57) // ctrl + num row
+        {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var shapeIndex = parseInt(String.fromCharCode(e.keyCode), 10) - 1;
+            var numShapes = cube.shapeNames.length;
+            if ((shapeIndex >= 0) && (shapeIndex < numShapes))
+            {
+                cube.renderShape(cube.shapeNames[shapeIndex]);
+            }
         }
     };
 
