@@ -1055,13 +1055,19 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             38: 'up',
             39: 'right',
             40: 'down',
+            70 : 'front',   // "Front:  CTRL+F"
+            66 : 'back',    // "Back:   CTRL+B"
+            85 : 'up',      // "Up:     CTRL+U"
+            68 : 'down',    // "Down:   CTRL+D"
+            82 : 'right',   // "Right:  CTRL+R"
+            76 : 'left',    // "Left:   CTRL+L"
         };
 
-        function keyIsArrow() {
+        function keyIsDirectionalAction() {
             return Object.keys(keyDirectionMap).indexOf(e.keyCode.toString()) !== -1;
         }
 
-        if ((e.shiftKey && (e.keyCode === 32)) || e.keyCode === 13)
+        if ((e.ctrlKey && (e.keyCode === 32)) || e.keyCode === 13)  // ctrl+space, or enter
         {
             e.preventDefault();
             e.stopPropagation();
@@ -1073,12 +1079,12 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             {
                 cube.play();
             }
-        } else if (e.keyCode === 8)
+        } else if (e.keyCode === 8) // delete
         {
             e.preventDefault();
             e.stopPropagation();
 
-            if (e.shiftKey)
+            if (e.ctrlKey)
             {
                 if (cube.isPlaying)
                 {
@@ -1090,7 +1096,30 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             {
                 cube.writeSlice(cube.getCharacterRender(' '), 'front');   // "space" character
             }
-        } else if (!e.shiftKey && keyIsArrow(e))
+        } else if (e.ctrlKey && (e.keyCode === 189))    // ctrl+minus
+        {   // prev step
+            e.preventDefault();
+            e.stopPropagation();
+
+            var currDirection = cube.playbackOptions.direction;
+            var oppositeDirection = {
+                'up': 'down',
+                'down': 'up',
+                'left': 'right',
+                'right': 'left',
+                'forward': 'back',
+                'back': 'forward',
+            }[currDirection];
+            cube.playbackOptions.direction = oppositeDirection;
+            cube.step();
+            cube.playbackOptions.direction = currDirection;
+        } else if (e.ctrlKey && (e.keyCode === 187))    // ctrl+equals
+        {   // next step
+            e.preventDefault();
+            e.stopPropagation();
+
+            cube.step();
+        } else if (e.ctrlKey && keyIsDirectionalAction(e))
         {
             e.preventDefault();
             e.stopPropagation();
@@ -1161,7 +1190,7 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
         desiredColor.length !== 3 ||
         desiredColor.some(invalidRgbValueFn))
     {
-        console.log(
+        console.error(
             'Invalid desired color: ', desiredColor,
             'Defaulted to this.penColor: ', this.penColorRgb
         );
@@ -1365,10 +1394,6 @@ Cube.prototype.renderSliceToPng = function(slice) {
         {
             for (var subpixelRow = 0; subpixelRow < PIXEL_MULTIPLIER_H; subpixelRow++)
             {
-                if (!(cell.color))
-                {
-                    console.log('broken cell', cell);
-                }
                 d[0] = cell.color[0];
                 d[1] = cell.color[1];
                 d[2] = cell.color[2];

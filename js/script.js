@@ -24,7 +24,7 @@ window.addEventListener('load', function() { // When everything is loaded
 
     var KEY_LISTEN_RATE = 10;   // in milliseconds
     document.addEventListener('keydown', _.throttle(function(event) {
-        if (!event.shiftKey)
+        if (event.ctrlKey || event.altKey)
         {
             return;
         }
@@ -59,7 +59,6 @@ window.addEventListener('load', function() { // When everything is loaded
             case 38: // up
             case 39: // right
             case 40: // down
-                console.log('restoring duration', prevTransitionDuration);
                 cube.html.style.transitionDuration = prevTransitionDuration;
                 break;
         };
