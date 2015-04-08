@@ -13,6 +13,9 @@ window.addEventListener('load', function() { // When everything is loaded
 
     cube.listenForKeystrokes();
 
+    cube.xAngle = -30;
+    cube.yAngle = 30;
+
     var prevTransitionDuration;
 
     var KEY_LISTEN_RATE = 10;   // in milliseconds
@@ -47,11 +50,4 @@ window.addEventListener('load', function() { // When everything is loaded
                 break;
         };
     }, false);
-
-    var prevTransitionDuration = cube.html.style.transitionDuration;
-
-    cube.html.style.transitionDuration = 0;
-
-    cube.html.style.transitionDuration = prevTransitionDuration;
-
 });
