@@ -801,6 +801,10 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             40: 'down',
         };
 
+        function keyIsArrow() {
+            return Object.keys(keyDirectionMap).indexOf(e.keyCode.toString()) !== -1;
+        }
+
         if ((e.shiftKey && (e.keyCode === 32)) || e.keyCode === 13)
         {
             e.preventDefault();
@@ -834,13 +838,25 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             {
                 cube.writeSlice(cube.charVoxelMap[' '], 'front');   // "space" character
             }
-        } else if (!e.shiftKey && Object.keys(keyDirectionMap).indexOf(e.keyCode.toString()) !== -1)
+        } else if (!e.shiftKey && keyIsArrow(e))
         {
             e.preventDefault();
             e.stopPropagation();
 
+            var newDirection = keyDirectionMap[e.keyCode];
+            if (e.altKey)
+            {
+                if (newDirection === 'up')
+                {
+                    newDirection = 'back';
+                } else if (newDirection === 'down')
+                {
+                    newDirection = 'forward';
+                }
+            }
+
             cube.pause().play({
-                direction: keyDirectionMap[e.keyCode],
+                direction: newDirection,
                 stepSize: cube.keyListenerOptions.stepSize,
                 delay: cube.keyListenerOptions.animateRate,
             });
