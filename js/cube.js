@@ -89,8 +89,8 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
          */
         cube.htmlReady.then(function() {
             cube.html.style.transform = [
-                'rotateX(' + cube.xAngle + 'deg' + ')',
-                'rotateY(' + cube.yAngle + 'deg' + ')'
+                ['rotateX(', cube.xAngle, 'deg)'].join(''),
+                ['rotateY(', cube.yAngle, 'deg)'].join(''),
             ].join(' ');
 
             if (cube.rotateCells)
@@ -385,9 +385,9 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         this.html.style.width = outerDimensions + 'px';
         this.html.style.transformStyle = 'preserve-3d';
         this.html.style.transformOrigin = [
-            'calc(' + outerDimensions + 'px/2)',
-            'calc(' + outerDimensions + 'px/2)',
-            'calc(-1 * ' + outerDimensions + 'px/2)'
+            ['calc(', outerDimensions, 'px/2)'].join(''),
+            ['calc(', outerDimensions, 'px/2)'].join(''),
+            ['calc(-1 * ', outerDimensions, 'px/2)'].join(''),
         ].join(' ');
 
         htmlReadySuccessFn();
