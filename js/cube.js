@@ -815,6 +815,25 @@ Cube.prototype.step = function(numSteps) {
     var DEFAULT_NUM_STEPS = 1;
     numSteps = typeof numSteps !== 'undefined' ? parseInt(numSteps, 10) || DEFAULT_NUM_STEPS : DEFAULT_NUM_STEPS;
 
+    if (numSteps < 0)
+    {   // step "backward"
+        var startDirection = cube.playbackOptions.direction;
+        var oppositeDirection = {
+            'up': 'down',
+            'down': 'up',
+            'left': 'right',
+            'right': 'left',
+            'forward': 'back',
+            'back': 'forward',
+        }[startDirection];
+
+        cube.playbackOptions.direction = oppositeDirection;
+
+        cube.step(Math.abs(numSteps));
+
+        cube.playbackOptions.direction = startDirection;
+    }
+
     for (var i = 0; i < numSteps; i++)
     {
         this.animationCb();
@@ -1101,18 +1120,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             e.preventDefault();
             e.stopPropagation();
 
-            var currDirection = cube.playbackOptions.direction;
-            var oppositeDirection = {
-                'up': 'down',
-                'down': 'up',
-                'left': 'right',
-                'right': 'left',
-                'forward': 'back',
-                'back': 'forward',
-            }[currDirection];
-            cube.playbackOptions.direction = oppositeDirection;
-            cube.step();
-            cube.playbackOptions.direction = currDirection;
+            cube.step(-1);
         } else if (e.ctrlKey && (e.keyCode === 187))    // ctrl+equals
         {   // next step
             e.preventDefault();
