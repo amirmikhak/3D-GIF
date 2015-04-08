@@ -13,6 +13,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         direction: 'back',
         stepSize: 1,
         wrap: false,
+        // interruptible: false,
     };
 
     var defaultCellOptions = {
@@ -25,7 +26,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         // backgroundColor: [0, 0, 0], // NOT IMPLEMENTED: color of non-leter pixels on generated frame: rgb array
         // startFace: 'front',         // NOT IMPLEMENTED: values: front, back, left, right, bottom, top
         // endFace: 'back',            // NOT IMPLEMENTED: values: front, back, left, right, bottom, top
-        animate: true,              // animate from frontFace to backFace: boolean
+        animate: false,             // animate from frontFace to backFace: boolean
         animateRate: 125,           // delay between each playback frame
         stepSize: 1,                // number of steps for each animation
     };
@@ -33,6 +34,10 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     var _playbackOptions = _.extend({}, defaultPlaybackOptions);
     var _cellOptions = _.extend({}, defaultCellOptions);
     var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
+
+    var _playButton;
+    var _clearButton;
+    var _isPlaying;
 
     var _xAngle = 0;
     var _yAngle = 0;
@@ -313,6 +318,21 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         }
     })
 
+    Object.defineProperty(this, 'isPlaying', {
+        enumerable: false,
+        get: function() {
+            return _isPlaying;
+        },
+        set: function(nowPlaying) {
+            _isPlaying = nowPlaying;
+            if (_playButton instanceof HTMLElement)
+            {
+                _playButton.classList.toggle('playing', nowPlaying);
+                _playButton.classList.toggle('paused', !nowPlaying);
+            }
+        }
+    });
+
     // @amirmikhak
     // Note: there has _got_ to be a "nicer" way to do this. This code feels smelly.
     this.cellOptions = defaultCellOptions;  // copy in the default options
@@ -331,13 +351,21 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
 
     if (playButton instanceof HTMLElement)
     {
+        _playButton = playButton;
         playButton.addEventListener('click', function(event) {
-            cube.play();
+            if (cube.isPlaying)
+            {
+                cube.pause();
+            } else
+            {
+                cube.play();
+            }
         });
     }
 
     if (clearButton instanceof HTMLElement)
     {
+        _clearButton = clearButton;
         clearButton.addEventListener('click', function(event) {
             cube.clear();
         });
@@ -537,13 +565,24 @@ Cube.prototype.play = function(opts) {
 
     this.playbackOptions = opts;
 
-    var playbackCompleteFn;
-    var playbackFailedFn;
+    this.playbackCompleteFn = undefined;
+    this.playbackFailedFn = undefined;
 
-    var promise = new Promise(function(resolve, reject) {
-        playbackCompleteFn = resolve;
-        playbackFailedFn = reject;
+    this.playbackPromise = new Promise(function(resolve, reject) {
+        var that = this;
+        cube.isPlaying = true;
+        cube.playbackCompleteFn = function() {
+            cube.isPlaying = false;
+            resolve.apply(that, arguments);
+        };
+        cube.playbackFailedFn = function() {
+            cube.isPlaying = false;
+            reject.apply(that, arguments);
+        };
     });
+
+    clearInterval(cube.animateInterval);
+    cube.animateInterval = null;
 
     if (this.playbackOptions.action === 'slide')
     {
@@ -609,9 +648,6 @@ Cube.prototype.play = function(opts) {
         console.error('animation action not supported');
     }
 
-
-    this.animateInterval = null;
-
     /**
      * @amirmikhak
      * These functions can be "defined" after they are "called" above because of javascript's "hoisting".
@@ -619,24 +655,30 @@ Cube.prototype.play = function(opts) {
      */
     function loopOverCubeSize(func) {
         var numOps = 0;
-        clearInterval(this.animateInterval);
-        this.animateInterval = setInterval(function() {
-            func.apply(this);
+        cube.animateInterval = setInterval(function() {
+            func.apply(cube);
             if (++numOps == cube.size)
             {
-                clearInterval(this.animateInterval);
-                playbackCompleteFn();
+                clearInterval(cube.animateInterval);
+                cube.playbackCompleteFn({reason: 'done'});
             }
         }, cube.playbackOptions.delay);
     }
 
-    return promise;
+    return this.playbackPromise;
+};
+
+Cube.prototype.pause = function() {
+    clearInterval(cube.animateInterval);
+    this.playbackCompleteFn({reason: 'paused'});
+    return this;
 };
 
 Cube.prototype.clear = function() {
     this.cells.forEach(function(cell) {
         cell.on = false;
     });
+    return this;
 };
 
 Cube.prototype.buildPlaybackControls = function(parentEl) {
@@ -690,17 +732,27 @@ Cube.prototype.listenForKeystrokes = function(opts) {
     this.keyListenerOptions = opts;
 
     var validKeyFns = {
+        specials: function(e) {
+            return (
+                (e.keyCode === 32) ||   // spacebar
+                (e.keyCode === 8) ||    // backspace
+                (e.keyCode === 13) ||   // enter
+                (e.keyCode >= 37 && e.keyCode <= 40)    // arrow keys
+            );
+        },
         alpha: function(e) {
-            return e.keyCode >= 65 && e.keyCode <= 90;
+            return validKeyFns.specials(e) || (e.keyCode >= 65 && e.keyCode <= 90);
         },
         num: function(e) {
             return (
+                validKeyFns.specials(e) ||
                 (e.keyCode >= 48 && e.keyCode <= 57) || // top row
                 (e.keyCode >= 96 && e.keyCode <= 105)   // num pad
             );
         },
         symbols: function(e) {
             return (
+                validKeyFns.specials(e) ||
                 (e.keyCode >= 106 && e.keyCode <= 111) ||  // math operators
                 (e.keyCode >= 186 && e.keyCode <= 222) ||  // punctuation
                 (e.shiftKey && e.keyCode >= 48 && e.keyCode <= 57)    // "uppercase" numbers
@@ -725,24 +777,82 @@ Cube.prototype.listenForKeystrokes = function(opts) {
         return false;
     }
 
-    this.keyListenerFn = function(e) {
-        char = String.fromCharCode(e.which);
+    this.actionKeyListenerFn = function(e) {
+        var keyDirectionMap = {
+            37: 'left',
+            38: 'up',
+            39: 'right',
+            40: 'down',
+        };
 
-        cube.writeSlice(cube.charVoxelMap[char], 'front');
-
-        if (cube.keyListenerOptions.animate)
+        if ((e.shiftKey && (e.keyCode === 32)) || e.keyCode === 13)
         {
-            cube.play({
-                direction: 'back',
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (cube.isPlaying)
+            {
+                cube.pause();
+            } else
+            {
+                cube.play({
+                    direction: 'back',
+                    stepSize: cube.keyListenerOptions.stepSize,
+                    delay: cube.keyListenerOptions.animateRate,
+                });
+            }
+        } else if (e.keyCode === 8)
+        {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (e.shiftKey)
+            {
+                if (cube.isPlaying)
+                {
+                    cube.pause();
+                }
+
+                cube.clear();   // clear whole cube
+            } else
+            {
+                cube.writeSlice(cube.charVoxelMap[' '], 'front');   // "space" character
+            }
+        } else if (!e.shiftKey && Object.keys(keyDirectionMap).indexOf(e.keyCode.toString()) !== -1)
+        {
+            e.preventDefault();
+            e.stopPropagation();
+
+            cube.pause().play({
+                direction: keyDirectionMap[e.keyCode],
                 stepSize: cube.keyListenerOptions.stepSize,
                 delay: cube.keyListenerOptions.animateRate,
             });
         }
     };
 
+    this.keyListenerFn = function(e) {
+        var char = String.fromCharCode(e.which);
+
+        if (cube.keyListenerOptions.animate)
+        {
+            cube.writeSlice(cube.charVoxelMap[char], 'front');
+
+            cube.play({
+                direction: 'back',
+                stepSize: cube.keyListenerOptions.stepSize,
+                delay: cube.keyListenerOptions.animateRate,
+            });
+        } else if (!cube.isPlaying)
+        {
+            cube.writeSlice(cube.charVoxelMap[char], 'front');
+        }
+    };
+
     if (!this.listeningForKeystrokes)
     {
         document.addEventListener('keydown', this.validKeyFilterFn);
+        document.addEventListener('keydown', this.actionKeyListenerFn);
         document.addEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = true;
     }
