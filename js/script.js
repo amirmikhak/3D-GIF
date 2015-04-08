@@ -2,21 +2,32 @@ var cube;
 window.addEventListener('load', function() { // When everything is loaded
 
     var cubeWrapper = document.getElementById('cube-wrapper');
+
+    var stepButton = document.getElementById('step');
     var playButton = document.getElementById('play');
     var clearButton = document.getElementById('clear');
 
-    cube = new Cube(8, cubeWrapper, playButton, clearButton, {
+    cube = new Cube(8, cubeWrapper, stepButton, playButton, clearButton, {
         size: 50,
     });
 
     cube.buildPlaybackControls(document.getElementById('playback-controls'));
+    cube.buildColorPicker(document.getElementById('color-picker'));
 
     cube.listenForKeystrokes();
+
+    cube.xAngle = -30;
+    cube.yAngle = 30;
 
     var prevTransitionDuration;
 
     var KEY_LISTEN_RATE = 10;   // in milliseconds
-    document.body.addEventListener('keydown', _.throttle(function(event) {
+    document.addEventListener('keydown', _.throttle(function(event) {
+        if (!event.shiftKey)
+        {
+            return;
+        }
+
         var keyDirectionMap = {
             37: 'left',
             38: 'up',
@@ -36,7 +47,12 @@ window.addEventListener('load', function() { // When everything is loaded
         }
     }, KEY_LISTEN_RATE), false);
 
-    document.body.addEventListener('keyup', function(event) {
+    document.addEventListener('keyup', function(event) {
+        if (!event.shiftKey)
+        {
+            return;
+        }
+
         switch (event.keyCode) {
             case 37: // left
             case 38: // up
@@ -47,11 +63,4 @@ window.addEventListener('load', function() { // When everything is loaded
                 break;
         };
     }, false);
-
-    var prevTransitionDuration = cube.html.style.transitionDuration;
-
-    cube.html.style.transitionDuration = 0;
-
-    cube.html.style.transitionDuration = prevTransitionDuration;
-
 });

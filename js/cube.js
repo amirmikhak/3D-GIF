@@ -1,10 +1,12 @@
-var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
+var Cube = function(size, parentElement, stepButton, playButton, clearButton, cellOpts) {
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
     // at http://www.quirksmode.org/js/this.html
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
     var cube = this;
+
+    var NOOP = function() {};   // does nothing, but useful to pass as argument to things expecting functions
 
     // DEFINE SOME PROPERTIES
     var defaultPlaybackOptions = {
@@ -13,6 +15,7 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         direction: 'back',
         stepSize: 1,
         wrap: false,
+        // interruptible: false,
     };
 
     var defaultCellOptions = {
@@ -25,43 +28,70 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         // backgroundColor: [0, 0, 0], // NOT IMPLEMENTED: color of non-leter pixels on generated frame: rgb array
         // startFace: 'front',         // NOT IMPLEMENTED: values: front, back, left, right, bottom, top
         // endFace: 'back',            // NOT IMPLEMENTED: values: front, back, left, right, bottom, top
-        animate: true,              // animate from frontFace to backFace: boolean
+        animate: false,             // animate from frontFace to backFace: boolean
         animateRate: 125,           // delay between each playback frame
         stepSize: 1,                // number of steps for each animation
     };
 
-    var playbackOptions = _.extend({}, defaultPlaybackOptions);
-    var cellOptions = _.extend({}, defaultCellOptions);
-    var keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
+    var _playbackOptions = _.extend({}, defaultPlaybackOptions);
+    var _cellOptions = _.extend({}, defaultCellOptions);
+    var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
-    var xAngle = 0;
-    var yAngle = 0;
-    var transitionTransforms;
+    var _stepButton;
+    var _playButton;
+    var _clearButton;
+
+    var _isPlaying = false;
+    var _penColor = 'blue';
+
+    var _xAngle = 0;
+    var _yAngle = 0;
+    var _transitionTransforms;
+    var _rotateCells = false;
 
     var htmlReadySuccessFn;
-    var htmlReadyFailedFn;
+    var htmlReadyFailureFn;
     this.htmlReady = new Promise(function(resolve, reject) {
         htmlReadySuccessFn = resolve;
-        htmlReadyFailedFn = reject;
+        htmlReadyFailureFn = reject;
     });
+
+    this.hasColorPicker = false;
+    this.hasPlaybackControls = false;
 
     Object.defineProperty(this, 'playbackOptions', {
         enumerable: true,
         get: function() {
-            return playbackOptions;
+            return _playbackOptions;
         },
         set: function(newOptions) {
-            _.extend(playbackOptions, newOptions);
+            var validDirections = ['forward', 'back', 'up', 'down', 'left', 'right'];
+            if (this.hasPlaybackControls &&
+                newOptions.direction &&
+                validDirections.indexOf(newOptions.direction) !== -1)
+            {
+                var radioSelector = 'input[type="radio"][name="direction"]';
+                var radiosElList = this.playbackControlsContainerEl.querySelectorAll(radioSelector)
+                var radioElArray = Array.prototype.slice.apply(radiosElList);
+                radioElArray.forEach(function(input) {
+                    input.checked = (input.value == newOptions.direction);
+                });
+            } else
+            {
+                delete(newOptions.direction);
+            }
+
+            _.extend(_playbackOptions, newOptions);
         }
     });
 
     Object.defineProperty(this, 'cellOptions', {
         enumerable: true,
         get: function() {
-            return cellOptions;
+            return _cellOptions;
         },
         set: function(newOptions) {
-            _.extend(cellOptions, newOptions);
+            _.extend(_cellOptions, newOptions);
         }
     });
 
@@ -69,10 +99,10 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     Object.defineProperty(this, 'keyListenerOptions', {
         enumerable: true,
         get: function() {
-            return keyListenerOptions;
+            return _keyListenerOptions;
         },
         set: function(newOptions) {
-            _.extend(keyListenerOptions, newOptions);
+            _.extend(_keyListenerOptions, newOptions);
         }
     });
 
@@ -81,41 +111,67 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
          * @amirmikhak
          * Helper function for xAngle and yAngle properties
          */
-        cube.html.style.transform = [
-            'rotateX(' + cube.xAngle + 'deg' + ')',
-            'rotateY(' + cube.yAngle + 'deg' + ')'
-        ].join(' ');
+        cube.htmlReady.then(function() {
+            cube.html.style.transform = [
+                ['rotateX(', cube.xAngle, 'deg)'].join(''),
+                ['rotateY(', cube.yAngle, 'deg)'].join(''),
+            ].join(' ');
+
+            if (cube.rotateCells)
+            {
+                /**
+                 * @amirmikhak
+                 * Only apply rotations if we need to because iterating over the cells
+                 * is very expensive and reduces performance significantly. See the
+                 * rotateCells property on "this" for more information.
+                 */
+                cube.cells.forEach(function(cell) {
+                    cell.applyOptions({
+                        rotation: [-1 * cube.xAngle, -1 * cube.yAngle, 0],
+                    });
+                });
+            }
+        });
     }
 
     Object.defineProperty(this, 'xAngle', {
         enumerable: true,
         get: function() {
-            return xAngle;
+            return _xAngle;
         },
         set: function(newAngle) {
-            xAngle = newAngle;
-            this.htmlReady.then(applyCameraAngle);
+            var parsedAngle = parseFloat(newAngle);
+            if (!isNaN(parsedAngle))
+            {
+                _xAngle = parsedAngle;
+                applyCameraAngle();
+            }
         }
     });
 
     Object.defineProperty(this, 'yAngle', {
         enumerable: true,
         get: function() {
-            return yAngle;
+            return _yAngle;
         },
         set: function(newAngle) {
-            yAngle = newAngle;
-
-            this.htmlReady.then(applyCameraAngle);
+            var parsedAngle = parseFloat(newAngle);
+            if (!isNaN(parsedAngle))
+            {
+                _yAngle = parsedAngle;
+                applyCameraAngle();
+            }
         }
     });
 
     Object.defineProperty(this, 'transitionTransforms', {
         enumerable: false,
         get: function() {
-            return transitionTransforms;
+            return _transitionTransforms;
         },
         set: function(shouldTransition) {
+            _transitionTransforms = shouldTransition;
+
             var TRANSITION_DURATION = '300ms';
             var TRANSITION_EASING = 'ease-in-out';
 
@@ -136,6 +192,104 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     });
 
     this.transitionTransforms = true;
+
+    Object.defineProperty(this, 'rotateCells', {
+        enumerable: true,
+        get: function() {
+            return _rotateCells;
+        },
+        set: function(shouldRotate) {
+            _rotateCells = shouldRotate;
+            if (!_rotateCells)
+            {
+                /**
+                 * @amirmikhak
+                 * To improve performance of applyCameraAngle(), we only iterate over
+                 * the cells if we need to rotate them. Thus, if we are not rotating
+                 * the cells but were previously, we need to "clear" their rotation
+                 * manually because applyCameraAngle() won't if the property is false.
+                 */
+                cube.cells.forEach(function(cell) {
+                    cell.applyOptions({
+                        rotation: [0, 0, 0],
+                    });
+                });
+            }
+
+            applyCameraAngle();
+        }
+    });
+
+    Object.defineProperty(this, 'animationSteps', {
+        writable: false,
+        enumerable: false,
+        value: {
+            shiftX: function() {
+                cube.shiftPlane(
+                    'X',
+                    cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            unshiftX: function() {
+                cube.shiftPlane(
+                    'X',
+                    -1 * cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            shiftY: function() {
+                cube.shiftPlane(
+                    'Y',
+                    cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            unshiftY: function() {
+                cube.shiftPlane(
+                    'Y',
+                    -1 * cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            shiftZ: function() {
+                cube.shiftPlane(
+                    'Z',
+                    cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+            unshiftZ: function() {
+                cube.shiftPlane(
+                    'Z',
+                    -1 * cube.playbackOptions.stepSize,
+                    cube.playbackOptions.wrap
+                );
+            },
+        }
+    });
+
+    Object.defineProperty(this, 'animationCb', {
+        enumerable: false,
+        set: NOOP,
+        get: function() {
+            if (this.playbackOptions.action === 'slide')
+            {
+                var slideDirectionAnimationMap = {
+                    'up': this.animationSteps.shiftX,
+                    'down': this.animationSteps.unshiftX,
+                    'left': this.animationSteps.shiftY,
+                    'right': this.animationSteps.unshiftY,
+                    'forward': this.animationSteps.shiftZ,
+                    'back': this.animationSteps.unshiftZ,
+                };
+
+                return slideDirectionAnimationMap[this.playbackOptions.direction];
+            }
+
+            return undefined;   // just being explicit about this
+        }
+    });
 
     Object.defineProperty(this, 'charVoxelMap', {
         /**
@@ -255,8 +409,94 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
             '|': '[{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false}]',
             '}': '[{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false}]',
             '~': '[{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false}]',
+            ' ': '[{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false}]',
         }
-    })
+    });
+
+    Object.defineProperty(this, 'outerDimensions', {
+        enumerable: false,
+        set: NOOP,
+        get: function() {
+            return this.size * this.cellOptions.size;
+        }
+    });
+
+    Object.defineProperty(this, 'isPlaying', {
+        enumerable: false,
+        get: function() {
+            return _isPlaying;
+        },
+        set: function(nowPlaying) {
+            _isPlaying = nowPlaying;
+            if (_playButton instanceof HTMLElement)
+            {
+                _playButton.classList.toggle('playing', nowPlaying);
+                _playButton.classList.toggle('paused', !nowPlaying);
+            }
+        }
+    });
+
+    Object.defineProperty(this, 'colors', {
+        enumerable: true,
+        writable: false,
+        value: {
+            indigo: [75, 0, 130],
+            blue: [0, 0, 255],
+            cyan: [0, 255, 255],
+            yellow: [255, 255, 0],
+            green: [0, 255, 0],
+            magenta: [255, 0, 255],
+            orange: [255, 127, 0],
+            red: [255, 0, 0],
+            white: [255, 255, 255],
+            gray: [125, 125, 125],
+            black: [0, 0, 0],
+        }
+    });
+
+    Object.defineProperty(this, 'colorNames', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            return Object.keys(this.colors);
+        },
+    });
+
+    Object.defineProperty(this, 'penColorRgb', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            return this.colors[this.penColor];
+        },
+    });
+
+    Object.defineProperty(this, 'penColor', {
+        enumerable: true,
+        get: function() {
+            return _penColor;
+        },
+        set: function(newColor) {
+            if (this.colorNames.indexOf(newColor) === -1)
+            {
+                console.error('Invalid color. Known colors: ' + this.colorNames.join(', '));
+                return;
+            }
+
+            _penColor = newColor;
+
+            if (this.hasColorPicker)
+            {
+                var radioSelector = 'input[type="radio"][name="color"]';
+                var radioElList = this.colorPickerContainerEl.querySelectorAll(radioSelector);
+                var radioElArray = Array.prototype.slice.apply(radioElList);
+                radioElArray.forEach(function(input) {
+                    input.checked = (input.value === _penColor);
+                    var swatch = input.nextElementSibling;
+                    swatch.style.backgroundColor = swatch.dataset.color;
+                });
+            }
+        }
+    });
 
     // @amirmikhak
     // Note: there has _got_ to be a "nicer" way to do this. This code feels smelly.
@@ -274,16 +514,37 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
         }
     }
 
+    if (stepButton instanceof HTMLElement)
+    {
+        _stepButton = stepButton;
+        _stepButton.addEventListener('click', function(event) {
+            if (cube.isPlaying)
+            {
+                cube.pause();
+            }
+
+            cube.step();
+        });
+    }
+
     if (playButton instanceof HTMLElement)
     {
-        playButton.addEventListener('click', function(event) {
-            cube.play();
+        _playButton = playButton;
+        _playButton.addEventListener('click', function(event) {
+            if (cube.isPlaying)
+            {
+                cube.pause();
+            } else
+            {
+                cube.play();
+            }
         });
     }
 
     if (clearButton instanceof HTMLElement)
     {
-        clearButton.addEventListener('click', function(event) {
+        _clearButton = clearButton;
+        _clearButton.addEventListener('click', function(event) {
             cube.clear();
         });
     }
@@ -291,24 +552,22 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
     // SET UP REST OF SELF
     this.size = size; // How many rows and columns do I have?
 
-    var outerDimensions = this.size * this.cellOptions.size;
-
     (function buildHTML() {
         // The HTML display of the cube istelf
-        cube.html = document.createElement('div');
-        cube.html.id = 'cube';
+        this.html = document.createElement('div');
+        this.html.id = 'cube';
 
-        cube.html.style.height = outerDimensions + 'px';
-        cube.html.style.width = outerDimensions + 'px';
-        cube.html.style.transformStyle = 'preserve-3d';
-        cube.html.style.transformOrigin = [
-            'calc(' + outerDimensions + 'px/2)',
-            'calc(' + outerDimensions + 'px/2)',
-            'calc(-1 * ' + outerDimensions + 'px/2)'
+        this.html.style.height = this.outerDimensions + 'px';
+        this.html.style.width = this.outerDimensions + 'px';
+        this.html.style.transformStyle = 'preserve-3d';
+        this.html.style.transformOrigin = [
+            ['calc(', this.outerDimensions, 'px/2)'].join(''),
+            ['calc(', this.outerDimensions, 'px/2)'].join(''),
+            ['calc(-1 * ', this.outerDimensions, 'px/2)'].join(''),
         ].join(' ');
 
         htmlReadySuccessFn();
-    }());
+    }.bind(this)());
 
     this.cells = [];
     for (var depth = 0; depth < this.size; depth++) {
@@ -319,29 +578,22 @@ var Cube = function(size, parentElement, playButton, clearButton, cellOpts) {
                 // Iterate over each column
 
                 // Create a cell
-                var cell = new Cell(this.cellOptions.size);
-                cell.depth = depth;
-                cell.column = column;
-                cell.row = row;
-
-                // Store the cell's coordinates in data attributes
-                ['depth', 'column', 'row'].forEach(function(dimension) {
-                    var attribute = 'data' + '-' + dimension;
-                    cell.html.setAttribute(attribute, cell[dimension]);
+                var cell = new Cell({
+                    cube: this,
+                    size: this.cellOptions.size,
+                    depth: depth,
+                    column: column,
+                    row: row,
+                    clickable: depth === 0,
                 });
 
-                // Manually position the cell in the right location via CSS
-                cell.html.style.transform = ['X', 'Y', 'Z'].map(function(direction) {
-                    var translation = {
-                        'X': cube.cellOptions.size * cell.column,
-                        'Y': cube.cellOptions.size * cell.row,
-                        'Z': -1 * cube.cellOptions.size * cell.depth
-                    };
-                    return 'translate' + direction + '(' + translation[direction] + 'px' + ')';
-                }).join(' ');
+                this.cells.push(cell);
 
-                cube.cells.push(cell);
-                cube.html.appendChild(cell.html); // Actually render the cell
+                this.htmlReady.then(function() {
+                    this.cells.forEach(function(cell) {
+                        this.html.appendChild(cell.html); // Actually render the cell
+                    }.bind(this));
+                }.bind(this));
             }
         }
     }
@@ -490,80 +742,31 @@ Cube.prototype.play = function(opts) {
 
     this.playbackOptions = opts;
 
-    var playbackCompleteFn;
-    var playbackFailedFn;
+    this.playbackCompleteFn = undefined;
+    this.playbackFailedFn = undefined;
 
-    var promise = new Promise(function(resolve, reject) {
-        playbackCompleteFn = resolve;
-        playbackFailedFn = reject;
+    this.playbackPromise = new Promise(function(resolve, reject) {
+        var that = this;
+        cube.isPlaying = true;
+        cube.playbackCompleteFn = function() {
+            cube.isPlaying = false;
+            resolve.apply(that, arguments);
+        };
+        cube.playbackFailedFn = function() {
+            cube.isPlaying = false;
+            reject.apply(that, arguments);
+        };
     });
 
-    if (this.playbackOptions.action === 'slide')
+    clearInterval(cube.animateInterval);
+    cube.animateInterval = null;
+
+    if (!this.animationCb)
     {
-        switch(this.playbackOptions.direction)
-        {
-            case 'up':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'X',
-                        cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'down':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'X',
-                        -1 * cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'left':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'Y',
-                        cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'right':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'Y',
-                        -1 * cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'forward':
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'Z',
-                        cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-                break;
-            case 'back':
-            default:
-                loopOverCubeSize(function() {
-                    cube.shiftPlane(
-                        'Z',
-                        -1 * cube.playbackOptions.stepSize,
-                        cube.playbackOptions.wrap
-                    );
-                });
-        }
-    } else
-    {
-        console.error('animation action not supported');
+        throw 'Invalid animation requested: not many are supported.';
     }
 
-
-    this.animateInterval = null;
+    loopOverCubeSize(this.animationCb);
 
     /**
      * @amirmikhak
@@ -572,70 +775,157 @@ Cube.prototype.play = function(opts) {
      */
     function loopOverCubeSize(func) {
         var numOps = 0;
-        clearInterval(this.animateInterval);
-        this.animateInterval = setInterval(function() {
-            func.apply(this);
+        cube.animateInterval = setInterval(function() {
+            func.apply(cube);
             if (++numOps == cube.size)
             {
-                clearInterval(this.animateInterval);
-                playbackCompleteFn();
+                clearInterval(cube.animateInterval);
+                cube.playbackCompleteFn({reason: 'done'});
             }
         }, cube.playbackOptions.delay);
     }
 
-    return promise;
+    return this.playbackPromise;
+};
+
+Cube.prototype.step = function(numSteps) {
+    var DEFAULT_NUM_STEPS = 1;
+    numSteps = typeof numSteps !== 'undefined' ? parseInt(numSteps, 10) || DEFAULT_NUM_STEPS : DEFAULT_NUM_STEPS;
+
+    for (var i = 0; i < numSteps; i++)
+    {
+        this.animationCb();
+    }
+}
+
+Cube.prototype.pause = function() {
+    clearInterval(cube.animateInterval);
+    if (this.playbackCompleteFn)
+    {
+        this.playbackCompleteFn({reason: 'paused'});
+    }
+    return this;
 };
 
 Cube.prototype.clear = function() {
     this.cells.forEach(function(cell) {
         cell.on = false;
     });
+    return this;
 };
 
 Cube.prototype.buildPlaybackControls = function(parentEl) {
     var cube = this;
 
-    parentEl.innerHTML = (
-        '<div>' +
-            'Direction: ' +
-            '<select>' +
-                '<option value="forward">Forward</option>' +
-                '<option value="back">Back</option>' +
-                '<option value="left">Left</option>' +
-                '<option value="right">Right</option>' +
-                '<option value="up">Up</option>' +
-                '<option value="down">Down</option>' +
-            '</select><br>' +
-            '<label>Wrap?: <input type="checkbox"></label>' +
+    this.hasPlaybackControls = true;
+    this.playbackControlsContainerEl = parentEl;
+    this.playbackControlsContainerEl.classList.add('playback-controls');
+    this.playbackControlsContainerEl.innerHTML = (
+        'Direction<br>' +
+        '<div class="radio-tabs">' +
+            '<input id="direction-radio-back" type="radio" name="direction" value="back" />' +
+            '<label for="direction-radio-back" class="radio-tab">Back</label>' +
+            '<input id="direction-radio-left" type="radio" name="direction" value="left" />' +
+            '<label for="direction-radio-left" class="radio-tab">Left</label>' +
+            '<input id="direction-radio-up" type="radio" name="direction" value="up" />' +
+            '<label for="direction-radio-up" class="radio-tab">Up</label>' +
+            '<input id="direction-radio-down" type="radio" name="direction" value="down" />' +
+            '<label for="direction-radio-down" class="radio-tab">Down</label>' +
+            '<input id="direction-radio-right" type="radio" name="direction" value="right" />' +
+            '<label for="direction-radio-right" class="radio-tab">Right</label>' +
+            '<input id="direction-radio-forward" type="radio" name="direction" value="forward" />' +
+            '<label for="direction-radio-forward" class="radio-tab">Forward</label>' +
         '</div>'
-        );
+    );
 
-    parentEl.addEventListener('change', function(e) {
-        if (e.target.nodeName === 'SELECT')
+    this.playbackControlsContainerEl.addEventListener('change', function(e) {
+        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'direction'))
         {
             cube.playbackOptions = {
                 direction: e.target.value,
             };
-        } else if (e.target.nodeName === 'INPUT')
-        {
-            cube.playbackOptions = {
-                wrap: e.target.checked,
-            };
         }
     });
 
-    function arrize(thing) {
-        return Array.prototype.slice.apply(thing);
+    this.playbackOptions = {
+        direction: this.playbackOptions.direction,  // trigger sync of DOM with state
     }
+};
 
-    arrize(parentEl.querySelectorAll('select option')).forEach(function(el) {
-        el.selected = (el.value == cube.playbackOptions.direction);
-    });
+Cube.prototype.buildColorPicker = function(parentEl) {
+    if (!this.hasColorPicker && (parentEl instanceof HTMLElement))
+    {
+        this.hasColorPicker = true;
+        this.colorPickerContainerEl = parentEl;
+        this.colorPickerContainerEl.classList.add('color-list');
 
-    arrize(parentEl.querySelectorAll('input')).forEach(function(el) {
-        el.checked = cube.playbackOptions.wrap;
-    });
-}
+        this.colorPickerContainerEl.innerHTML = (
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="indigo" />' +
+                '<div data-color="indigo"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="blue" />' +
+                '<div data-color="blue"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="cyan" />' +
+                '<div data-color="cyan"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="yellow" />' +
+                '<div data-color="yellow"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="green" />' +
+                '<div data-color="green"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="magenta" />' +
+                '<div data-color="magenta"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="orange" />' +
+                '<div data-color="orange"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="red" />' +
+                '<div data-color="red"></div>' +
+            '</label>'
+        );
+
+        /**
+         * @amirmikhak
+         * Position the color picker
+         */
+        var colorPickerHeight = this.colorPickerContainerEl.getBoundingClientRect().height;
+
+        this.colorPickerContainerEl.style.position = 'absolute';
+        this.colorPickerContainerEl.style.top = [
+            'calc(50% - ', colorPickerHeight / 2, 'px)'
+        ].join('');
+        this.colorPickerContainerEl.style.left = [
+            'calc(50% - ', this.outerDimensions, 'px)'
+        ].join('');
+
+        /**
+         * @amirmikhak
+         * Add event listener for change in DOM to be reflected in Cube's model
+         */
+        this.colorPickerContainerEl.addEventListener('change', function(e) {
+            if ((e.target.nodeName === 'INPUT') && (e.target.name === 'color'))
+            {
+                cube.penColor = e.target.value;
+            }
+        });
+
+        /**
+         * @amirmikhak
+         * Sync DOM/Cube on build
+         */
+        this.penColor = this.penColor;
+    }
+};
 
 Cube.prototype.listenForKeystrokes = function(opts) {
     var cube = this;
@@ -643,17 +933,27 @@ Cube.prototype.listenForKeystrokes = function(opts) {
     this.keyListenerOptions = opts;
 
     var validKeyFns = {
+        specials: function(e) {
+            return (
+                (e.keyCode === 32) ||   // spacebar
+                (e.keyCode === 8) ||    // backspace
+                (e.keyCode === 13) ||   // enter
+                (e.keyCode >= 37 && e.keyCode <= 40)    // arrow keys
+            );
+        },
         alpha: function(e) {
-            return e.keyCode >= 65 && e.keyCode <= 90;
+            return validKeyFns.specials(e) || (e.keyCode >= 65 && e.keyCode <= 90);
         },
         num: function(e) {
             return (
+                validKeyFns.specials(e) ||
                 (e.keyCode >= 48 && e.keyCode <= 57) || // top row
                 (e.keyCode >= 96 && e.keyCode <= 105)   // num pad
             );
         },
         symbols: function(e) {
             return (
+                validKeyFns.specials(e) ||
                 (e.keyCode >= 106 && e.keyCode <= 111) ||  // math operators
                 (e.keyCode >= 186 && e.keyCode <= 222) ||  // punctuation
                 (e.shiftKey && e.keyCode >= 48 && e.keyCode <= 57)    // "uppercase" numbers
@@ -678,24 +978,94 @@ Cube.prototype.listenForKeystrokes = function(opts) {
         return false;
     }
 
-    this.keyListenerFn = function(e) {
-        char = String.fromCharCode(e.which);
+    this.actionKeyListenerFn = function(e) {
+        var keyDirectionMap = {
+            37: 'left',
+            38: 'up',
+            39: 'right',
+            40: 'down',
+        };
 
-        cube.writeSlice(cube.charVoxelMap[char], 'front');
+        function keyIsArrow() {
+            return Object.keys(keyDirectionMap).indexOf(e.keyCode.toString()) !== -1;
+        }
 
-        if (cube.keyListenerOptions.animate)
+        if ((e.shiftKey && (e.keyCode === 32)) || e.keyCode === 13)
         {
-            cube.play({
-                direction: 'back',
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (cube.isPlaying)
+            {
+                cube.pause();
+            } else
+            {
+                cube.play();
+            }
+        } else if (e.keyCode === 8)
+        {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (e.shiftKey)
+            {
+                if (cube.isPlaying)
+                {
+                    cube.pause();
+                }
+
+                cube.clear();   // clear whole cube
+            } else
+            {
+                cube.writeSlice(cube.getCharacterRender(' '), 'front');   // "space" character
+            }
+        } else if (!e.shiftKey && keyIsArrow(e))
+        {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var newDirection = keyDirectionMap[e.keyCode];
+            if (e.altKey)
+            {
+                if (newDirection === 'up')
+                {
+                    newDirection = 'back';
+                } else if (newDirection === 'down')
+                {
+                    newDirection = 'forward';
+                }
+            }
+
+            cube.pause().play({
+                direction: newDirection,
                 stepSize: cube.keyListenerOptions.stepSize,
                 delay: cube.keyListenerOptions.animateRate,
             });
         }
     };
 
+    this.keyListenerFn = function(e) {
+        var char = String.fromCharCode(e.which);
+
+        if (cube.keyListenerOptions.animate)
+        {
+            cube.writeSlice(cube.getCharacterRender(char), 'front');
+
+            cube.play({
+                direction: 'back',
+                stepSize: cube.keyListenerOptions.stepSize,
+                delay: cube.keyListenerOptions.animateRate,
+            });
+        } else if (!cube.isPlaying)
+        {
+            cube.writeSlice(cube.getCharacterRender(char), 'front');
+        }
+    };
+
     if (!this.listeningForKeystrokes)
     {
         document.addEventListener('keydown', this.validKeyFilterFn);
+        document.addEventListener('keydown', this.actionKeyListenerFn);
         document.addEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = true;
     }
@@ -708,6 +1078,34 @@ Cube.prototype.stopListeningForKeystrokes = function() {
         document.removeEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = false;
     }
+};
+
+Cube.prototype.getCharacterRender = function(char, desiredColor) {
+    desiredColor = typeof desiredColor !== 'undefined' ? desiredColor : this.penColorRgb;
+    var invalidRgbValueFn = function(val) {
+        return val < 0 || val > 255;
+    }
+
+    if (!(desiredColor instanceof Array) ||
+        desiredColor.length !== 3 ||
+        desiredColor.some(invalidRgbValueFn))
+    {
+        console.log(
+            'Invalid desired color: ', desiredColor,
+            'Defaulted to this.penColor: ', this.penColorRgb
+        );
+        desiredColor = this.penColorRgb;
+    }
+
+    var charData = JSON.parse(cube.charVoxelMap[char]);
+    charData.forEach(function(cell) {
+        if (cell.on)
+        {
+            cell.color = desiredColor;
+        }
+    });
+
+    return charData;
 };
 
 Cube.prototype.affectXSlice = function(column, fn) {
