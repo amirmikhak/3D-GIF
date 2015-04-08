@@ -13,6 +13,7 @@ window.addEventListener('load', function() { // When everything is loaded
 
     cube.buildPlaybackControls(document.getElementById('playback-controls'));
     cube.buildColorPicker(document.getElementById('color-picker'));
+    cube.buildShapePicker(document.getElementById('shape-picker'));
 
     cube.listenForKeystrokes();
 
