@@ -103,6 +103,7 @@ var charVoxelMap = {
     '|': [],
     '}': [],
     '~': [],
+    ' ': [],
 };
 
 var chars = Object.keys(charVoxelMap).slice();
