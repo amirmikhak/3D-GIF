@@ -48,7 +48,7 @@ body {
 }
 
 .control-button:active {
-    background: #999;
+    background-color: #999;
 }
 
 .control-button {
@@ -68,9 +68,8 @@ body {
     text-align: center;
 }
 
-#play.playing,
-#play.playing:hover {
-    -webkit-animation: rightSlidingBackground 1s linear infinite;
+#play.playing {
+    background-color: #999;
 }
 
 #playback-controls input {
@@ -103,7 +102,7 @@ body {
 }
 
 .radio-tabs input[type="radio"]:checked + .radio-tab {
-    background: #999;
+    background-color: #999;
 }
 
 /**
