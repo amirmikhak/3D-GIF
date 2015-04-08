@@ -1,4 +1,4 @@
-var Cube = function(size, parentElement, stepButton, playButton, clearButton, cellOpts) {
+var Cube = function(size, parentElement, prevStepButton, nextStepButton, playButton, clearButton, cellOpts) {
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
@@ -37,7 +37,8 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
     var _cellOptions = _.extend({}, defaultCellOptions);
     var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
-    var _stepButton;
+    var _prevStepButton;
+    var _nextStepButton;
     var _playButton;
     var _clearButton;
 
@@ -66,6 +67,11 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
         },
         set: function(newOptions) {
             var validDirections = ['forward', 'back', 'up', 'down', 'left', 'right'];
+
+            var resumePlayingAfterChange = cube.isPlaying;
+
+            cube.pause();
+
             if (this.hasPlaybackControls &&
                 newOptions.direction &&
                 validDirections.indexOf(newOptions.direction) !== -1)
@@ -82,6 +88,11 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
             }
 
             _.extend(_playbackOptions, newOptions);
+
+            if (resumePlayingAfterChange)
+            {
+                cube.play();
+            }
         }
     });
 
@@ -413,6 +424,29 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
         }
     });
 
+    Object.defineProperty(this, 'shapes', {
+        enumerable: true,
+        writable: false,
+        value: {
+            circle: '[{"row":0,"column":0,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":0,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":0,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":0,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":0,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":0,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":0,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":0,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":1,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":1,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":1,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":1,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":1,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":1,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":1,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":1,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":2,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":2,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":2,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":2,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":2,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":2,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":2,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":2,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":3,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":3,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":3,"depth":0,"color":[0,255,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":3,"depth":0,"color":[255,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":3,"depth":0,"color":[255,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":3,"depth":0,"color":[0,255,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":3,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":3,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":4,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":4,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":4,"depth":0,"color":[0,255,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":4,"depth":0,"color":[255,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":4,"depth":0,"color":[255,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":4,"depth":0,"color":[0,255,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":4,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":4,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":5,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":5,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":5,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":5,"depth":0,"color":[0,255,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":5,"depth":0,"color":[0,255,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":5,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":5,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":5,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":6,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":6,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":6,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":6,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":6,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":6,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":6,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":6,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":7,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":7,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":7,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]}]',
+            diamond: '[{"row":0,"column":0,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":0,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":0,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":0,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":0,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":0,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":0,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":0,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":1,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":1,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":1,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":1,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":1,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":1,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":2,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":2,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":2,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":2,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":2,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":2,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":3,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":3,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":3,"depth":0,"color":[255,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":3,"depth":0,"color":[255,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":3,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":3,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":4,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":4,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":4,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":4,"depth":0,"color":[255,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":4,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":4,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":5,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":5,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":5,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":5,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":5,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":5,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":6,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":6,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":6,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":6,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":6,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":6,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":6,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":6,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":7,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":7,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]}]',
+            square: '[{"row":0,"column":0,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":0,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":0,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":0,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":0,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":0,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":0,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":0,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":1,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":1,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":1,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":1,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":1,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":1,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":1,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":1,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":2,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":2,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":2,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":2,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":2,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":2,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":2,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":2,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":3,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":3,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":3,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":3,"depth":0,"color":[255,0,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":3,"depth":0,"color":[255,0,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":3,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":3,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":3,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":4,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":4,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":4,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":4,"depth":0,"color":[255,0,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":4,"depth":0,"color":[255,0,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":4,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":4,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":4,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":5,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":5,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":5,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":5,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":5,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":5,"depth":0,"color":[0,255,255],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":5,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":5,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":6,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":6,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":6,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":6,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":6,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":6,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":6,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":6,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":7,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":7,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":7,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":7,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":7,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":7,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":7,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":7,"depth":0,"color":[255,127,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]}]',
+            heart: '[{"row":0,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":0,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":0,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":1,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":1,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":1,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":1,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":2,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":2,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":2,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":3,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":3,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":3,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":4,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":4,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":4,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":5,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":5,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":5,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":5,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":6,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":6,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":6,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":6,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":6,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":6,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":6,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":6,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":7,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":7,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":7,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":7,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]}]',
+            smile: '[{"row":0,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":1,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":1,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":2,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":2,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":5,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":5,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":6,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":6,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":6,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]}]',
+            frown: '[{"row":0,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":1,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":1,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":1,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":2,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":2,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":5,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":5,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":6,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":6,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":6,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":6,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]}]',
+            wink: '[{"row":0,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":0,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":0,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":1,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":1,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":1,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":2,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":2,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":2,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":3,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":4,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":5,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":5,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":6,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":6,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":6,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":6,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":6,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":7,"depth":0,"color":[255,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":7,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]}]',
+            battleaxe: '[{"row":0,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":0,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":0,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":0,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":0,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":0,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":0,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":1,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":1,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":1,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":1,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":1,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":1,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":2,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":2,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":2,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":2,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":2,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":2,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":3,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":3,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":3,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":3,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":4,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":4,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":4,"depth":0,"color":[0,255,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":4,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":4,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":4,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":4,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":5,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":5,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":5,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":5,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":5,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":5,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":5,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":6,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":6,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":6,"depth":0,"color":[0,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":6,"depth":0,"color":[255,0,0],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":6,"depth":0,"color":[255,255,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":6,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":6,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":6,"depth":0,"color":[0,0,255],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":0,"column":7,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":1,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":2,"column":7,"depth":0,"color":[255,127,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":3,"column":7,"depth":0,"color":[75,0,130],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":4,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":5,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":6,"column":7,"depth":0,"color":[255,0,0],"on":false,"size":50,"clickable":true,"rotation":[0,0,0]},{"row":7,"column":7,"depth":0,"color":[75,0,130],"on":true,"size":50,"clickable":true,"rotation":[0,0,0]}]',
+        }
+    });
+
+    Object.defineProperty(this, 'shapeNames', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            return Object.keys(this.shapes);
+        },
+    });
+
     Object.defineProperty(this, 'outerDimensions', {
         enumerable: false,
         set: NOOP,
@@ -514,10 +548,23 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
         }
     }
 
-    if (stepButton instanceof HTMLElement)
+    if (prevStepButton instanceof HTMLElement)
     {
-        _stepButton = stepButton;
-        _stepButton.addEventListener('click', function(event) {
+        _prevStepButton = prevStepButton;
+        _prevStepButton.addEventListener('click', function(event) {
+            if (cube.isPlaying)
+            {
+                cube.pause();
+            }
+
+            cube.step(-1);
+        });
+    }
+
+    if (nextStepButton instanceof HTMLElement)
+    {
+        _nextStepButton = nextStepButton;
+        _nextStepButton.addEventListener('click', function(event) {
             if (cube.isPlaying)
             {
                 cube.pause();
@@ -736,61 +783,40 @@ Cube.prototype.nudge = function(direction, amount) {
 };
 
 Cube.prototype.play = function(opts) {
-    var cube = this;
-
     opts = typeof opts !== 'undefined' ? opts : {};
 
     this.playbackOptions = opts;
 
-    this.playbackCompleteFn = undefined;
-    this.playbackFailedFn = undefined;
+    this.isPlaying = true;
 
-    this.playbackPromise = new Promise(function(resolve, reject) {
-        var that = this;
-        cube.isPlaying = true;
-        cube.playbackCompleteFn = function() {
-            cube.isPlaying = false;
-            resolve.apply(that, arguments);
-        };
-        cube.playbackFailedFn = function() {
-            cube.isPlaying = false;
-            reject.apply(that, arguments);
-        };
-    });
-
-    clearInterval(cube.animateInterval);
-    cube.animateInterval = null;
-
-    if (!this.animationCb)
-    {
-        throw 'Invalid animation requested: not many are supported.';
-    }
-
-    loopOverCubeSize(this.animationCb);
-
-    /**
-     * @amirmikhak
-     * These functions can be "defined" after they are "called" above because of javascript's "hoisting".
-     * Learn more: http://code.tutsplus.com/tutorials/javascript-hoisting-explained--net-15092
-     */
-    function loopOverCubeSize(func) {
-        var numOps = 0;
-        cube.animateInterval = setInterval(function() {
-            func.apply(cube);
-            if (++numOps == cube.size)
-            {
-                clearInterval(cube.animateInterval);
-                cube.playbackCompleteFn({reason: 'done'});
-            }
-        }, cube.playbackOptions.delay);
-    }
-
-    return this.playbackPromise;
+    clearInterval(this.animateInterval);
+    this.animateInterval = setInterval(function() {
+        this.animationCb.apply(this);
+    }.bind(this), this.playbackOptions.delay);
 };
 
 Cube.prototype.step = function(numSteps) {
     var DEFAULT_NUM_STEPS = 1;
     numSteps = typeof numSteps !== 'undefined' ? parseInt(numSteps, 10) || DEFAULT_NUM_STEPS : DEFAULT_NUM_STEPS;
+
+    if (numSteps < 0)
+    {   // step "backward"
+        var startDirection = cube.playbackOptions.direction;
+        var oppositeDirection = {
+            'up': 'down',
+            'down': 'up',
+            'left': 'right',
+            'right': 'left',
+            'forward': 'back',
+            'back': 'forward',
+        }[startDirection];
+
+        cube.playbackOptions.direction = oppositeDirection;
+
+        cube.step(Math.abs(numSteps));
+
+        cube.playbackOptions.direction = startDirection;
+    }
 
     for (var i = 0; i < numSteps; i++)
     {
@@ -799,11 +825,8 @@ Cube.prototype.step = function(numSteps) {
 }
 
 Cube.prototype.pause = function() {
+    this.isPlaying = false;
     clearInterval(cube.animateInterval);
-    if (this.playbackCompleteFn)
-    {
-        this.playbackCompleteFn({reason: 'paused'});
-    }
     return this;
 };
 
@@ -821,20 +844,19 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
     this.playbackControlsContainerEl = parentEl;
     this.playbackControlsContainerEl.classList.add('playback-controls');
     this.playbackControlsContainerEl.innerHTML = (
-        'Direction<br>' +
         '<div class="radio-tabs">' +
             '<input id="direction-radio-back" type="radio" name="direction" value="back" />' +
-            '<label for="direction-radio-back" class="radio-tab">Back</label>' +
+            '<label for="direction-radio-back" class="control-button radio-tab">Back</label>' +
             '<input id="direction-radio-left" type="radio" name="direction" value="left" />' +
-            '<label for="direction-radio-left" class="radio-tab">Left</label>' +
+            '<label for="direction-radio-left" class="control-button radio-tab">Left</label>' +
             '<input id="direction-radio-up" type="radio" name="direction" value="up" />' +
-            '<label for="direction-radio-up" class="radio-tab">Up</label>' +
+            '<label for="direction-radio-up" class="control-button radio-tab">Up</label>' +
             '<input id="direction-radio-down" type="radio" name="direction" value="down" />' +
-            '<label for="direction-radio-down" class="radio-tab">Down</label>' +
+            '<label for="direction-radio-down" class="control-button radio-tab">Down</label>' +
             '<input id="direction-radio-right" type="radio" name="direction" value="right" />' +
-            '<label for="direction-radio-right" class="radio-tab">Right</label>' +
+            '<label for="direction-radio-right" class="control-button radio-tab">Right</label>' +
             '<input id="direction-radio-forward" type="radio" name="direction" value="forward" />' +
-            '<label for="direction-radio-forward" class="radio-tab">Forward</label>' +
+            '<label for="direction-radio-forward" class="control-button radio-tab">Forward</label>' +
         '</div>'
     );
 
@@ -900,6 +922,13 @@ Cube.prototype.buildColorPicker = function(parentEl) {
          */
         var colorPickerHeight = this.colorPickerContainerEl.getBoundingClientRect().height;
 
+        /**
+         * @amirmikhak
+         * !TODO: fix this.
+         * need this correction look correct in a pinch.
+         */
+        colorPickerHeight -= 100;
+
         this.colorPickerContainerEl.style.position = 'absolute';
         this.colorPickerContainerEl.style.top = [
             'calc(50% - ', colorPickerHeight / 2, 'px)'
@@ -924,6 +953,61 @@ Cube.prototype.buildColorPicker = function(parentEl) {
          * Sync DOM/Cube on build
          */
         this.penColor = this.penColor;
+    }
+};
+
+Cube.prototype.buildShapePicker = function(parentEl) {
+    if (!this.hasShapePicker && (parentEl instanceof HTMLElement))
+    {
+        this.hasShapePicker = true;
+        this.shapePickerContainerEl = parentEl;
+        this.shapePickerContainerEl.classList.add('shape-list');
+        this.shapePickerContainerEl.innerHTML = this.shapeNames.map(function(shapeName) {
+            var shapeRender = cube.renderSliceToPng(cube.shapes[shapeName]);
+            var styles = [
+                'background-image:url(\'' + shapeRender + '\')',
+                'background-size:cover',
+                'background-position:50% 50%',
+            ].join(';');
+
+            return [
+                '<div class="swatch" data-shape="', shapeName, '" ',
+                    'style="', styles, '"></div>'
+            ].join('')
+        }).join('');
+
+        /**
+         * @amirmikhak
+         * Position the shape picker
+         */
+        var shapePickerHeight = this.shapePickerContainerEl.getBoundingClientRect().height;
+        /**
+         * @amirmikhak
+         * !TODO: fix this.
+         * need this correction look correct in a pinch.
+         */
+        shapePickerHeight -= 100;
+
+
+        this.shapePickerContainerEl.style.position = 'absolute';
+        this.shapePickerContainerEl.style.top = [
+            'calc(50% - ', shapePickerHeight / 2, 'px)'
+        ].join('');
+        this.shapePickerContainerEl.style.right = [
+            'calc(50% - ', this.outerDimensions, 'px)'
+        ].join('');
+
+        /**
+         * @amirmikhak
+         * Add event listener to parent, which will catch all events that bubble
+         * up from children (the swatches).
+         */
+        this.shapePickerContainerEl.addEventListener('click', function(e) {
+            if (e.target.dataset && e.target.dataset.shape)
+            {
+                cube.renderShape(e.target.dataset.shape);
+            }
+        });
     }
 };
 
@@ -984,13 +1068,19 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             38: 'up',
             39: 'right',
             40: 'down',
+            70 : 'front',   // "Front:  CTRL+F"
+            66 : 'back',    // "Back:   CTRL+B"
+            85 : 'up',      // "Up:     CTRL+U"
+            68 : 'down',    // "Down:   CTRL+D"
+            82 : 'right',   // "Right:  CTRL+R"
+            76 : 'left',    // "Left:   CTRL+L"
         };
 
-        function keyIsArrow() {
+        function keyIsDirectionalAction() {
             return Object.keys(keyDirectionMap).indexOf(e.keyCode.toString()) !== -1;
         }
 
-        if ((e.shiftKey && (e.keyCode === 32)) || e.keyCode === 13)
+        if ((e.ctrlKey && (e.keyCode === 32)) || e.keyCode === 13)  // ctrl+space, or enter
         {
             e.preventDefault();
             e.stopPropagation();
@@ -1002,12 +1092,12 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             {
                 cube.play();
             }
-        } else if (e.keyCode === 8)
+        } else if (e.keyCode === 8) // delete
         {
             e.preventDefault();
             e.stopPropagation();
 
-            if (e.shiftKey)
+            if (e.ctrlKey)
             {
                 if (cube.isPlaying)
                 {
@@ -1019,7 +1109,19 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             {
                 cube.writeSlice(cube.getCharacterRender(' '), 'front');   // "space" character
             }
-        } else if (!e.shiftKey && keyIsArrow(e))
+        } else if (e.ctrlKey && (e.keyCode === 189))    // ctrl+minus
+        {   // prev step
+            e.preventDefault();
+            e.stopPropagation();
+
+            cube.step(-1);
+        } else if (e.ctrlKey && (e.keyCode === 187))    // ctrl+equals
+        {   // next step
+            e.preventDefault();
+            e.stopPropagation();
+
+            cube.step();
+        } else if (e.ctrlKey && keyIsDirectionalAction(e))
         {
             e.preventDefault();
             e.stopPropagation();
@@ -1041,6 +1143,17 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 stepSize: cube.keyListenerOptions.stepSize,
                 delay: cube.keyListenerOptions.animateRate,
             });
+        } else if (e.ctrlKey && e.keyCode >= 48 && e.keyCode <= 57) // ctrl + num row
+        {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var shapeIndex = parseInt(String.fromCharCode(e.keyCode), 10) - 1;
+            var numShapes = cube.shapeNames.length;
+            if ((shapeIndex >= 0) && (shapeIndex < numShapes))
+            {
+                cube.renderShape(cube.shapeNames[shapeIndex]);
+            }
         }
     };
 
@@ -1056,7 +1169,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 stepSize: cube.keyListenerOptions.stepSize,
                 delay: cube.keyListenerOptions.animateRate,
             });
-        } else if (!cube.isPlaying)
+        } else
         {
             cube.writeSlice(cube.getCharacterRender(char), 'front');
         }
@@ -1090,7 +1203,7 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
         desiredColor.length !== 3 ||
         desiredColor.some(invalidRgbValueFn))
     {
-        console.log(
+        console.error(
             'Invalid desired color: ', desiredColor,
             'Defaulted to this.penColor: ', this.penColorRgb
         );
@@ -1106,6 +1219,16 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
     });
 
     return charData;
+};
+
+Cube.prototype.renderShape = function(shape) {
+    if (this.shapeNames.indexOf(shape) === -1)
+    {
+        console.error('Invalid shape. Known shapes: ' + this.shapeNames.join(', '));
+        return;
+    }
+
+    cube.writeSlice(this.shapes[shape], 'front', 0);
 };
 
 Cube.prototype.affectXSlice = function(column, fn) {
@@ -1229,6 +1352,75 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         var column = (face === 'right') ? (cube.size - 1) - offset : offset;
         this.affectXSlice(column, writeCellFromData);
     }
+};
+
+Cube.prototype.renderSliceToPng = function(slice) {
+    /**
+     * @amirmikhak
+     * Helper function to render icons that resemble 2d slices of the cube.
+     * Returns a data url.
+     *
+     * Helpful links:
+     * http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
+     * http://www.html5canvastutorials.com/advanced/html5-canvas-save-drawing-as-an-image/
+     */
+
+    var PNG_OUTPUT_WIDTH = 64;
+    var PNG_OUTPUT_HEIGHT = 64;
+
+    var PIXEL_MULTIPLIER_W = Math.floor(PNG_OUTPUT_WIDTH / this.size);
+    var PIXEL_MULTIPLIER_H = Math.floor(PNG_OUTPUT_HEIGHT / this.size);
+
+    var c;
+    var ctx;
+    var id;
+    var d;
+
+    this.sliceRenderer = {};
+
+    c = this.sliceRenderer.c = document.createElement('canvas');
+    c.width = PNG_OUTPUT_WIDTH;
+    c.height = PNG_OUTPUT_HEIGHT;
+
+    ctx = this.sliceRenderer.ctx = c.getContext('2d');
+
+    id = ctx.createImageData(1, 1);
+    d = id.data;
+
+    try
+    {   // handle different types of data input: JSON or raw object
+        slice = JSON.parse(slice);    // throws SyntaxError if not valid JSON string
+    } catch (err)
+    {   // pass
+    }
+
+    if (!(slice instanceof Array) || (slice.length !== Math.pow(this.size, 2)))
+    {
+        throw 'Malformed data';
+    }
+
+    slice.forEach(function drawCell(cell) {
+        var pixelOffsetX = cell.row * PIXEL_MULTIPLIER_W;
+        var pixelOffsetY = cell.column * PIXEL_MULTIPLIER_H;
+
+        for (var subpixelCol = 0; subpixelCol < PIXEL_MULTIPLIER_W; subpixelCol++)
+        {
+            for (var subpixelRow = 0; subpixelRow < PIXEL_MULTIPLIER_H; subpixelRow++)
+            {
+                d[0] = cell.color[0];
+                d[1] = cell.color[1];
+                d[2] = cell.color[2];
+                d[3] = cell.on ? 255 : 0;
+
+                var y = pixelOffsetX + subpixelRow; // the x/y are swapped in the slice serialization
+                var x = pixelOffsetY + subpixelCol;
+
+                ctx.putImageData(id, x, y);
+            }
+        }
+    });
+
+    return c.toDataURL();
 };
 
 Cube.prototype.toJSON = function() {

@@ -3,19 +3,27 @@
 Keyboard Actions
 ----------
 
-- letters/symbols/etc.: put typed character on front face
+- ARROWS: rotate the cube
 
-- backspace / space bar: enter “space” character (clear front slice)
+- LETTERS / SYMBOLS / ETC.: put typed character on front face
+- SPACEBAR: enter “ ” (space) character, which clears the front slice
 
-- enter key: toggle playback
+- ENTER: toggle playback
 
-- arrow key: play current contents of box into the direction of the
-arrow pressed (e.g. right arrow moves all content in the box to slide
-out towards the right side of the cube)
+- CTRL+EQUALS: next step
+- CTRL+MINUS: previous step
 
-- alt + up: back
-- alt + down: forward
+- CTRL+SPACE: toggle playback
 
-- shift + space: toggle playback
-- shift + arrow key: rotate the cube
-- shift + backspace: clear all contents of the cube
+- CTRL+B: send content towards the back
+- CTRL+F: send content towards the front
+- CTRL+L: send content towards the left
+- CTRL+R: send content towards the right
+- CTRL+U: send content towards the top
+- CTRL+D: send content towards the bottom
+
+- CTRL+ALT+UP: send content towards the back
+- CTRL+ALT+DOWN: send content towards the front
+
+- BACKSPACE: clear front slice
+- SHIFT+BACKSPACE: clear all contents of the cube

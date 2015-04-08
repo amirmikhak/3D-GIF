@@ -5,6 +5,8 @@ var Cell = function(opts) {
     // at http://www.quirksmode.org/js/this.html
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
 
+    var NOOP = function() {};   // does nothing, but useful to pass as argument to things expecting functions
+
     var defaultOptions = {
         cube: null,
         row: null,
@@ -247,6 +249,24 @@ var Cell = function(opts) {
         }
     });
 
+    Object.defineProperty(this, 'options', {
+        enumerable: false,
+        configurable: false,
+        set: NOOP,
+        get: function() {
+            return {
+                row: this.row,
+                column: this.column,
+                depth: this.depth,
+                color:this.color,
+                on: this.on,
+                size: this.size,
+                clickable:this.clickable,
+                rotation:this.rotation,
+            };
+        }
+    });
+
     this.applyOptions = function(newOpts) {
         if (!(newOpts instanceof Object))
         {
@@ -290,5 +310,5 @@ Cell.prototype.setFromCell = function(otherCell) {
 };
 
 Cell.prototype.toJSON = function() {
-    return _.cloneDeep(_options);
-}
+    return this.options;
+};
