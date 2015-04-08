@@ -815,11 +815,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 cube.pause();
             } else
             {
-                cube.play({
-                    direction: 'back',
-                    stepSize: cube.keyListenerOptions.stepSize,
-                    delay: cube.keyListenerOptions.animateRate,
-                });
+                cube.play();
             }
         } else if (e.keyCode === 8)
         {
