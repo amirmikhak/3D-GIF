@@ -6,6 +6,7 @@ var Cell = function(opts) {
     // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
 
     var defaultOptions = {
+        cube: null,
         row: null,
         column: null,
         depth: null,
@@ -16,6 +17,8 @@ var Cell = function(opts) {
         rotation: [0, 0, 0],
         transitionTransforms: false,
     };
+
+    var _cube;
 
     var _row;
     var _column;
@@ -90,6 +93,16 @@ var Cell = function(opts) {
         }.bind(cell));
     }
 
+    Object.defineProperty(this, 'cube', {
+        enumerable: true,
+        get: function() {
+            return _cube;
+        },
+        set: function(newCube) {
+            _cube = _options.cube = newCube;
+        }
+    });
+
     Object.defineProperty(this, 'row', {
         enumerable: true,
         get: function() {
@@ -159,6 +172,15 @@ var Cell = function(opts) {
 
     function clickHandler(event) {
         cell.on = !cell.on; // Toggle my on status when someone clicks the cell
+        if (cell.cube && cell.on)
+        {
+            /**
+             * @amirmikhak
+             * IF we have a connection to the cube and it has an opinion about
+             * what color we should be, let's honor it.
+             */
+            cell.color = cube.penColorRgb;
+        }
     };
 
     Object.defineProperty(this, 'clickable', {

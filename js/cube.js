@@ -40,7 +40,9 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
     var _stepButton;
     var _playButton;
     var _clearButton;
-    var _isPlaying;
+
+    var _isPlaying = false;
+    var _penColor = 'blue';
 
     var _xAngle = 0;
     var _yAngle = 0;
@@ -54,6 +56,7 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
         htmlReadyFailureFn = reject;
     });
 
+    this.hasColorPicker = false;
     this.hasPlaybackControls = false;
 
     Object.defineProperty(this, 'playbackOptions', {
@@ -286,7 +289,7 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
 
             return undefined;   // just being explicit about this
         }
-    })
+    });
 
     Object.defineProperty(this, 'charVoxelMap', {
         /**
@@ -408,7 +411,15 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
             '~': '[{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":true},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false}]',
             ' ': '[{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false},{"row":null,"column":null,"depth":0,"color":[0,0,255],"on":false}]',
         }
-    })
+    });
+
+    Object.defineProperty(this, 'outerDimensions', {
+        enumerable: false,
+        set: NOOP,
+        get: function() {
+            return this.size * this.cellOptions.size;
+        }
+    });
 
     Object.defineProperty(this, 'isPlaying', {
         enumerable: false,
@@ -421,6 +432,46 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
             {
                 _playButton.classList.toggle('playing', nowPlaying);
                 _playButton.classList.toggle('paused', !nowPlaying);
+            }
+        }
+    });
+
+    Object.defineProperty(this, 'penColorRgb', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            var colorNameRgbMap = {
+                indigo: [75, 0, 130],
+                blue: [0, 0, 255],
+                cyan: [0, 255, 255],
+                yellow: [255, 255, 0],
+                green: [0, 255, 0],
+                majenta: [255, 0, 255],
+                orange: [255, 127, 0],
+                red: [255, 0, 0],
+            };
+
+            return colorNameRgbMap[this.penColor] || [255, 255, 255];
+        },
+    });
+
+    Object.defineProperty(this, 'penColor', {
+        enumerable: true,
+        get: function() {
+            return _penColor;
+        },
+        set: function(newColor) {
+            _penColor = newColor;
+            if (this.hasColorPicker)
+            {
+                var radioSelector = 'input[type="radio"][name="color"]';
+                var radioElList = this.colorPickerContainerEl.querySelectorAll(radioSelector);
+                var radioElArray = Array.prototype.slice.apply(radioElList);
+                radioElArray.forEach(function(input) {
+                    input.checked = (input.value === _penColor);
+                    var swatch = input.nextElementSibling;
+                    swatch.style.backgroundColor = swatch.dataset.color;
+                });
             }
         }
     });
@@ -479,20 +530,18 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
     // SET UP REST OF SELF
     this.size = size; // How many rows and columns do I have?
 
-    var outerDimensions = this.size * this.cellOptions.size;
-
     (function buildHTML() {
         // The HTML display of the cube istelf
         this.html = document.createElement('div');
         this.html.id = 'cube';
 
-        this.html.style.height = outerDimensions + 'px';
-        this.html.style.width = outerDimensions + 'px';
+        this.html.style.height = this.outerDimensions + 'px';
+        this.html.style.width = this.outerDimensions + 'px';
         this.html.style.transformStyle = 'preserve-3d';
         this.html.style.transformOrigin = [
-            ['calc(', outerDimensions, 'px/2)'].join(''),
-            ['calc(', outerDimensions, 'px/2)'].join(''),
-            ['calc(-1 * ', outerDimensions, 'px/2)'].join(''),
+            ['calc(', this.outerDimensions, 'px/2)'].join(''),
+            ['calc(', this.outerDimensions, 'px/2)'].join(''),
+            ['calc(-1 * ', this.outerDimensions, 'px/2)'].join(''),
         ].join(' ');
 
         htmlReadySuccessFn();
@@ -508,6 +557,7 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
 
                 // Create a cell
                 var cell = new Cell({
+                    cube: this,
                     size: this.cellOptions.size,
                     depth: depth,
                     column: column,
@@ -778,7 +828,82 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
     this.playbackOptions = {
         direction: this.playbackOptions.direction,  // trigger sync of DOM with state
     }
-}
+};
+
+Cube.prototype.buildColorPicker = function(parentEl) {
+    if (!this.hasColorPicker && (parentEl instanceof HTMLElement))
+    {
+        this.hasColorPicker = true;
+        this.colorPickerContainerEl = parentEl;
+        this.colorPickerContainerEl.classList.add('color-list');
+
+        this.colorPickerContainerEl.innerHTML = (
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="indigo" />' +
+                '<div data-color="indigo"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="blue" />' +
+                '<div data-color="blue"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="cyan" />' +
+                '<div data-color="cyan"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="yellow" />' +
+                '<div data-color="yellow"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="green" />' +
+                '<div data-color="green"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="magenta" />' +
+                '<div data-color="magenta"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="orange" />' +
+                '<div data-color="orange"></div>' +
+            '</label>' +
+            '<label class="swatch">' +
+                '<input type="radio" name="color" value="red" />' +
+                '<div data-color="red"></div>' +
+            '</label>'
+        );
+
+        /**
+         * @amirmikhak
+         * Position the color picker
+         */
+        var colorPickerHeight = this.colorPickerContainerEl.getBoundingClientRect().height;
+
+        this.colorPickerContainerEl.style.position = 'absolute';
+        this.colorPickerContainerEl.style.top = [
+            'calc(50% - ', colorPickerHeight / 2, 'px)'
+        ].join('');
+        this.colorPickerContainerEl.style.left = [
+            'calc(50% - ', this.outerDimensions, 'px)'
+        ].join('');
+
+        /**
+         * @amirmikhak
+         * Add event listener for change in DOM to be reflected in Cube's model
+         */
+        this.colorPickerContainerEl.addEventListener('change', function(e) {
+            if ((e.target.nodeName === 'INPUT') && (e.target.name === 'color'))
+            {
+                cube.penColor = e.target.value;
+            }
+        });
+
+        /**
+         * @amirmikhak
+         * Sync DOM/Cube on build
+         */
+        this.penColor = this.penColor;
+    }
+};
 
 Cube.prototype.listenForKeystrokes = function(opts) {
     var cube = this;
