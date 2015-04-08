@@ -1,4 +1,4 @@
-var Cube = function(size, parentElement, stepButton, playButton, clearButton, cellOpts) {
+var Cube = function(size, parentElement, prevStepButton, nextStepButton, playButton, clearButton, cellOpts) {
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
@@ -37,7 +37,8 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
     var _cellOptions = _.extend({}, defaultCellOptions);
     var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
-    var _stepButton;
+    var _prevStepButton;
+    var _nextStepButton;
     var _playButton;
     var _clearButton;
 
@@ -537,10 +538,23 @@ var Cube = function(size, parentElement, stepButton, playButton, clearButton, ce
         }
     }
 
-    if (stepButton instanceof HTMLElement)
+    if (prevStepButton instanceof HTMLElement)
     {
-        _stepButton = stepButton;
-        _stepButton.addEventListener('click', function(event) {
+        _prevStepButton = prevStepButton;
+        _prevStepButton.addEventListener('click', function(event) {
+            if (cube.isPlaying)
+            {
+                cube.pause();
+            }
+
+            cube.step(-1);
+        });
+    }
+
+    if (nextStepButton instanceof HTMLElement)
+    {
+        _nextStepButton = nextStepButton;
+        _nextStepButton.addEventListener('click', function(event) {
             if (cube.isPlaying)
             {
                 cube.pause();
@@ -863,20 +877,19 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
     this.playbackControlsContainerEl = parentEl;
     this.playbackControlsContainerEl.classList.add('playback-controls');
     this.playbackControlsContainerEl.innerHTML = (
-        'Direction<br>' +
         '<div class="radio-tabs">' +
             '<input id="direction-radio-back" type="radio" name="direction" value="back" />' +
-            '<label for="direction-radio-back" class="radio-tab">Back</label>' +
+            '<label for="direction-radio-back" class="control-button radio-tab">Back</label>' +
             '<input id="direction-radio-left" type="radio" name="direction" value="left" />' +
-            '<label for="direction-radio-left" class="radio-tab">Left</label>' +
+            '<label for="direction-radio-left" class="control-button radio-tab">Left</label>' +
             '<input id="direction-radio-up" type="radio" name="direction" value="up" />' +
-            '<label for="direction-radio-up" class="radio-tab">Up</label>' +
+            '<label for="direction-radio-up" class="control-button radio-tab">Up</label>' +
             '<input id="direction-radio-down" type="radio" name="direction" value="down" />' +
-            '<label for="direction-radio-down" class="radio-tab">Down</label>' +
+            '<label for="direction-radio-down" class="control-button radio-tab">Down</label>' +
             '<input id="direction-radio-right" type="radio" name="direction" value="right" />' +
-            '<label for="direction-radio-right" class="radio-tab">Right</label>' +
+            '<label for="direction-radio-right" class="control-button radio-tab">Right</label>' +
             '<input id="direction-radio-forward" type="radio" name="direction" value="forward" />' +
-            '<label for="direction-radio-forward" class="radio-tab">Forward</label>' +
+            '<label for="direction-radio-forward" class="control-button radio-tab">Forward</label>' +
         '</div>'
     );
 
@@ -942,6 +955,13 @@ Cube.prototype.buildColorPicker = function(parentEl) {
          */
         var colorPickerHeight = this.colorPickerContainerEl.getBoundingClientRect().height;
 
+        /**
+         * @amirmikhak
+         * !TODO: fix this.
+         * need this correction look correct in a pinch.
+         */
+        colorPickerHeight -= 100;
+
         this.colorPickerContainerEl.style.position = 'absolute';
         this.colorPickerContainerEl.style.top = [
             'calc(50% - ', colorPickerHeight / 2, 'px)'
@@ -994,6 +1014,13 @@ Cube.prototype.buildShapePicker = function(parentEl) {
          * Position the shape picker
          */
         var shapePickerHeight = this.shapePickerContainerEl.getBoundingClientRect().height;
+        /**
+         * @amirmikhak
+         * !TODO: fix this.
+         * need this correction look correct in a pinch.
+         */
+        shapePickerHeight -= 100;
+
 
         this.shapePickerContainerEl.style.position = 'absolute';
         this.shapePickerContainerEl.style.top = [
