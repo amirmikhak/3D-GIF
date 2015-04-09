@@ -575,6 +575,8 @@ var Cube = function(size, cellOpts) {
     }
 
     var _buildShapePicker = function _buildShapePicker(parentEl) {
+        _destroyShapePicker();
+
         _shapePicker = parentEl;
         _shapePicker.classList.add('shape-list');
         _shapePicker.innerHTML = this.shapeNames.map(function(shapeName) {
