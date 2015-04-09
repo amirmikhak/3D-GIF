@@ -8,12 +8,10 @@ To run on local machine:
 
 Using npm:
 
-    Run these commands from the terminal while inside the root directory of the repository:
+Run these commands from the terminal while inside the root directory of the repository:
 
-    ```
     npm install -g http-server
     http-server . -a 127.0.0.1 -p 9001
-    ```
 
 
 Keyboard Actions
