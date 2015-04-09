@@ -462,10 +462,22 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
         },
         set: function(nowPlaying) {
             _isPlaying = nowPlaying;
+
             if (_playButton instanceof HTMLElement)
             {
-                _playButton.classList.toggle('playing', nowPlaying);
-                _playButton.classList.toggle('paused', !nowPlaying);
+                _playButton.classList.toggle('playing', _isPlaying);
+                _playButton.classList.toggle('paused', !_isPlaying);
+            }
+
+            if (_isPlaying)
+            {
+                clearInterval(this.animateInterval);
+                this.animateInterval = setInterval(function() {
+                    this.animationCb.apply(this);
+                }.bind(this), this.playbackOptions.delay);
+            } else
+            {
+                clearInterval(cube.animateInterval);
             }
         }
     });
@@ -856,25 +868,6 @@ Cube.prototype.applyCell = function(newCell) {
  * ANIMATION FUNCTIONS
  */
 
-Cube.prototype.play = function(opts) {
-    /**
-     * @amirmikhak
-     * Starts the animation loop. The loop can be stopped using cube.clear();
-     */
-    opts = typeof opts !== 'undefined' ? opts : {};
-
-    this.playbackOptions = opts;
-
-    this.isPlaying = true;
-
-    clearInterval(this.animateInterval);
-    this.animateInterval = setInterval(function() {
-        this.animationCb.apply(this);
-    }.bind(this), this.playbackOptions.delay);
-
-    return this;    // enables multiple calls on cube to be "chained"
-};
-
 Cube.prototype.step = function(numSteps) {
     /**
      * @amirmikhak
@@ -918,13 +911,25 @@ Cube.prototype.step = function(numSteps) {
     return this;    // enables multiple calls on cube to be "chained"
 }
 
+Cube.prototype.play = function(opts) {
+    /**
+     * @amirmikhak
+     * Starts the animation loop. The loop can be stopped using cube.clear();
+     */
+    opts = typeof opts !== 'undefined' ? opts : {};
+
+    this.playbackOptions = opts;
+    this.isPlaying = true;
+
+    return this;    // enables multiple calls on cube to be "chained"
+};
+
 Cube.prototype.pause = function() {
     /**
      * @amirmikhak
      * Stop the animation loop. The loop can be started using cube.play();
      */
     this.isPlaying = false;
-    clearInterval(cube.animateInterval);
 
     return this;    // enables multiple calls on cube to be "chained"
 };
