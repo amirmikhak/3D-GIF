@@ -44,8 +44,8 @@ var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButto
     var _playButton;
     var _clearButton;
 
-    var _colorPicker = false;
-    var _playbackControls = false;
+    var _colorPicker;
+    var _playbackControls;
 
     var _fontMap = {};
     var _activeFont;
@@ -58,6 +58,7 @@ var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButto
     var _transitionTransforms;
     var _rotateCells = false;
 
+
     /**
      * @amirmikhak
      * We use this "Promise" and expose these callbacks to ensure that functions
@@ -68,6 +69,7 @@ var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButto
      * https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
      * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
      */
+
     var htmlReadySuccessFn;
     var htmlReadyFailureFn;
     this.htmlReady = new Promise(function(resolve, reject) {
@@ -456,6 +458,12 @@ var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButto
         }
     });
 
+
+    /**
+     * @amirmikhak
+     * DOM-RELATED PROPERTIES AND HELPER FUNCTIONS
+     */
+
     var __colorPickerChangeListener = function(e) {
         if ((e.target.nodeName === 'INPUT') && (e.target.name === 'color'))
         {
@@ -618,10 +626,16 @@ var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButto
                 _container = undefined;
             } else
             {
-                console.error('Invalid playbackControls: must be instance of HTMLElement');
+                console.error('Invalid container: must be instance of HTMLElement');
             }
         }
     });
+
+
+    /**
+     * @amirmikhak
+     * FONT-RELATED PROPERTIES
+     */
 
     Object.defineProperty(this, 'hasFont', {
         enumerable: true,
@@ -700,6 +714,7 @@ var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButto
      * These functions are attached inside of the original definition of the cube
      * because they need access to "private" variables: _fontMap, _shapeMap.
      */
+
      this.loadFont = function(handle, url) {
          /**
           * @amirmikhak
@@ -869,6 +884,7 @@ Cube.prototype.toJSON = function() {
      * the .toJSON() method because it's doing a similar traversal when
      * generating a string representation of each object.
      */
+
     return {
         size: this.size,
         cells: this.cells,
@@ -883,6 +899,7 @@ Cube.prototype.nudge = function(direction, amount) {
      * Rotate the cube in a direction (left, right, up, down) by an amount
      * (in degrees).
      */
+
     amount = !isNaN(parseFloat(amount, 10)) ? amount : 1;
 
     switch (direction) {
@@ -910,6 +927,7 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
      * along a given plane (axis: X, Y, Z). Wrap defines whether cells "fall
      * off" or wrap to the opposite face when shifting out of bounds.
      */
+
     stepSize = typeof stepSize !== 'undefined' ? stepSize : -1;
     wrap = typeof wrap !== 'undefined' ? !!wrap : true;
 
@@ -992,6 +1010,7 @@ Cube.prototype.getCellAt = function(row, column, depth) {
      * of existing, valid cells. See cell.setFromCell() for the list of
      * properties that are copied between cells.
      */
+
     if ((row < 0) || (row > this.size - 1) ||
         (column < 0) || (column > this.size - 1) ||
         (depth < 0) ||  (depth > this.size - 1))
@@ -1013,6 +1032,7 @@ Cube.prototype.setCellAt = function(row, column, depth, newCell) {
      *
      * Throws "Invalid coordinate" if the coordinate is impossible.
      */
+
     if ((row < 0) || (row > this.size - 1) ||
         (column < 0) || (column > this.size - 1) ||
         (depth < 0) ||  (depth > this.size - 1))
@@ -1036,6 +1056,7 @@ Cube.prototype.applyCell = function(newCell) {
      * column, and depth are all set. This may be useful for programatically
      * created Cell objects.
      */
+
     return this.setCellAt(newCell.row, newCell.column, newCell.depth, newCell);
 };
 
@@ -1052,6 +1073,7 @@ Cube.prototype.step = function(numSteps) {
      * is negative, we take the number of steps in the "opposite" direction for
      * the current animation settings.
      */
+
     var DEFAULT_NUM_STEPS = 1;
     numSteps = typeof numSteps !== 'undefined' ? parseInt(numSteps, 10) || DEFAULT_NUM_STEPS : DEFAULT_NUM_STEPS;
 
@@ -1093,6 +1115,7 @@ Cube.prototype.play = function(opts) {
      * @amirmikhak
      * Starts the animation loop. The loop can be stopped using cube.clear();
      */
+
     opts = typeof opts !== 'undefined' ? opts : {};
 
     this.playbackOptions = opts;
@@ -1106,9 +1129,16 @@ Cube.prototype.pause = function() {
      * @amirmikhak
      * Stop the animation loop. The loop can be started using cube.play();
      */
+
     this.isPlaying = false;
 
     return this;    // enables multiple calls on cube to be "chained"
+};
+
+Cube.prototype.togglePlaying = function(force) {
+    this.isPlaying = (typeof force !== 'undefined') ?
+        force :
+        !this.isPlaying;
 };
 
 Cube.prototype.clear = function() {
@@ -1116,6 +1146,7 @@ Cube.prototype.clear = function() {
      * @amirmikhak
      * Clear the contents of the cube.
      */
+
     this.cells.forEach(function(cell) {
         cell.on = false;
     });
@@ -1253,13 +1284,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             e.preventDefault();
             e.stopPropagation();
 
-            if (cube.isPlaying)
-            {
-                cube.pause();
-            } else
-            {
-                cube.play();
-            }
+            cube.togglePlaying();
         } else if (e.keyCode === 8) // delete
         {
             e.preventDefault();
@@ -1267,11 +1292,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
             if (e.ctrlKey)
             {
-                if (cube.isPlaying)
-                {
-                    cube.pause();
-                }
-
+                cube.pause();
                 cube.clear();   // clear whole cube
             } else
             {
@@ -1382,10 +1403,12 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
 
     var charPixels = cube.activeFontChars[char];
 
+
     /**
      * @amirmikhak
      * Loop over each pixel to apply the current penColor if the pixel is on.
      */
+
     charPixels.forEach(function(cell) {
         if (cell.on)
         {
