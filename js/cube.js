@@ -661,6 +661,8 @@ var Cube = function(size, cellOpts) {
     };
 
     var _buildPlaybackControls = function _buildPlaybackControls(parentEl) {
+        _destroyPlaybackControls();
+
         var directions = ['back', 'left', 'up', 'down', 'right', 'forward'];
         var optionsHtml = directions.map(function(direction) {
             return [
