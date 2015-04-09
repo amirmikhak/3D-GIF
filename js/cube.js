@@ -1138,11 +1138,9 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 }
             }
 
-            cube.pause().play({
+            cube.playbackOptions = {
                 direction: newDirection,
-                stepSize: cube.keyListenerOptions.stepSize,
-                delay: cube.keyListenerOptions.animateRate,
-            });
+            };
         } else if (e.ctrlKey && e.keyCode >= 48 && e.keyCode <= 57) // ctrl + num row
         {
             e.preventDefault();
