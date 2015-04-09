@@ -24,6 +24,20 @@ var Cell = function(opts) {
     var TRANSITION_EASING = 'ease-in-out';
 
     var _options = _.extend({}, defaultOptions, opts);
+    var _drawnOptions = {};
+    var _dirtyOptions = {
+        row: false,
+        column: false,
+        depth: false,
+        color: false,
+        on: false,
+        size: false,
+        rotation: false,
+        transitionTransforms: false,
+    };
+
+    var _colorRgbString = '0,0,0';  // trying to preconcat this for performance reasons
+    var _hasRotation = false;   // also here for performance reasons
 
     /**
      * We use this "Promise" and expose these callbacks to ensure that functions
@@ -41,20 +55,30 @@ var Cell = function(opts) {
         htmlReadyFailureFn = reject;
     });
 
-    function getRbgaFromColorWithOpacity(color, opacity) {
-        return 'rgba(' + color.join(',') + ',' + opacity + ')';
+    function areEqual(a, b) {
+        // a function for comparing simple and more complex types such as arrays
+        return (
+              (a === null || b === null) ||
+              (typeof a === 'undefined' || typeof b === 'undefined')
+          ) ?
+            a === b :
+            a.toString() === b.toString();   // crappy but close enough for now
     }
 
-    function render() {
-        /**
-         * Idempotent* render function to ensure that the state of the model and
-         * DOM are not out of sync.
-         *
-         * * Can be called as many times as you like and nothing bad or unexpected
-         *   will happen. Technical definition: http://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
-         */
-        cell.htmlReady.then(function() {
-            if (this.transitionTransforms)
+    function calculateDirtyOptions() {
+        for (var key in _options)
+        {
+            _dirtyOptions[key] = !areEqual(_options[key], _drawnOptions[key]);
+        }
+    }
+
+    function updateDOM() {
+        var _size = _options['size'];   // performance
+        var _on = _options['on'];   // performance
+
+        if (_dirtyOptions['transitionTransforms'])
+        {
+            if (_options['transitionTransforms'])
             {
                 this.html.style.transitionProperty = 'transform';
                 this.html.style.transitionDuration = TRANSITION_DURATION;
@@ -65,66 +89,111 @@ var Cell = function(opts) {
                 this.html.style.transitionDuration = null;
                 this.html.style.transitionTimingFunction = null;
             }
+        }
 
+        if (_dirtyOptions.on || _dirtyOptions.color)
+        {
             // render the LED's on-ness
-            this.led.classList.toggle('on', this.on);
-            this.html.style.opacity = this.on ? 1 : null;
+            this.led.classList.toggle('on', _on);
+            this.html.style.opacity = _on ? 1 : null;
 
             // render the LED's color
-            this.led.style.backgroundColor = getRbgaFromColorWithOpacity(this.on ? this.color : [0, 0, 0], 1);
-            this.html.style.backgroundColor = this.on ?
-                getRbgaFromColorWithOpacity(this.color, 0.125) :
+            this.led.style.backgroundColor = _on ?
+                ['rgba(', _colorRgbString, ',1)'].join('') :
+                'rgba(0,0,0,1)';
+            this.html.style.backgroundColor = _on ?
+                ['rgba(', _colorRgbString, ',', 0.125, ')'].join('') :
                 null;
+        }
 
-            // apply cell data attributes
-            this.html.setAttribute('data-row', this.row);
-            this.html.setAttribute('data-column', this.column);
-            this.html.setAttribute('data-depth', this.depth);
+        // apply cell data attributes
+        if (_dirtyOptions.row)
+        {
+            this.html.setAttribute('data-row', _options['row']);
+        }
+        if (_dirtyOptions.column)
+        {
+            this.html.setAttribute('data-column', _options['column']);
+        }
+        if (_dirtyOptions.depth)
+        {
+            this.html.setAttribute('data-depth', _options['depth']);
+        }
 
-            // set the size of the cell
-            this.html.style.width = this.size + 'px';
-            this.html.style.height = this.size + 'px';
+        // set the size of the cell
+        if (_dirtyOptions.size)
+        {
+            this.html.style.width = _size + 'px';
+            this.html.style.height = _size + 'px';
+        }
 
-            /**
-             * Build the string to position the cell / optionally change its face
-             *
-             * NOTE: 3d transforms are not commutitive meaning that the order
-             *  of the transforms matters. Browsers apply transforms in reverse
-             *  order of their appearance in the CSS. That is in the case of
-             *  "transform: A B C;" browsers will first perform transform C,
-             *  then B, then A.
-             */
-            var xform = [
-                ['translateX(', (this.size * this.column), 'px)'].join(''),
-                ['translateY(', (this.size * this.row), 'px)'].join(''),
-                ['translateZ(', (-1 * this.size * this.depth), 'px)'].join(''),
-                ['rotateX(', this.rotation[0], 'deg)'].join(''),
-                ['rotateY(', this.rotation[1], 'deg)'].join(''),
-                ['rotateZ(', this.rotation[2], 'deg)'].join(''),
-            ].join(' ');
+        /**
+         * Build the string to position the cell / optionally change its face
+         *
+         * NOTE: 3d transforms are not commutitive meaning that the order
+         *  of the transforms matters. Browsers apply transforms in reverse
+         *  order of their appearance in the CSS. That is in the case of
+         *  "transform: A B C;" browsers will first perform transform C,
+         *  then B, then A.
+         */
+         if (_dirtyOptions.size ||
+            _dirtyOptions.row ||
+            _dirtyOptions.column ||
+            _dirtyOptions.depth ||
+            _dirtyOptions.rotation)
+         {
+            var xformPieces = [
+                ['translateX(', (_size * _options['column']), 'px)'].join(''),
+                ['translateY(', (_size * _options['row']), 'px)'].join(''),
+                ['translateZ(', (-1 * _size * _options['depth']), 'px)'].join(''),
+            ];
+
+            if (_hasRotation)
+            {   // if we need to rotate the cell...
+                // ... add the rotation transform rules to the array
+                var rot = _options['rotation'];
+                xformPieces.push(['rotateX(', rot[0], 'deg)'].join(''));
+                xformPieces.push(['rotateY(', rot[1], 'deg)'].join(''));
+                xformPieces.push(['rotateZ(', rot[2], 'deg)'].join(''));
+            }
 
             // assign the built string to the element
-            this.html.style.transform = xform;
-        }.bind(cell));
+            this.html.style.transform = xformPieces.join(' ');;
+         }
+
+    }
+
+    function render() {
+        /**
+         * Idempotent* render function to ensure that the state of the model and
+         * DOM are not out of sync.
+         *
+         * * Can be called as many times as you like and nothing bad or unexpected
+         *   will happen. Technical definition: http://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
+         */
+
+        calculateDirtyOptions();
+
+        cell.htmlReady.then(updateDOM.bind(cell));
     }
 
     Object.defineProperty(this, 'cube', {
         enumerable: true,
         get: function() {
-            return _options.cube;
+            return _options['cube'];
         },
         set: function(newCube) {
-            _options.cube = newCube;
+            _options['cube'] = newCube;
         }
     });
 
     Object.defineProperty(this, 'row', {
         enumerable: true,
         get: function() {
-            return _options.row;
+            return _options['row'];
         },
         set: function(newRow) {
-            _options.row = newRow;
+            _options['row'] = newRow;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -132,10 +201,10 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'column', {
         enumerable: true,
         get: function() {
-            return _options.column;
+            return _options['column'];
         },
         set: function(newColumn) {
-            _options.column = newColumn;
+            _options['column'] = newColumn;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -143,10 +212,10 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'depth', {
         enumerable: true,
         get: function() {
-            return _options.depth;
+            return _options['depth'];
         },
         set: function(newDepth) {
-            _options.depth = newDepth;
+            _options['depth'] = newDepth;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -154,10 +223,11 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'color', {
         enumerable: true,
         get: function() {
-            return _options.color;
+            return _options['color'];
         },
         set: function(newColor) {
-            _options.color = newColor;
+            _options['color'] = newColor;
+            _colorRgbString = _options['color'].join(',')
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -165,10 +235,10 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'on', {
         enumerable: true,
         get: function() {
-            return _options.on;
+            return _options['on'];
         },
         set: function(turnOn) {
-            _options.on = turnOn;
+            _options['on'] = turnOn;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -176,17 +246,17 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'size', {
         enumerable: true,
         get: function() {
-            return _options.size;
+            return _options['size'];
         },
         set: function(newSize) {
-            _options.size = newSize;
+            _options['size'] = newSize;
             render();   // call to ensure that the DOM is sync with model
         }
     });
 
     function clickHandler(event) {
-        cell.on = !cell.on; // Toggle my on status when someone clicks the cell
-        if (cell.cube && cell.on)
+        cell.on = !_options['on']; // Toggle my on status when someone clicks the cell
+        if (cell.cube && _options['on'])
         {
             /**
              * IF we have a connection to the cube and it has an opinion about
@@ -203,10 +273,10 @@ var Cell = function(opts) {
          */
         enumerable: true,
         get: function() {
-            return _options.clickable;
+            return _options['clickable'];
         },
         set: function(newClickable) {
-            _options.clickable = newClickable;
+            _options['clickable'] = newClickable;
             cell.htmlReady.then(function() {
                 /**
                  * The binding of even listeners is not put into the render() function
@@ -223,7 +293,7 @@ var Cell = function(opts) {
                 {
                     cell.html.removeEventListener('click', clickHandler);   // we don't want the same handler bound more than once
                     cell.html.addEventListener('click', clickHandler);
-                    _options.clickable = newClickable;
+                    _options['clickable'] = newClickable;
                 } else
                 {
                     cell.html.removeEventListener('click', clickHandler);
@@ -240,7 +310,7 @@ var Cell = function(opts) {
          */
         enumerable: true,
         get: function() {
-            return _options.rotation;
+            return _options['rotation'];
         },
         set: function(newRotation) {
             var invalidValueChecker = function(axisValue) {
@@ -253,7 +323,12 @@ var Cell = function(opts) {
                 throw 'Bad value for cell.rotation: ' + newRotation;
             }
 
-            _options.rotation = newRotation;
+            _options['rotation'] = newRotation;
+
+            // cache whether we have a rotation for performance
+            _hasRotation = newRotation.reduce(function(prev, curr) {
+                return prev + curr;
+            });
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -264,10 +339,10 @@ var Cell = function(opts) {
          */
         enumerable: false,
         get: function() {
-            return _options.transitionTransforms;
+            return _options['transitionTransforms'];
         },
         set: function(shouldTransition) {
-            _options.transitionTransforms = shouldTransition;
+            _options['transitionTransforms'] = shouldTransition;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -285,14 +360,14 @@ var Cell = function(opts) {
         get: function() {
             return {
                 // do not include cube because we could get a circular reference
-                row: this.row,
-                column: this.column,
-                depth: this.depth,
-                color:this.color,
-                on: this.on,
-                size: this.size,
-                clickable: this.clickable,
-                rotation: this.rotation,
+                row: _options['row'],
+                column: _options['column'],
+                depth: _options['depth'],
+                color:t_options['color'],
+                on: _options['on'],
+                size: _options['size'],
+                clickable: _options['clickable'],
+                rotation: _options['rotation'],
             };
         }
     });
