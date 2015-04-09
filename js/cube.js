@@ -1024,8 +1024,7 @@ Cube.prototype.buildColorPicker = function(parentEl) {
 
         /**
          * @amirmikhak
-         * !TODO: fix this.
-         * need this correction look correct in a pinch.
+         * !TODO: Fix this. We need this correction look correct.
          */
         colorPickerHeight -= 100;
 
