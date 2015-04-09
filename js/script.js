@@ -14,9 +14,7 @@ window.addEventListener('load', function() { // When everything is loaded
     cube.clearButton = document.getElementById('clear');
     cube.playbackControls = document.getElementById('playback-controls');
     cube.colorPicker = document.getElementById('color-picker');
-
-    var shapePickerEl = document.getElementById('shape-picker');
-    cube.buildShapePicker(shapePickerEl);
+    cube.shapePicker = document.getElementById('shape-picker');
 
     cube.listenForKeystrokes();
 

@@ -45,6 +45,7 @@ var Cube = function(size, cellOpts) {
     var _clearButton;
 
     var _colorPicker;
+    var _shapePicker;
     var _playbackControls;
 
     var _fontMap = {};
@@ -541,6 +542,97 @@ var Cube = function(size, cellOpts) {
             } else
             {
                 console.error('Invalid colorPicker: must be instance of HTMLElement');
+            }
+        },
+    });
+
+
+        /**
+         * @amirmikhak
+         * Shape Picker property and helpers
+         */
+
+    var __shapePickerClickListener = function(e) {
+        if (e.target.dataset && e.target.dataset.shape)
+        {
+            cube.renderShape(e.target.dataset.shape);
+        }
+    };
+
+    var _destroyShapePicker = function _destroyShapePicker() {
+        if (_shapePicker)
+        {
+            _shapePicker.classList.add('shape-list');
+            _shapePicker.innerHTML = '';
+            _shapePicker.style.position = null;
+            _shapePicker.style.top = null;
+            _shapePicker.style.right = null;
+            _shapePicker.removeEventListener('click', __shapePickerClickListener);
+        }
+    }
+
+    var _buildShapePicker = function _buildShapePicker(parentEl) {
+        _shapePicker = parentEl;
+        _shapePicker.classList.add('shape-list');
+        _shapePicker.innerHTML = this.shapeNames.map(function(shapeName) {
+            var shapeRender = this.getPngDataOfSlice(this.shapes[shapeName]);
+            var styles = [
+                'background-image:url(\'' + shapeRender + '\')',
+                'background-size:cover',
+                'background-position:50% 50%',
+            ].join(';');
+
+            return [
+                '<div class="swatch" data-shape="', shapeName, '" ',
+                    'style="', styles, '"></div>'
+            ].join('')
+        }.bind(this)).join('');
+
+        /**
+         * @amirmikhak
+         * Position the shape picker
+         */
+        var shapePickerHeight = _shapePicker.getBoundingClientRect().height;
+        /**
+         * @amirmikhak
+         * !TODO: Fix this. We need this correction look correct.
+         */
+        shapePickerHeight -= 100;
+
+        _shapePicker.style.position = 'absolute';
+        _shapePicker.style.top = [
+            'calc(50% - ', shapePickerHeight / 2, 'px)'
+        ].join('');
+        _shapePicker.style.right = [
+            'calc(50% - ', this.outerDimensions, 'px)'
+        ].join('');
+
+        /**
+         * @amirmikhak
+         * Add event listener to parent, which will catch all events that bubble
+         * up from children (the swatches).
+         */
+        _shapePicker.addEventListener('click', __shapePickerClickListener);
+    };
+
+    Object.defineProperty(this, 'shapePicker', {
+        enumerable: false,
+        get: function() {
+            return _shapePicker;
+        },
+        set: function(newShapePickerEl) {
+            if ((newShapePickerEl instanceof HTMLElement) &&
+                (newShapePickerEl !== _shapePicker))
+            {
+                _buildShapePicker.call(this, newShapePickerEl);
+            } else if ((newShapePickerEl === null) ||
+                (typeof newShapePickerEl === 'undefined'))
+            {
+                _destroyShapePicker();
+                _shapePicker = undefined;
+            } else
+            {
+                console.error('Invalid shapePicker: must be instance of HTMLElement');
             }
         },
     });
@@ -1250,62 +1342,6 @@ Cube.prototype.clear = function() {
     this.cells.forEach(function(cell) {
         cell.on = false;
     });
-
-    return this;    // enables multiple calls on cube to be "chained"
-};
-
-Cube.prototype.buildShapePicker = function(parentEl) {
-    if (!this.hasShapePicker && (parentEl instanceof HTMLElement))
-    {
-        this.hasShapePicker = true;
-        this.shapePickerContainerEl = parentEl;
-        this.shapePickerContainerEl.classList.add('shape-list');
-        this.shapePickerContainerEl.innerHTML = this.shapeNames.map(function(shapeName) {
-            var shapeRender = cube.getPngDataOfSlice(cube.shapes[shapeName]);
-            var styles = [
-                'background-image:url(\'' + shapeRender + '\')',
-                'background-size:cover',
-                'background-position:50% 50%',
-            ].join(';');
-
-            return [
-                '<div class="swatch" data-shape="', shapeName, '" ',
-                    'style="', styles, '"></div>'
-            ].join('')
-        }).join('');
-
-        /**
-         * @amirmikhak
-         * Position the shape picker
-         */
-        var shapePickerHeight = this.shapePickerContainerEl.getBoundingClientRect().height;
-        /**
-         * @amirmikhak
-         * !TODO: Fix this. We need this correction look correct.
-         */
-        shapePickerHeight -= 100;
-
-
-        this.shapePickerContainerEl.style.position = 'absolute';
-        this.shapePickerContainerEl.style.top = [
-            'calc(50% - ', shapePickerHeight / 2, 'px)'
-        ].join('');
-        this.shapePickerContainerEl.style.right = [
-            'calc(50% - ', this.outerDimensions, 'px)'
-        ].join('');
-
-        /**
-         * @amirmikhak
-         * Add event listener to parent, which will catch all events that bubble
-         * up from children (the swatches).
-         */
-        this.shapePickerContainerEl.addEventListener('click', function(e) {
-            if (e.target.dataset && e.target.dataset.shape)
-            {
-                cube.renderShape(e.target.dataset.shape);
-            }
-        });
-    }
 
     return this;    // enables multiple calls on cube to be "chained"
 };
