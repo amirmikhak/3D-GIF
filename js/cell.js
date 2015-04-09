@@ -177,7 +177,6 @@ var Cell = function(opts) {
         if (cell.cube && cell.on)
         {
             /**
-             * @amirmikhak
              * IF we have a connection to the cube and it has an opinion about
              * what color we should be, let's honor it.
              */
@@ -194,7 +193,6 @@ var Cell = function(opts) {
             _options.clickable = newClickable;
             cell.htmlReady.then(function() {
                 /**
-                 * @amirmikhak
                  * The binding of even listeners is not put into the render() function
                  * because the render function is meant to be idempotent. That is, one
                  * should be able to call it as many time as they like and the state

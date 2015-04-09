@@ -60,7 +60,6 @@ var Cube = function(size, cellOpts) {
 
 
     /**
-     * @amirmikhak
      * We use this "Promise" and expose these callbacks to ensure that functions
      * that expect the cube's DOM to be present and built don't run until this
      * is actually the case.
@@ -78,7 +77,6 @@ var Cube = function(size, cellOpts) {
 
     Object.defineProperty(this, 'playbackOptions', {
         /**
-         * @amirmikhak
          * Property that is referenced to determine the correct animation callbacks
          * to generate the next frame.
          */
@@ -94,14 +92,12 @@ var Cube = function(size, cellOpts) {
             cube.pause();
 
             /**
-             * @amirmikhak
              * Verify that the new direction, if present, is valid.
              */
             if (newOptions.direction &&
                 validDirections.indexOf(newOptions.direction) !== -1)
             {
                 /**
-                 * @amirmikhak
                  * If there are playback controls that are rendered, we want to keep
                  * them in sync with our internal state.
                  */
@@ -118,7 +114,6 @@ var Cube = function(size, cellOpts) {
             } else
             {
                 /**
-                 * @amirmikhak
                  * Delete the invalid property on the new settings to prevent
                  * it from being applied.
                  */
@@ -126,7 +121,6 @@ var Cube = function(size, cellOpts) {
             }
 
             /**
-             * @amirmikhak
              * Actually apply the new settings.
              */
             _.extend(_playbackOptions, newOptions);
@@ -140,7 +134,6 @@ var Cube = function(size, cellOpts) {
 
     Object.defineProperty(this, 'keyListenerOptions', {
         /**
-         * @amirmikhak
          * Property that defines which keystrokes are listened for and sent to
          * the cube, and which playback settings to use for keyboard-generated
          * images. Custom keyboard playback settings only apply if the animate
@@ -157,7 +150,6 @@ var Cube = function(size, cellOpts) {
 
     function applyCameraAngle() {
         /**
-         * @amirmikhak
          * Helper function for xAngle and yAngle properties that helps ensure
          * that the visible angle of the cube is in sync with the internal state.
          */
@@ -170,7 +162,6 @@ var Cube = function(size, cellOpts) {
             if (cube.rotateCells)
             {
                 /**
-                 * @amirmikhak
                  * Only apply rotations if we need to because iterating over the cells
                  * is very expensive and reduces performance significantly. See the
                  * rotateCells property on "this" for more information.
@@ -216,7 +207,6 @@ var Cube = function(size, cellOpts) {
 
     Object.defineProperty(this, 'transitionTransforms', {
         /**
-         * @amirmikhak
          * Animate transforms on the cube (does not apply to cells, whose property
          * is set separately).
          */
@@ -248,7 +238,6 @@ var Cube = function(size, cellOpts) {
 
     Object.defineProperty(this, 'rotateCells', {
         /**
-         * @amirmikhak
          * If true, each cell rotates opposite the cube so that it is always facing
          * you. It is computationally expensive and graphically looks a little weird.
          * It is thus not especially useful, yet I leave it here for posterity.
@@ -262,7 +251,6 @@ var Cube = function(size, cellOpts) {
             if (!_rotateCells)
             {
                 /**
-                 * @amirmikhak
                  * To improve performance of applyCameraAngle(), we only iterate over
                  * the cells if we need to rotate them. Thus, if we are not rotating
                  * the cells but were previously, we need to "clear" their rotation
@@ -281,7 +269,6 @@ var Cube = function(size, cellOpts) {
 
     Object.defineProperty(this, 'animationSteps', {
         /**
-         * @amirmikhak
          * Read-only dictionary of some of the atomic changes that can be made to
          * the cube for an animation.
          */
@@ -335,7 +322,6 @@ var Cube = function(size, cellOpts) {
 
     Object.defineProperty(this, 'animationCb', {
         /**
-         * @amirmikhak
          * Read-only property for the correct animation callback to use for the
          * current action and direction.
          */
@@ -362,7 +348,6 @@ var Cube = function(size, cellOpts) {
 
     Object.defineProperty(this, 'shapes', {
         /**
-         * @amirmikhak
          * An object of image slice arrays, each of which could have been serialized.
          */
         enumerable: true,
@@ -410,7 +395,6 @@ var Cube = function(size, cellOpts) {
             }
 
             /**
-             * @amirmikhak
              * Start / stop the actual animation loop
              */
             if (_isPlaying)
@@ -428,7 +412,6 @@ var Cube = function(size, cellOpts) {
 
 
     /**
-     * @amirmikhak
      * Colors-related properties
      */
 
@@ -496,17 +479,14 @@ var Cube = function(size, cellOpts) {
 
 
     /**
-     * @amirmikhak
      * DOM-RELATED PROPERTIES AND HELPER FUNCTIONS
      */
 
         /**
-         * @amirmikhak
          * Color Picker property and helpers
          */
     var __colorPickerChangeListener = function(e) {
         /**
-         * @amirmikhak
          * Undo the actions of _buildColorPicker() so that the element is left
          * in as close a state as possible to that it was before being called.
          */
@@ -518,7 +498,6 @@ var Cube = function(size, cellOpts) {
 
     var _destroyColorPicker = function _destroyColorPicker() {
         /**
-         * @amirmikhak
          * Undo the actions of _buildColorPicker() so that the element is left
          * in as close a state as possible to that it was before being called.
          */
@@ -535,7 +514,6 @@ var Cube = function(size, cellOpts) {
 
     var _buildColorPicker = function _buildColorPicker(parentEl) {
         /**
-         * @amirmikhak
          * Build the color picker's components, position it, and bind its event
          * listener(s).
          */
@@ -553,13 +531,11 @@ var Cube = function(size, cellOpts) {
         }).join('');
 
         /**
-         * @amirmikhak
          * Position the color picker
          */
         var colorPickerHeight = _colorPicker.getBoundingClientRect().height;
 
         /**
-         * @amirmikhak
          * !TODO: Fix this. We need this correction look correct.
          */
         colorPickerHeight -= 100;
@@ -569,13 +545,11 @@ var Cube = function(size, cellOpts) {
         _colorPicker.style.left = ['calc(50% - ', this.outerDimensions, 'px)'].join('');
 
         /**
-         * @amirmikhak
          * Add event listener for change in DOM to be reflected in Cube's model
          */
         _colorPicker.addEventListener('change', __colorPickerChangeListener);
 
         /**
-         * @amirmikhak
          * Sync DOM/Cube on build
          */
         this.penColor = this.penColor;
@@ -588,7 +562,6 @@ var Cube = function(size, cellOpts) {
         },
         set: function(newColorPickerEl) {
             /**
-             * @amirmikhak
              * If the new parent element is a valid container for a color picker,
              * and if it's not the same as it is now, rebuild it. Otherwise, check
              * if the caller intended to remove the color picker, in which case
@@ -614,7 +587,6 @@ var Cube = function(size, cellOpts) {
 
 
         /**
-         * @amirmikhak
          * Shape Picker property and helpers
          */
 
@@ -627,7 +599,6 @@ var Cube = function(size, cellOpts) {
 
     var _destroyShapePicker = function _destroyShapePicker() {
         /**
-         * @amirmikhak
          * Undo the actions of _buildShapePicker() so that the element is left
          * in as close a state as possible to that it was before being called.
          */
@@ -666,12 +637,10 @@ var Cube = function(size, cellOpts) {
         }.bind(this)).join('');   // Use our "outside" this inside of the map
 
         /**
-         * @amirmikhak
          * Position the shape picker
          */
         var shapePickerHeight = _shapePicker.getBoundingClientRect().height;
         /**
-         * @amirmikhak
          * !TODO: Fix this. We need this correction look correct.
          */
         shapePickerHeight -= 100;
@@ -685,7 +654,6 @@ var Cube = function(size, cellOpts) {
         ].join('');
 
         /**
-         * @amirmikhak
          * Add event listener to parent, which will catch all events that bubble
          * up from children (the swatches).
          */
@@ -699,7 +667,6 @@ var Cube = function(size, cellOpts) {
         },
         set: function(newShapePickerEl) {
             /**
-             * @amirmikhak
              * This property follows the same pattern as the colorPicker property.
              */
             if ((newShapePickerEl instanceof HTMLElement) &&
@@ -721,7 +688,6 @@ var Cube = function(size, cellOpts) {
 
 
         /**
-         * @amirmikhak
          * Playback Controls property and helpers
          */
 
@@ -736,7 +702,6 @@ var Cube = function(size, cellOpts) {
 
     var _destroyPlaybackControls = function _destroyPlaybackControls() {
         /**
-         * @amirmikhak
          * Undo the actions of _buildPlaybackControls() so that the element is
          * left in as close a state as possible to that it was before being
          * called.
@@ -752,7 +717,6 @@ var Cube = function(size, cellOpts) {
 
     var _buildPlaybackControls = function _buildPlaybackControls(parentEl) {
         /**
-         * @amirmikhak
          * Build the color picker's components, position it, and bind its event
          * listener(s).
          */
@@ -760,7 +724,6 @@ var Cube = function(size, cellOpts) {
         _destroyPlaybackControls();
 
         /**
-         * @amirmikhak
          * Compose an array of strings into HTML using a template and Array.map(),
          * which converts each item in the array using the passed-in function.
          */
@@ -793,7 +756,6 @@ var Cube = function(size, cellOpts) {
         },
         set: function(newPlaybackControlsEl) {
             /**
-             * @amirmikhak
              * This property follows the same pattern as the colorPicker property.
              */
             if ((newPlaybackControlsEl instanceof HTMLElement) &&
@@ -814,7 +776,6 @@ var Cube = function(size, cellOpts) {
     });
 
         /**
-         * @amirmikhak
          * Cube Container property
          */
 
@@ -825,7 +786,6 @@ var Cube = function(size, cellOpts) {
         },
         set: function(newContainer) {
             /**
-             * @amirmikhak
              * This property follows the same pattern as the colorPicker property.
              */
             if ((newContainer instanceof HTMLElement) &&
@@ -848,7 +808,6 @@ var Cube = function(size, cellOpts) {
 
 
         /**
-         * @amirmikhak
          * Prev Step Button property and listener
          */
 
@@ -868,7 +827,6 @@ var Cube = function(size, cellOpts) {
         },
         set: function(newPrevStepButton) {
             /**
-             * @amirmikhak
              * This property follows the same pattern as the colorPicker property.
              */
             if ((newPrevStepButton instanceof HTMLElement) &&
@@ -898,7 +856,6 @@ var Cube = function(size, cellOpts) {
 
 
         /**
-         * @amirmikhak
          * Next Step Button property and listener
          */
 
@@ -914,7 +871,6 @@ var Cube = function(size, cellOpts) {
         },
         set: function(newNextStepButton) {
             /**
-             * @amirmikhak
              * This property follows the same pattern as the colorPicker property.
              */
             if ((newNextStepButton instanceof HTMLElement) &&
@@ -944,7 +900,6 @@ var Cube = function(size, cellOpts) {
 
 
         /**
-         * @amirmikhak
          * Play Button property and listener
          */
 
@@ -959,7 +914,6 @@ var Cube = function(size, cellOpts) {
         },
         set: function(newPlayButton) {
             /**
-             * @amirmikhak
              * This property follows the same pattern as the colorPicker property.
              */
             if ((newPlayButton instanceof HTMLElement) &&
@@ -989,7 +943,6 @@ var Cube = function(size, cellOpts) {
 
 
         /**
-         * @amirmikhak
          * Clear Button property and listener
          */
 
@@ -1004,7 +957,6 @@ var Cube = function(size, cellOpts) {
         },
         set: function(newClearButton) {
             /**
-             * @amirmikhak
              * This property follows the same pattern as the colorPicker property.
              */
             if ((newClearButton instanceof HTMLElement) &&
@@ -1034,7 +986,6 @@ var Cube = function(size, cellOpts) {
 
 
     /**
-     * @amirmikhak
      * FONT-RELATED PROPERTIES
      */
 
@@ -1087,7 +1038,6 @@ var Cube = function(size, cellOpts) {
 
     function fetchJSONFile(path, successCb, failureCb) {
         /**
-         * @amirmikhak
          * Helper function to make AJAX loading nicer. Grabbed from here: http://stackoverflow.com/questions/14388452/how-do-i-load-a-json-object-from-a-file-with-ajax
          */
         var httpRequest = new XMLHttpRequest();
@@ -1111,14 +1061,12 @@ var Cube = function(size, cellOpts) {
     }
 
     /**
-     * @amirmikhak
      * These functions are attached inside of the original definition of the cube
      * because they need access to "private" variables: _fontMap, _shapeMap.
      */
 
      this.loadFont = function(handle, url) {
          /**
-          * @amirmikhak
           * Load a remote JSON file of a map of characters that can be displayed on
           * the cube. Save the loaded map of shapes by a handle for optional removal.
           */
@@ -1135,7 +1083,6 @@ var Cube = function(size, cellOpts) {
 
      this.unloadFont = function(handle) {
          /**
-          * @amirmikhak
           * Unload a previously loaded font.
           */
 
@@ -1205,7 +1152,6 @@ var Cube = function(size, cellOpts) {
 
 Cube.prototype.toJSON = function() {
     /**
-     * @amirmikhak
      * Overrides the default (inherited) Object.toJSON() function to for custom
      * serialization. This is necessary because of the cube.html property,
      * which contains what are called "circular references," which prevent the
@@ -1242,7 +1188,6 @@ Cube.prototype.toJSON = function() {
 
 Cube.prototype.nudge = function(direction, amount) {
     /**
-     * @amirmikhak
      * Rotate the cube in a direction (left, right, up, down) by an amount
      * (in degrees).
      */
@@ -1269,7 +1214,6 @@ Cube.prototype.nudge = function(direction, amount) {
 
 Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     /**
-     * @amirmikhak
      * Apply the state of any given cell to its n'th-away neighbor (stepSize)
      * along a given plane (axis: X, Y, Z). Wrap defines whether cells "fall
      * off" or wrap to the opposite face when shifting out of bounds.
@@ -1349,7 +1293,6 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
 
 Cube.prototype.getCellAt = function(row, column, depth) {
     /**
-     * @amirmikhak
      * Returns the cell for a given coordinate. If the coordinate is invalid,
      * return a Cell that is off and has no color. Note that this Cell does not
      * need to have a link to the cube or any other attributes set on it
@@ -1374,7 +1317,6 @@ Cube.prototype.getCellAt = function(row, column, depth) {
 
 Cube.prototype.setCellAt = function(row, column, depth, newCell) {
     /**
-     * @amirmikhak
      * Apply newCell's state to a cell at a given coordinate.
      *
      * Throws "Invalid coordinate" if the coordinate is impossible.
@@ -1398,7 +1340,6 @@ Cube.prototype.setCellAt = function(row, column, depth, newCell) {
 
 Cube.prototype.applyCell = function(newCell) {
     /**
-     * @amirmikhak
      * Convenience function for cube.setCellAt(). Expects a cell whose row,
      * column, and depth are all set. This may be useful for programatically
      * created Cell objects.
@@ -1409,13 +1350,11 @@ Cube.prototype.applyCell = function(newCell) {
 
 
 /**
- * @amirmikhak
  * ANIMATION FUNCTIONS
  */
 
 Cube.prototype.step = function(numSteps) {
     /**
-     * @amirmikhak
      * Performs a single step of the current animation. If the number of steps
      * is negative, we take the number of steps in the "opposite" direction for
      * the current animation settings.
@@ -1446,7 +1385,6 @@ Cube.prototype.step = function(numSteps) {
     for (var i = 0; i < numSteps; i++)
     {
         /**
-         * @amirmikhak
          * animationCb is a property of the cube object, the getter of which
          * returns the function that will apply the desired animation for the
          * current settings.
@@ -1459,7 +1397,6 @@ Cube.prototype.step = function(numSteps) {
 
 Cube.prototype.play = function(opts) {
     /**
-     * @amirmikhak
      * Starts the animation loop. The loop can be stopped using cube.clear();
      */
 
@@ -1473,7 +1410,6 @@ Cube.prototype.play = function(opts) {
 
 Cube.prototype.pause = function() {
     /**
-     * @amirmikhak
      * Stop the animation loop. The loop can be started using cube.play();
      */
 
@@ -1490,7 +1426,6 @@ Cube.prototype.togglePlaying = function(force) {
 
 Cube.prototype.clear = function() {
     /**
-     * @amirmikhak
      * Clear the contents of the cube.
      */
 
@@ -1543,7 +1478,6 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
     this.validKeyFilterFn = function(e) {
         /**
-         * @amirmikhak
          * Call the validator for the current set of desired keys
          * (cube.keyListenerOptions.keys) passing in the current event for
          * evaluation. If the key is valid, allow the event to proceed,
@@ -1561,7 +1495,6 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
     this.actionKeyListenerFn = function(e) {
         /**
-         * @amirmikhak
          * Capture key events that are supposed to trigger an action on the cube.
          * In the event that an action is typed, we don't want to let the event
          * propagate up to this.keyListenerFn(). If it were to, the letters
@@ -1590,7 +1523,6 @@ Cube.prototype.listenForKeystrokes = function(opts) {
         if ((e.ctrlKey && (e.keyCode === 32)) || e.keyCode === 13)  // ctrl+space, or enter
         {
             /**
-             * @amirmikhak
              * Prevent the browser's default behavior for the event. For example,
              * arrow keys scroll the browser window by default. This would be
              * prevented by e.preventDefault().
@@ -1667,7 +1599,6 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
     this.keyListenerFn = function(e) {
         /**
-         * @amirmikhak
          * Called for each keypress that is allowed to pass through the
          * validation function.
          */
@@ -1692,7 +1623,6 @@ Cube.prototype.listenForKeystrokes = function(opts) {
     if (!this.listeningForKeystrokes)
     {
         /**
-         * @amirmikhak
          * By checking that this.listeningForKeystrokes is not already set, we
          * prevent double-binding of these listeners to single events.
          */
@@ -1708,14 +1638,12 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
 Cube.prototype.stopListeningForKeystrokes = function() {
     /**
-     * @amirmikhak
      * Removes event listeners added by cube.listenForKeystrokes()
      */
 
     if (this.listeningForKeystrokes)
     {
         /**
-         * @amirmikhak
          * By checking that we were listening for keystrokes before, we are sure
          * that the event listeners were bound and that the functions we are
          * referencing to unbind have been defined.
@@ -1732,7 +1660,6 @@ Cube.prototype.stopListeningForKeystrokes = function() {
 
 Cube.prototype.getCharacterRender = function(char, desiredColor) {
     /**
-     * @amirmikhak
      * Return a slice containing a character (char, a single character) in a
      * color (desiredColor, a string) for rendering to the cube. This function
      * does not draw to the cube; the output of this function needs to get to
@@ -1759,7 +1686,6 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
 
 
     /**
-     * @amirmikhak
      * Loop over each pixel to apply the current penColor if the pixel is on.
      */
 
@@ -1775,7 +1701,6 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
 
 Cube.prototype.renderShape = function(shape) {
     /**
-     * @amirmikhak
      * Draw a shape to the front face of the cube.
      */
 
@@ -1790,13 +1715,11 @@ Cube.prototype.renderShape = function(shape) {
 
 
 /**
- * @amirmikhak
  * SLICE MANIPULATION FUNCTIONS
  */
 
 Cube.prototype.affectXSlice = function(column, fn) {
     /**
-     * @amirmikhak
      * Call a function on each cell within a given X slice starting from the left
      */
 
@@ -1813,7 +1736,6 @@ Cube.prototype.affectXSlice = function(column, fn) {
 
 Cube.prototype.affectYSlice = function(row, fn) {
     /**
-     * @amirmikhak
      * Call a function on each cell within a given Y slice starting from the top
      */
 
@@ -1830,7 +1752,6 @@ Cube.prototype.affectYSlice = function(row, fn) {
 
 Cube.prototype.affectZSlice = function(depth, fn) {
     /**
-     * @amirmikhak
      * Call a function on each cell within a given Z slice starting from the front
      */
 
@@ -1847,7 +1768,6 @@ Cube.prototype.affectZSlice = function(depth, fn) {
 
 Cube.prototype.readSlice = function(face, offset, output) {
     /**
-     * @amirmikhak
      * Read a slice "offset" slices in from "face", and return in format: "output"
      *
      * Note: readSlice('left') returns the same thing as readSlice('right', 7);
@@ -1861,7 +1781,6 @@ Cube.prototype.readSlice = function(face, offset, output) {
     var validOutputs = ['object', 'object-deep', 'json'];
 
     /**
-     * @amirmikhak
      * Use reasonable default values if the caller didn't give you any or gave
      * values that are out of bounds or otherwise invalid.
      *
@@ -1881,7 +1800,6 @@ Cube.prototype.readSlice = function(face, offset, output) {
 
     function captureCell(r, c, d) {
         /**
-         * @amirmikhak
          * Callback, called for each cell, for getting the cell data in the
          * correct format and gathering them into a single data structure.
          */
@@ -1892,7 +1810,6 @@ Cube.prototype.readSlice = function(face, offset, output) {
     }
 
     /**
-     * @amirmikhak
      * Use the correct affectFooSlice function for the axis
      */
     if ((face === 'front') || (face === 'back'))
@@ -1919,7 +1836,6 @@ Cube.prototype.readSlice = function(face, offset, output) {
 
 Cube.prototype.writeSlice = function(data, face, offset) {
     /**
-     * @amirmikhak
      * Write a saved slice (recorded in the formats output by cube.readSlice) to
      * "offset" slices in from "face".
      *
@@ -1973,7 +1889,6 @@ Cube.prototype.writeSlice = function(data, face, offset) {
 
 Cube.prototype.getPngDataOfSlice = function(slice) {
     /**
-     * @amirmikhak
      * Helper function to render icons that resemble 2d slices of the cube.
      * Returns a data url.
      *
@@ -2018,7 +1933,6 @@ Cube.prototype.getPngDataOfSlice = function(slice) {
 
     slice.forEach(function drawCell(cell, idx) {
         /**
-         * @amirmikhak
          * if we don't have row or column information, we need to populate it
          * on each cell so that it can be drawn in the correct spot of the png.
          */
@@ -2026,7 +1940,6 @@ Cube.prototype.getPngDataOfSlice = function(slice) {
         cell.column = !isNaN(parseInt(cell.column, 10)) ? cell.column : Math.floor(idx / this.size);
 
         /**
-         * @amirmikhak
          * Because we are scaling the image up, we are drawing multiple real
          * pixels in the PNG for each big, fat cell in the slice.
          */
