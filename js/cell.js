@@ -37,6 +37,15 @@ var Cell = function(opts) {
 
     var _options = _.extend({}, defaultOptions, opts);
 
+    /**
+     * We use this "Promise" and expose these callbacks to ensure that functions
+     * that expect the cube's DOM to be present and built don't run until this
+     * is actually the case.
+     *
+     * To learn more about Promises in Javascript, see these links:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+     */
     var htmlReadySuccessFn;
     var htmlReadyFailureFn;
     this.htmlReady = new Promise(function(resolve, reject) {
@@ -49,6 +58,13 @@ var Cell = function(opts) {
     }
 
     function render() {
+        /**
+         * Idempotent* render function to ensure that the state of the model and
+         * DOM are not out of sync.
+         *
+         * * Can be called as many times as you like and nothing bad or unexpected
+         *   will happen. Technical definition: http://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
+         */
         cell.htmlReady.then(function() {
             if (_transitionTransforms)
             {
@@ -81,7 +97,15 @@ var Cell = function(opts) {
             this.html.style.width = _size + 'px';
             this.html.style.height = _size + 'px';
 
-            // position the cell
+            /**
+             * Build the string to position the cell / optionally change its face
+             *
+             * NOTE: 3d transforms are not commutitive meaning that the order
+             *  of the transforms matters. Browsers apply transforms in reverse
+             *  order of their appearance in the CSS. That is in the case of
+             *  "transform: A B C;" browsers will first perform transform C,
+             *  then B, then A.
+             */
             var xform = [
                 ['translateX(', (this.size * this.column), 'px)'].join(''),
                 ['translateY(', (this.size * this.row), 'px)'].join(''),
@@ -89,9 +113,10 @@ var Cell = function(opts) {
                 ['rotateX(', this.rotation[0], 'deg)'].join(''),
                 ['rotateY(', this.rotation[1], 'deg)'].join(''),
                 ['rotateZ(', this.rotation[2], 'deg)'].join(''),
-            ];
+            ].join(' ');
 
-            this.html.style.transform = xform.join(' ');
+            // assign the built string to the element
+            this.html.style.transform = xform;
         }.bind(cell));
     }
 
@@ -101,6 +126,7 @@ var Cell = function(opts) {
             return _cube;
         },
         set: function(newCube) {
+            // assign newCube value to both _cube and _options.cube
             _cube = _options.cube = newCube;
         }
     });
@@ -111,8 +137,9 @@ var Cell = function(opts) {
             return _row;
         },
         set: function(newRow) {
+            // assign newRow value to both _row and _options.row
             _row = _options.row = newRow;
-            render();
+            render();   // call to ensure that the DOM is sync with model
         }
     });
 
@@ -122,8 +149,9 @@ var Cell = function(opts) {
             return _column;
         },
         set: function(newColumn) {
+            // assign newColumn value to both _column and _options.column
             _column = _options.column = newColumn;
-            render();
+            render();   // call to ensure that the DOM is sync with model
         }
     });
 
@@ -133,8 +161,9 @@ var Cell = function(opts) {
             return _depth;
         },
         set: function(newDepth) {
+            // assign newDept value to both _depth and _options.depth
             _depth = _options.depth = newDepth;
-            render();
+            render();   // call to ensure that the DOM is sync with model
         }
     });
 
@@ -144,9 +173,9 @@ var Cell = function(opts) {
             return _color;
         },
         set: function(newColor) {
-            // A custom setter which both updates our color attribute and renders that color
+            // assign newColor value to both _color and _options.color
             _color = _options.color = newColor;
-            render();
+            render();   // call to ensure that the DOM is sync with model
         }
     });
 
@@ -156,8 +185,9 @@ var Cell = function(opts) {
             return _on;
         },
         set: function(turnOn) {
+            // assign turnOn value to both _on and _options.on
             _on = _options.on = turnOn;
-            render();
+            render();   // call to ensure that the DOM is sync with model
         }
     });
 
@@ -167,8 +197,9 @@ var Cell = function(opts) {
             return _size;
         },
         set: function(newSize) {
+            // assign newSize value to both _size and _options.size
             _size = _options.size = newSize;
-            render();
+            render();   // call to ensure that the DOM is sync with model
         }
     });
 
@@ -185,6 +216,10 @@ var Cell = function(opts) {
     };
 
     Object.defineProperty(this, 'clickable', {
+        /**
+         * Whether we listen for click events. The click event handler simply toggles
+         * whether the cell is on.
+         */
         enumerable: true,
         get: function() {
             return _clickable;
@@ -211,11 +246,16 @@ var Cell = function(opts) {
                 {
                     cell.html.removeEventListener('click', clickHandler);
                 }
-            }.bind(this));
+            }.bind(this));  // Use our "outside" this inside of the promise callback
         }
     });
 
     Object.defineProperty(this, 'rotation', {
+        /**
+         * Each cell can be rotated. This property was added for the cube.rotateCells
+         * property, which is disabled by default. See comment in that property for
+         * details.
+         */
         enumerable: true,
         get: function() {
             return _rotation;
@@ -232,27 +272,37 @@ var Cell = function(opts) {
             }
 
             _rotation = _options.rotation = newRotation;
-            render();
+            render();   // call to ensure that the DOM is sync with model
         }
     });
 
     Object.defineProperty(this, 'transitionTransforms', {
+        /**
+         * Apply CSS transitions on the cell's transform style.
+         */
         enumerable: false,
         get: function() {
             return _transitionTransforms;
         },
         set: function(shouldTransition) {
             _transitionTransforms = _options.transitionTransforms = shouldTransition;
-            render();
+            render();   // call to ensure that the DOM is sync with model
         }
     });
 
     Object.defineProperty(this, 'options', {
+        /**
+         * If anyone wants to know our options, we don't have to give them a pointer
+         * to our private _options. Instead, we give them a new object with values
+         * that are the same as in our object. That way, someone from outside the
+         * cell can't inadvertantly make changes to our internal model.
+         */
         enumerable: false,
         configurable: false,
         set: NOOP,
         get: function() {
             return {
+                // do not include cube because we could get a circular reference
                 row: this.row,
                 column: this.column,
                 depth: this.depth,
@@ -266,12 +316,22 @@ var Cell = function(opts) {
     });
 
     this.applyOptions = function(newOpts) {
+        /**
+         * Assign a collection of options passed in as a single object for the
+         * cell.
+         */
         if (!(newOpts instanceof Object))
         {
             throw 'TypeError: Cell options must be object';
         }
 
         Object.keys(newOpts).forEach(function(key) {
+            /**
+             * For each option passed in from the caller, check that we have a
+             * property by that name. If so, assign the value from newOpts to
+             * it, which will trigger the custom setter, which will ensure that
+             * the DOM is in sync.
+             */
             if (this.hasOwnProperty(key))
             {
                 this[key] = _options[key] = newOpts[key];
@@ -279,7 +339,7 @@ var Cell = function(opts) {
             {
                 console.error('Invalid option for Cell:' + key);
             }
-        }.bind(this));
+        }.bind(this));  // Use our "outside" this inside of the foreach
     };
 
     (function buildHTML() {
@@ -295,12 +355,15 @@ var Cell = function(opts) {
         this.html.appendChild(this.led);
 
         htmlReadySuccessFn();
-    }.bind(this)());
+    }.bind(this)());  // Use our "outside" this inside of buildHTML
 
     return this;
 };
 
 Cell.prototype.setFromCell = function(otherCell) {
+    /**
+     * Copy visual properties from another cell into self.
+     */
     this.applyOptions({
         color: otherCell.color,
         on: otherCell.on,
@@ -308,5 +371,9 @@ Cell.prototype.setFromCell = function(otherCell) {
 };
 
 Cell.prototype.toJSON = function() {
+    /**
+     * Custom serialization function. See comment for Cube.toJSON in cube.js
+     * for thorough explanation.
+     */
     return this.options;
 };
