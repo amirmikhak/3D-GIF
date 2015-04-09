@@ -1,4 +1,4 @@
-var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButton, cellOpts) {
+var Cube = function(size, cellOpts) {
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
@@ -631,6 +631,156 @@ var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButto
         }
     });
 
+    var __prevStepButtonClickListener = function(event) {
+        if (cube.isPlaying)
+        {
+            cube.pause();
+        }
+
+        cube.step(-1);
+    };
+
+    Object.defineProperty(this, 'prevStepButton', {
+        enumerable: false,
+        get: function() {
+            return _prevStepButton;
+        },
+        set: function(newPrevStepButton) {
+            if ((newPrevStepButton instanceof HTMLElement) &&
+                (newPrevStepButton !== _prevStepButton))
+            {
+                if (_prevStepButton)
+                {
+                    // unbind a click listener that may have been previously bound
+                    _prevStepButton.removeEventListener('click', __prevStepButtonClickListener);
+                }
+
+                // get the new button
+                _prevStepButton = newPrevStepButton;
+
+                // bind the click listener to the new button
+                _prevStepButton.addEventListener('click', __prevStepButtonClickListener);
+            } else if ((newPrevStepButton === null) ||
+                (typeof newPrevStepButton === 'undefined'))
+            {
+                _prevStepButton.removeEventListener('click', __prevStepButtonClickListener);
+                _prevStepButton = undefined;
+            } else
+            {
+                console.error('Invalid prevStepButton: must be instance of HTMLElement');
+            }
+        }
+    });
+
+    var __nextStepButtonClickListener = function(event) {
+        cube.pause();
+        cube.step();
+    };
+
+    Object.defineProperty(this, 'nextStepButton', {
+        enumerable: false,
+        get: function() {
+            return _nextStepButton;
+        },
+        set: function(newNextStepButton) {
+            if ((newNextStepButton instanceof HTMLElement) &&
+                (newNextStepButton !== _nextStepButton))
+            {
+                if (_nextStepButton)
+                {
+                    // unbind a click listener that may have been previously bound
+                    _nextStepButton.removeEventListener('click', __nextStepButtonClickListener);
+                }
+
+                // get the new button
+                _nextStepButton = newNextStepButton;
+
+                // bind the click listener to the new button
+                _nextStepButton.addEventListener('click', __nextStepButtonClickListener);
+            } else if ((newNextStepButton === null) ||
+                (typeof newNextStepButton === 'undefined'))
+            {
+                _nextStepButton.removeEventListener('click', __nextStepButtonClickListener);
+                _nextStepButton = undefined;
+            } else
+            {
+                console.error('Invalid nextStepButton: must be instance of HTMLElement');
+            }
+        }
+    });
+
+    var __playButtonClickListener = function(event) {
+        cube.togglePlaying();
+    };
+
+    Object.defineProperty(this, 'playButton', {
+        enumerable: false,
+        get: function() {
+            return _playButton;
+        },
+        set: function(newPlayButton) {
+            if ((newPlayButton instanceof HTMLElement) &&
+                (newPlayButton !== _playButton))
+            {
+                if (_playButton)
+                {
+                    // unbind a click listener that may have been previously bound
+                    _playButton.removeEventListener('click', __playButtonClickListener);
+                }
+
+                // get the new button
+                _playButton = newPlayButton;
+
+                // bind the click listener to the new button
+                _playButton.addEventListener('click', __playButtonClickListener);
+            } else if ((newPlayButton === null) ||
+                (typeof newPlayButton === 'undefined'))
+            {
+                _playButton.removeEventListener('click', __playButtonClickListener);
+                _playButton = undefined;
+            } else
+            {
+                console.error('Invalid playButton: must be instance of HTMLElement');
+            }
+        }
+    });
+
+    var __clearButtonClickListener = function(event) {
+        cube.clear();
+    };
+
+    Object.defineProperty(this, 'clearButton', {
+        enumerable: false,
+        get: function() {
+            return _clearButton;
+        },
+        set: function(newClearButton) {
+            if ((newClearButton instanceof HTMLElement) &&
+                (newClearButton !== _clearButton))
+            {
+                if (_clearButton)
+                {
+                    // unbind a click listener that may have been previously bound
+                    _clearButton.removeEventListener('click', __clearButtonClickListener);
+                }
+
+                // get the new button
+                _clearButton = newClearButton;
+
+                // bind the click listener to the new button
+                _clearButton.addEventListener('click', __clearButtonClickListener);
+            } else if ((newClearButton === null) ||
+                (typeof newClearButton === 'undefined'))
+            {
+                _clearButton.removeEventListener('click', __clearButtonClickListener);
+                _clearButton = undefined;
+            } else
+            {
+                console.error('Invalid clearButton: must be instance of HTMLElement');
+            }
+        }
+    });
+
 
     /**
      * @amirmikhak
@@ -754,56 +904,6 @@ var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButto
     this.cellOptions = defaultCellOptions;  // copy in the default options
     this.cellOptions = typeof cellOpts !== 'undefined' ? cellOpts : {}; // copy in what the user wanted
 
-    // CONFIGURE FOR ARGUMENTS
-    if (prevStepButton instanceof HTMLElement)
-    {
-        _prevStepButton = prevStepButton;
-        _prevStepButton.addEventListener('click', function(event) {
-            if (cube.isPlaying)
-            {
-                cube.pause();
-            }
-
-            cube.step(-1);
-        });
-    }
-
-    if (nextStepButton instanceof HTMLElement)
-    {
-        _nextStepButton = nextStepButton;
-        _nextStepButton.addEventListener('click', function(event) {
-            if (cube.isPlaying)
-            {
-                cube.pause();
-            }
-
-            cube.step();
-        });
-    }
-
-    if (playButton instanceof HTMLElement)
-    {
-        _playButton = playButton;
-        _playButton.addEventListener('click', function(event) {
-            if (cube.isPlaying)
-            {
-                cube.pause();
-            } else
-            {
-                cube.play();
-            }
-        });
-    }
-
-    if (clearButton instanceof HTMLElement)
-    {
-        _clearButton = clearButton;
-        _clearButton.addEventListener('click', function(event) {
-            cube.clear();
-        });
-    }
-
-    // SET UP REST OF SELF
     this.size = size; // How many rows and columns do I have?
 
     (function buildHTML() {

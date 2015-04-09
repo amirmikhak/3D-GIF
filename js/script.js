@@ -1,25 +1,21 @@
 var cube;
 window.addEventListener('load', function() { // When everything is loaded
 
-    var cubeWrapper = document.getElementById('cube-wrapper');
-
-    var nextStepButton = document.getElementById('next-step');
-    var prevStepButton = document.getElementById('prev-step');
-    var playButton = document.getElementById('play');
-    var clearButton = document.getElementById('clear');
-    var colorPickerEl = document.getElementById('color-picker');
-    var playbackControlsEl = document.getElementById('playback-controls');
-    var shapePickerEl = document.getElementById('shape-picker');
-
-    cube = new Cube(8, prevStepButton, nextStepButton, playButton, clearButton, {
+    cube = new Cube(8, {
         size: 50,
     });
 
     cube.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json');
-    cube.container = cubeWrapper;
-    cube.colorPicker = colorPickerEl;
-    cube.playbackControls = playbackControlsEl;
 
+    cube.container = document.getElementById('cube-wrapper');
+    cube.prevStepButton = document.getElementById('prev-step');
+    cube.nextStepButton = document.getElementById('next-step');
+    cube.playButton = document.getElementById('play');
+    cube.clearButton = document.getElementById('clear');
+    cube.playbackControls = document.getElementById('playback-controls');
+    cube.colorPicker = document.getElementById('color-picker');
+
+    var shapePickerEl = document.getElementById('shape-picker');
     cube.buildShapePicker(shapePickerEl);
 
     cube.listenForKeystrokes();
