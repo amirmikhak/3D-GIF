@@ -532,6 +532,7 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
         }
     });
 
+
     // @amirmikhak
     // Note: there has _got_ to be a "nicer" way to do this. This code feels smelly.
     this.cellOptions = defaultCellOptions;  // copy in the default options
@@ -650,7 +651,76 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
     return this;
 };
 
+Cube.prototype.toJSON = function() {
+    /**
+     * @amirmikhak
+     * Overrides the default (inherited) Object.toJSON() function to for custom
+     * serialization. This is necessary because of the cube.html property,
+     * which contains what are called "circular references," which prevent the
+     * serializer from completing. To prevent this, we expose only the relevant
+     * and serializable properties of the object.
+     *
+     * Example of a circular reference:
+     *     var y = {
+     *         property1: 'one',
+     *         property2: 'two',
+     *     };
+     *     var x = {
+     *         property1: 'aye',
+     *         property2: 'bee',
+     *         property3: y,
+     *     };
+     *     y.property3 = x;
+     *
+     * If you run the above code in the Chrome developer's console, you'll find
+     * that both x and y are valid objects and that each points to the other.
+     * You can verify this by expanding the properties of each (to see them,
+     * just type each's variable name in the console and hit enter) and seeing
+     * that the nesting of the objects never stops. This presents a problem for
+     * the .toJSON() method because it's doing a similar traversal when
+     * generating a string representation of each object.
+     */
+    return {
+        size: this.size,
+        cells: this.cells,
+        playbackOptions: this.playbackOptions,
+        cellOptions: this.cellOptions,
+    };
+};
+
+Cube.prototype.nudge = function(direction, amount) {
+    /**
+     * @amirmikhak
+     * Rotate the cube in a direction (left, right, up, down) by an amount
+     * (in degrees).
+     */
+    amount = !isNaN(parseFloat(amount, 10)) ? amount : 1;
+
+    switch (direction) {
+        case 'left':
+            this.yAngle -= amount;
+            break;
+        case 'up':
+            this.xAngle += amount;
+            break;
+        case 'right':
+            this.yAngle += amount;
+            break;
+        case 'down':
+            this.xAngle -= amount;
+            break;
+    };
+
+    return this;    // enables multiple calls on cube to be "chained"
+};
+
 Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
+    /**
+     * @amirmikhak
+     * Apply the state of any given cell to its n'th-away neighbor (stepSize)
+     * along a given plane (axis: X, Y, Z). Wrap defines whether cells "fall
+     * off" or wrap to the opposite face when shifting out of bounds.
+     */
     stepSize = typeof stepSize !== 'undefined' ? stepSize : -1;
     wrap = typeof wrap !== 'undefined' ? !!wrap : true;
 
@@ -719,23 +789,28 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
             cell.color = nextState[index].color;
         }
     });
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.getCellAt = function(row, column, depth) {
+    /**
+     * @amirmikhak
+     * Returns the cell for a given coordinate. If the coordinate is invalid,
+     * return a Cell that is off and has no color. Note that this Cell does not
+     * need to have a link to the cube or any other attributes set on it
+     * because it represents an invalid point and is only used to set the state
+     * of existing, valid cells. See cell.setFromCell() for the list of
+     * properties that are copied between cells.
+     */
     if ((row < 0) || (row > this.size - 1) ||
         (column < 0) || (column > this.size - 1) ||
         (depth < 0) ||  (depth > this.size - 1))
     {
-        /*
-         * @amirmikhak
-         * if impossible coordinate, return an object that _looks like_ an off cell.
-         * this is likely very confusing behavior, but it works for what I need in
-         * shiftPlane().
-         */
-        return {
+        return new Cell({
             on: false,
             color: [0, 0, 0],
-        }
+        });
     }
 
     var cellIndex = (depth * this.size * this.size) + (row * this.size) + column;
@@ -743,6 +818,12 @@ Cube.prototype.getCellAt = function(row, column, depth) {
 };
 
 Cube.prototype.setCellAt = function(row, column, depth, newCell) {
+    /**
+     * @amirmikhak
+     * Apply newCell's state to a cell at a given coordinate.
+     *
+     * Throws "Invalid coordinate" if the coordinate is impossible.
+     */
     if ((row < 0) || (row > this.size - 1) ||
         (column < 0) || (column > this.size - 1) ||
         (depth < 0) ||  (depth > this.size - 1))
@@ -760,29 +841,26 @@ Cube.prototype.setCellAt = function(row, column, depth, newCell) {
 };
 
 Cube.prototype.applyCell = function(newCell) {
+    /**
+     * @amirmikhak
+     * Convenience function for cube.setCellAt(). Expects a cell whose row,
+     * column, and depth are all set. This may be useful for programatically
+     * created Cell objects.
+     */
     return this.setCellAt(newCell.row, newCell.column, newCell.depth, newCell);
 };
 
-Cube.prototype.nudge = function(direction, amount) {
-    amount = !isNaN(parseFloat(amount, 10)) ? amount : 1;
 
-    switch (direction) {
-        case 'left':
-            this.yAngle -= amount;
-            break;
-        case 'up':
-            this.xAngle += amount;
-            break;
-        case 'right':
-            this.yAngle += amount;
-            break;
-        case 'down':
-            this.xAngle -= amount;
-            break;
-    };
-};
+/**
+ * @amirmikhak
+ * ANIMATION FUNCTIONS
+ */
 
 Cube.prototype.play = function(opts) {
+    /**
+     * @amirmikhak
+     * Starts the animation loop. The loop can be stopped using cube.clear();
+     */
     opts = typeof opts !== 'undefined' ? opts : {};
 
     this.playbackOptions = opts;
@@ -796,12 +874,18 @@ Cube.prototype.play = function(opts) {
 };
 
 Cube.prototype.step = function(numSteps) {
+    /**
+     * @amirmikhak
+     * Performs a single step of the current animation. If the number of steps
+     * is negative, we take the number of steps in the "opposite" direction for
+     * the current animation settings.
+     */
     var DEFAULT_NUM_STEPS = 1;
     numSteps = typeof numSteps !== 'undefined' ? parseInt(numSteps, 10) || DEFAULT_NUM_STEPS : DEFAULT_NUM_STEPS;
 
     if (numSteps < 0)
     {   // step "backward"
-        var startDirection = cube.playbackOptions.direction;
+        var startDirection = this.playbackOptions.direction;
         var oppositeDirection = {
             'up': 'down',
             'down': 'up',
@@ -809,32 +893,48 @@ Cube.prototype.step = function(numSteps) {
             'right': 'left',
             'forward': 'back',
             'back': 'forward',
-        }[startDirection];
+        }[startDirection];  // get the opposite direction
 
-        cube.playbackOptions.direction = oppositeDirection;
+        this.playbackOptions.direction = oppositeDirection; // apply the opposite direction for our next steps
 
-        cube.step(Math.abs(numSteps));
+        this.step(Math.abs(numSteps));  // call this very function, but with a positive number of steps
 
-        cube.playbackOptions.direction = startDirection;
+        this.playbackOptions.direction = startDirection;    // re-apply the old direction
     }
 
     for (var i = 0; i < numSteps; i++)
     {
+        /**
+         * @amirmikhak
+         * animationCb is a property of the cube object, the getter of which
+         * returns the function that will apply the desired animation for the
+         * current settings.
+         */
         this.animationCb();
     }
 }
 
 Cube.prototype.pause = function() {
+    /**
+     * @amirmikhak
+     * Stop the animation loop. The loop can be started using cube.play();
+     */
     this.isPlaying = false;
     clearInterval(cube.animateInterval);
-    return this;
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.clear = function() {
+    /**
+     * @amirmikhak
+     * Clear the contents of the cube.
+     */
     this.cells.forEach(function(cell) {
         cell.on = false;
     });
-    return this;
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.buildPlaybackControls = function(parentEl) {
@@ -1229,6 +1329,12 @@ Cube.prototype.renderShape = function(shape) {
     cube.writeSlice(this.shapes[shape], 'front', 0);
 };
 
+
+/**
+ * @amirmikhak
+ * SLICE MANIPULATION FUNCTIONS
+ */
+
 Cube.prototype.affectXSlice = function(column, fn) {
     for (var depth = cube.size - 1; depth >= 0; depth--)
     {
@@ -1419,13 +1525,4 @@ Cube.prototype.renderSliceToPng = function(slice) {
     });
 
     return c.toDataURL();
-};
-
-Cube.prototype.toJSON = function() {
-    return {
-        size: this.size,
-        cells: this.cells,
-        playbackOptions: this.playbackOptions,
-        cellOptions: this.cellOptions,
-    };
 };
