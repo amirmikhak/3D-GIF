@@ -1071,7 +1071,7 @@ Cube.prototype.buildShapePicker = function(parentEl) {
         this.shapePickerContainerEl = parentEl;
         this.shapePickerContainerEl.classList.add('shape-list');
         this.shapePickerContainerEl.innerHTML = this.shapeNames.map(function(shapeName) {
-            var shapeRender = cube.renderSliceToPng(cube.shapes[shapeName]);
+            var shapeRender = cube.getPngDataOfSlice(cube.shapes[shapeName]);
             var styles = [
                 'background-image:url(\'' + shapeRender + '\')',
                 'background-size:cover',
@@ -1480,7 +1480,7 @@ Cube.prototype.writeSlice = function(data, face, offset) {
     return this;    // enables multiple calls on cube to be "chained"
 };
 
-Cube.prototype.renderSliceToPng = function(slice) {
+Cube.prototype.getPngDataOfSlice = function(slice) {
     /**
      * @amirmikhak
      * Helper function to render icons that resemble 2d slices of the cube.
