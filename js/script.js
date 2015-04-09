@@ -7,15 +7,20 @@ window.addEventListener('load', function() { // When everything is loaded
     var prevStepButton = document.getElementById('prev-step');
     var playButton = document.getElementById('play');
     var clearButton = document.getElementById('clear');
+    var colorPickerEl = document.getElementById('color-picker');
+    var playbackControlsEl = document.getElementById('playback-controls');
+    var shapePickerEl = document.getElementById('shape-picker');
 
     cube = new Cube(8, cubeWrapper, prevStepButton, nextStepButton, playButton, clearButton, {
         size: 50,
     });
 
     cube.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json');
-    cube.buildPlaybackControls(document.getElementById('playback-controls'));
-    cube.buildColorPicker(document.getElementById('color-picker'));
-    cube.buildShapePicker(document.getElementById('shape-picker'));
+
+    cube.colorPicker = colorPickerEl;
+
+    cube.buildPlaybackControls(playbackControlsEl);
+    cube.buildShapePicker(shapePickerEl);
 
     cube.listenForKeystrokes();
 

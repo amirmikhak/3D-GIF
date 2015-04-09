@@ -42,6 +42,9 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
     var _playButton;
     var _clearButton;
 
+    var _colorPicker = false;
+    var _playbackControls = false;
+
     var _fontMap = {};
     var _activeFont;
 
@@ -53,15 +56,22 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
     var _transitionTransforms;
     var _rotateCells = false;
 
+    /**
+     * @amirmikhak
+     * We use this "Promise" and expose these callbacks to ensure that functions
+     * that expect the cube's DOM to be present and built don't run until this
+     * is actually the case.
+     *
+     * To learn more about Promises in Javascript, see these links:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+     */
     var htmlReadySuccessFn;
     var htmlReadyFailureFn;
     this.htmlReady = new Promise(function(resolve, reject) {
         htmlReadySuccessFn = resolve;
         htmlReadyFailureFn = reject;
     });
-
-    this.hasColorPicker = false;
-    this.hasPlaybackControls = false;
 
     Object.defineProperty(this, 'playbackOptions', {
         enumerable: true,
@@ -75,21 +85,42 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
 
             cube.pause();
 
-            if (this.hasPlaybackControls &&
-                newOptions.direction &&
+            /**
+             * @amirmikhak
+             * Verify that the new direction, if present, is valid.
+             */
+            if (newOptions.direction &&
                 validDirections.indexOf(newOptions.direction) !== -1)
             {
-                var radioSelector = 'input[type="radio"][name="direction"]';
-                var radiosElList = this.playbackControlsContainerEl.querySelectorAll(radioSelector)
-                var radioElArray = Array.prototype.slice.apply(radiosElList);
-                radioElArray.forEach(function(input) {
-                    input.checked = (input.value == newOptions.direction);
-                });
+                /**
+                 * @amirmikhak
+                 * If there are playback controls that are rendered, we want to keep
+                 * them in sync with our internal state.
+                 */
+                if (this.playbackControls)
+                {
+                    var radioSelector = 'input[type="radio"][name="direction"]';
+                    var radiosElList = this.playbackControlsContainerEl.querySelectorAll(radioSelector)
+                    var radioElArray = Array.prototype.slice.apply(radiosElList);
+                    radioElArray.forEach(function(input) {
+                        // check or uncheck each of the radio buttons
+                        input.checked = (input.value == newOptions.direction);
+                    });
+                }
             } else
             {
+                /**
+                 * @amirmikhak
+                 * Delete the invalid property on the new settings to prevent
+                 * it from being applied.
+                 */
                 delete(newOptions.direction);
             }
 
+            /**
+             * @amirmikhak
+             * Actually apply the new settings.
+             */
             _.extend(_playbackOptions, newOptions);
 
             if (resumePlayingAfterChange)
@@ -204,8 +235,6 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
             });
         }
     });
-
-    this.transitionTransforms = true;
 
     Object.defineProperty(this, 'rotateCells', {
         enumerable: true,
@@ -375,9 +404,9 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
             magenta: [255, 0, 255],
             orange: [255, 127, 0],
             red: [255, 0, 0],
-            white: [255, 255, 255],
-            gray: [125, 125, 125],
-            black: [0, 0, 0],
+            // white: [255, 255, 255],
+            // gray: [125, 125, 125],
+            // black: [0, 0, 0],
         }
     });
 
@@ -411,10 +440,10 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
 
             _penColor = newColor;
 
-            if (this.hasColorPicker)
+            if (_colorPicker)
             {
                 var radioSelector = 'input[type="radio"][name="color"]';
-                var radioElList = this.colorPickerContainerEl.querySelectorAll(radioSelector);
+                var radioElList = _colorPicker.querySelectorAll(radioSelector);
                 var radioElArray = Array.prototype.slice.apply(radioElList);
                 radioElArray.forEach(function(input) {
                     input.checked = (input.value === _penColor);
@@ -423,6 +452,87 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
                 });
             }
         }
+    });
+
+    var __colorPickerChangeListener = function(e) {
+        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'color'))
+        {
+            cube.penColor = e.target.value;
+        }
+    };
+
+    var _destroyColorPicker = function _destroyColorPicker() {
+        if (_colorPicker)
+        {
+            _colorPicker.classList.remove('color-list');
+            _colorPicker.innerHTML = '';
+            _colorPicker.removeEventListener('change', __colorPickerChangeListener);
+        }
+    };
+
+    var _buildColorPicker = function _buildColorPicker(parentEl) {
+        _destroyColorPicker();
+
+        _colorPicker = parentEl;
+        _colorPicker.classList.add('color-list');
+        _colorPicker.innerHTML = this.colorNames.map(function(colorName) {
+            return [
+                '<label class="swatch">',
+                    '<input type="radio" name="color" value="', colorName, '" />',
+                    '<div data-color="', colorName, '"></div>',
+                '</label>',
+            ].join('')
+        }).join('');
+
+        /**
+         * @amirmikhak
+         * Position the color picker
+         */
+        var colorPickerHeight = _colorPicker.getBoundingClientRect().height;
+
+        /**
+         * @amirmikhak
+         * !TODO: Fix this. We need this correction look correct.
+         */
+        colorPickerHeight -= 100;
+
+        _colorPicker.style.position = 'absolute';
+        _colorPicker.style.top = ['calc(50% - ', colorPickerHeight / 2, 'px)'].join('');
+        _colorPicker.style.left = ['calc(50% - ', this.outerDimensions, 'px)'].join('');
+
+        /**
+         * @amirmikhak
+         * Add event listener for change in DOM to be reflected in Cube's model
+         */
+        _colorPicker.addEventListener('change', __colorPickerChangeListener);
+
+        /**
+         * @amirmikhak
+         * Sync DOM/Cube on build
+         */
+        this.penColor = this.penColor;
+    };
+
+    Object.defineProperty(this, 'colorPicker', {
+        enumerable: true,
+        get: function() {
+            return _colorPicker;
+        },
+        set: function(newColorPickerEl) {
+            if ((newColorPickerEl instanceof HTMLElement) &&
+                (newColorPickerEl !== _colorPicker))
+            {
+                _buildColorPicker.call(this, newColorPickerEl);
+            } else if ((newColorPickerEl === null) ||
+                (typeof newColorPickerEl === 'undefined'))
+            {
+                _destroyColorPicker();
+                _colorPicker = undefined;
+            } else
+            {
+                console.error('Invalid colorPicker: must be instance of HTMLElement');
+            }
+        },
     });
 
     Object.defineProperty(this, 'hasFont', {
@@ -535,6 +645,8 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
             _activeFont = Object.keys(_fontMap)[0]; // ... use it
         }
      };
+
+    this.transitionTransforms = true;
 
     this.cellOptions = defaultCellOptions;  // copy in the default options
     this.cellOptions = typeof cellOpts !== 'undefined' ? cellOpts : {}; // copy in what the user wanted
@@ -938,7 +1050,7 @@ Cube.prototype.clear = function() {
 Cube.prototype.buildPlaybackControls = function(parentEl) {
     var cube = this;
 
-    this.hasPlaybackControls = true;
+    this.playbackControls = true;
     this.playbackControlsContainerEl = parentEl;
     this.playbackControlsContainerEl.classList.add('playback-controls');
     this.playbackControlsContainerEl.innerHTML = (
@@ -969,89 +1081,6 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
 
     this.playbackOptions = {
         direction: this.playbackOptions.direction,  // trigger sync of DOM with state
-    }
-
-    return this;    // enables multiple calls on cube to be "chained"
-};
-
-Cube.prototype.buildColorPicker = function(parentEl) {
-    if (!this.hasColorPicker && (parentEl instanceof HTMLElement))
-    {
-        this.hasColorPicker = true;
-        this.colorPickerContainerEl = parentEl;
-        this.colorPickerContainerEl.classList.add('color-list');
-
-        this.colorPickerContainerEl.innerHTML = (
-            '<label class="swatch">' +
-                '<input type="radio" name="color" value="indigo" />' +
-                '<div data-color="indigo"></div>' +
-            '</label>' +
-            '<label class="swatch">' +
-                '<input type="radio" name="color" value="blue" />' +
-                '<div data-color="blue"></div>' +
-            '</label>' +
-            '<label class="swatch">' +
-                '<input type="radio" name="color" value="cyan" />' +
-                '<div data-color="cyan"></div>' +
-            '</label>' +
-            '<label class="swatch">' +
-                '<input type="radio" name="color" value="yellow" />' +
-                '<div data-color="yellow"></div>' +
-            '</label>' +
-            '<label class="swatch">' +
-                '<input type="radio" name="color" value="green" />' +
-                '<div data-color="green"></div>' +
-            '</label>' +
-            '<label class="swatch">' +
-                '<input type="radio" name="color" value="magenta" />' +
-                '<div data-color="magenta"></div>' +
-            '</label>' +
-            '<label class="swatch">' +
-                '<input type="radio" name="color" value="orange" />' +
-                '<div data-color="orange"></div>' +
-            '</label>' +
-            '<label class="swatch">' +
-                '<input type="radio" name="color" value="red" />' +
-                '<div data-color="red"></div>' +
-            '</label>'
-        );
-
-        /**
-         * @amirmikhak
-         * Position the color picker
-         */
-        var colorPickerHeight = this.colorPickerContainerEl.getBoundingClientRect().height;
-
-        /**
-         * @amirmikhak
-         * !TODO: Fix this. We need this correction look correct.
-         */
-        colorPickerHeight -= 100;
-
-        this.colorPickerContainerEl.style.position = 'absolute';
-        this.colorPickerContainerEl.style.top = [
-            'calc(50% - ', colorPickerHeight / 2, 'px)'
-        ].join('');
-        this.colorPickerContainerEl.style.left = [
-            'calc(50% - ', this.outerDimensions, 'px)'
-        ].join('');
-
-        /**
-         * @amirmikhak
-         * Add event listener for change in DOM to be reflected in Cube's model
-         */
-        this.colorPickerContainerEl.addEventListener('change', function(e) {
-            if ((e.target.nodeName === 'INPUT') && (e.target.name === 'color'))
-            {
-                cube.penColor = e.target.value;
-            }
-        });
-
-        /**
-         * @amirmikhak
-         * Sync DOM/Cube on build
-         */
-        this.penColor = this.penColor;
     }
 
     return this;    // enables multiple calls on cube to be "chained"
