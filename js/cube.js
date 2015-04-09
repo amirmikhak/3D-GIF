@@ -433,7 +433,6 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
         },
     });
 
-
     Object.defineProperty(this, 'fonts', {
         enumerable: true,
         set: NOOP,
@@ -515,9 +514,9 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
             _fontMap[handle] = fontData;
             if (Object.keys(_fontMap).length === 1)
             {   // if this newly loaded font is the only one available...
-                _activeFont = handle;   // ... use it.
+                this.activeFont = handle;   // ... use it.
             }
-        });
+        }.bind(this));
      };
 
      this.unloadFont = function(handle) {
@@ -1086,8 +1085,7 @@ Cube.prototype.buildShapePicker = function(parentEl) {
         var shapePickerHeight = this.shapePickerContainerEl.getBoundingClientRect().height;
         /**
          * @amirmikhak
-         * !TODO: fix this.
-         * need this correction look correct in a pinch.
+         * !TODO: Fix this. We need this correction look correct.
          */
         shapePickerHeight -= 100;
 
