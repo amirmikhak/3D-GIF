@@ -20,18 +20,6 @@ var Cell = function(opts) {
         transitionTransforms: false,
     };
 
-    var _cube;
-
-    var _row;
-    var _column;
-    var _depth;
-    var _color;
-    var _on;
-    var _size;
-    var _clickable;
-    var _rotation;
-    var _transitionTransforms;
-
     var TRANSITION_DURATION = '300ms';
     var TRANSITION_EASING = 'ease-in-out';
 
@@ -66,7 +54,7 @@ var Cell = function(opts) {
          *   will happen. Technical definition: http://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
          */
         cell.htmlReady.then(function() {
-            if (_transitionTransforms)
+            if (this.transitionTransforms)
             {
                 this.html.style.transitionProperty = 'transform';
                 this.html.style.transitionDuration = TRANSITION_DURATION;
@@ -79,23 +67,23 @@ var Cell = function(opts) {
             }
 
             // render the LED's on-ness
-            this.led.classList.toggle('on', _on);
-            this.html.style.opacity = _on ? 1 : null;
+            this.led.classList.toggle('on', this.on);
+            this.html.style.opacity = this.on ? 1 : null;
 
             // render the LED's color
-            this.led.style.backgroundColor = getRbgaFromColorWithOpacity(_on ? _color : [0, 0, 0], 1);
-            this.html.style.backgroundColor = _on ?
-                getRbgaFromColorWithOpacity(_color, 0.125) :
+            this.led.style.backgroundColor = getRbgaFromColorWithOpacity(this.on ? this.color : [0, 0, 0], 1);
+            this.html.style.backgroundColor = this.on ?
+                getRbgaFromColorWithOpacity(this.color, 0.125) :
                 null;
 
             // apply cell data attributes
-            this.html.setAttribute('data-row', _row);
-            this.html.setAttribute('data-column', _column);
-            this.html.setAttribute('data-depth', _depth);
+            this.html.setAttribute('data-row', this.row);
+            this.html.setAttribute('data-column', this.column);
+            this.html.setAttribute('data-depth', this.depth);
 
             // set the size of the cell
-            this.html.style.width = _size + 'px';
-            this.html.style.height = _size + 'px';
+            this.html.style.width = this.size + 'px';
+            this.html.style.height = this.size + 'px';
 
             /**
              * Build the string to position the cell / optionally change its face
@@ -123,22 +111,20 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'cube', {
         enumerable: true,
         get: function() {
-            return _cube;
+            return _options.cube;
         },
         set: function(newCube) {
-            // assign newCube value to both _cube and _options.cube
-            _cube = _options.cube = newCube;
+            _options.cube = newCube;
         }
     });
 
     Object.defineProperty(this, 'row', {
         enumerable: true,
         get: function() {
-            return _row;
+            return _options.row;
         },
         set: function(newRow) {
-            // assign newRow value to both _row and _options.row
-            _row = _options.row = newRow;
+            _options.row = newRow;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -146,11 +132,10 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'column', {
         enumerable: true,
         get: function() {
-            return _column;
+            return _options.column;
         },
         set: function(newColumn) {
-            // assign newColumn value to both _column and _options.column
-            _column = _options.column = newColumn;
+            _options.column = newColumn;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -158,11 +143,10 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'depth', {
         enumerable: true,
         get: function() {
-            return _depth;
+            return _options.depth;
         },
         set: function(newDepth) {
-            // assign newDept value to both _depth and _options.depth
-            _depth = _options.depth = newDepth;
+            _options.depth = newDepth;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -170,11 +154,10 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'color', {
         enumerable: true,
         get: function() {
-            return _color;
+            return _options.color;
         },
         set: function(newColor) {
-            // assign newColor value to both _color and _options.color
-            _color = _options.color = newColor;
+            _options.color = newColor;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -182,11 +165,10 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'on', {
         enumerable: true,
         get: function() {
-            return _on;
+            return _options.on;
         },
         set: function(turnOn) {
-            // assign turnOn value to both _on and _options.on
-            _on = _options.on = turnOn;
+            _options.on = turnOn;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -194,11 +176,10 @@ var Cell = function(opts) {
     Object.defineProperty(this, 'size', {
         enumerable: true,
         get: function() {
-            return _size;
+            return _options.size;
         },
         set: function(newSize) {
-            // assign newSize value to both _size and _options.size
-            _size = _options.size = newSize;
+            _options.size = newSize;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -222,7 +203,7 @@ var Cell = function(opts) {
          */
         enumerable: true,
         get: function() {
-            return _clickable;
+            return _options.clickable;
         },
         set: function(newClickable) {
             _options.clickable = newClickable;
@@ -238,10 +219,10 @@ var Cell = function(opts) {
                  * were called 20 times, there would be 20 listeners that will have
                  * been added to capture a single click causing 20 callbacks to occur.
                  */
-                if (newClickable && !_clickable)
+                if (newClickable && !_options.clickable)
                 {
                     cell.html.addEventListener('click', clickHandler);
-                    _clickable = newClickable;
+                    _options.clickable = newClickable;
                 } else
                 {
                     cell.html.removeEventListener('click', clickHandler);
@@ -258,7 +239,7 @@ var Cell = function(opts) {
          */
         enumerable: true,
         get: function() {
-            return _rotation;
+            return _options.rotation;
         },
         set: function(newRotation) {
             var invalidValueChecker = function(axisValue) {
@@ -271,7 +252,7 @@ var Cell = function(opts) {
                 throw 'Bad value for cell.rotation: ' + newRotation;
             }
 
-            _rotation = _options.rotation = newRotation;
+            _options.rotation = newRotation;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -282,10 +263,10 @@ var Cell = function(opts) {
          */
         enumerable: false,
         get: function() {
-            return _transitionTransforms;
+            return _options.transitionTransforms;
         },
         set: function(shouldTransition) {
-            _transitionTransforms = _options.transitionTransforms = shouldTransition;
+            _options.transitionTransforms = shouldTransition;
             render();   // call to ensure that the DOM is sync with model
         }
     });
@@ -309,8 +290,8 @@ var Cell = function(opts) {
                 color:this.color,
                 on: this.on,
                 size: this.size,
-                clickable:this.clickable,
-                rotation:this.rotation,
+                clickable: this.clickable,
+                rotation: this.rotation,
             };
         }
     });
