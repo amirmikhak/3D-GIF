@@ -219,8 +219,9 @@ var Cell = function(opts) {
                  * were called 20 times, there would be 20 listeners that will have
                  * been added to capture a single click causing 20 callbacks to occur.
                  */
-                if (newClickable && !_options.clickable)
+                if (newClickable)
                 {
+                    cell.html.removeEventListener('click', clickHandler);   // we don't want the same handler bound more than once
                     cell.html.addEventListener('click', clickHandler);
                     _options.clickable = newClickable;
                 } else
