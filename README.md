@@ -2,8 +2,7 @@
 
 # Version 2 Functionality
 
-
-To run on local machine:
+Serve on local machine:
 ----------
 
 Using npm:
@@ -12,6 +11,13 @@ Run these commands from the terminal while inside the root directory of the repo
 
     npm install -g http-server
     http-server . -a 127.0.0.1 -p 9001
+
+
+View on S3:
+----------
+
+[https://s3.amazonaws.com/dgmde15-amirmikhak/l3d/index.html](https://s3.amazonaws.com/dgmde15-amirmikhak/l3d/index.html)
+
 
 
 Keyboard Actions
