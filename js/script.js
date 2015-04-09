@@ -18,8 +18,8 @@ window.addEventListener('load', function() { // When everything is loaded
     cube.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json');
 
     cube.colorPicker = colorPickerEl;
+    cube.playbackControls = playbackControlsEl;
 
-    cube.buildPlaybackControls(playbackControlsEl);
     cube.buildShapePicker(shapePickerEl);
 
     cube.listenForKeystrokes();

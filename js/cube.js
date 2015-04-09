@@ -100,7 +100,7 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
                 if (this.playbackControls)
                 {
                     var radioSelector = 'input[type="radio"][name="direction"]';
-                    var radiosElList = this.playbackControlsContainerEl.querySelectorAll(radioSelector)
+                    var radiosElList = this.playbackControls.querySelectorAll(radioSelector)
                     var radioElArray = Array.prototype.slice.apply(radiosElList);
                     radioElArray.forEach(function(input) {
                         // check or uncheck each of the radio buttons
@@ -514,7 +514,7 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
     };
 
     Object.defineProperty(this, 'colorPicker', {
-        enumerable: true,
+        enumerable: false,
         get: function() {
             return _colorPicker;
         },
@@ -533,6 +533,69 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
                 console.error('Invalid colorPicker: must be instance of HTMLElement');
             }
         },
+    });
+
+    var __playbackControlsChangeListener = function(e) {
+        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'direction'))
+        {
+            cube.playbackOptions = {
+                direction: e.target.value,
+            };
+        }
+    };
+
+    var _destroyPlaybackControls = function _destroyPlaybackControls() {
+        if (_playbackControls)
+        {
+            _playbackControls.removeEventListener('change', __playbackControlsChangeListener);
+            _playbackControls.classList.remove('playback-controls');
+            _playbackControls.innerHTML = '';
+        }
+    };
+
+    var _buildPlaybackControls = function _buildPlaybackControls(parentEl) {
+        var directions = ['back', 'left', 'up', 'down', 'right', 'forward'];
+        var optionsHtml = directions.map(function(direction) {
+            return [
+                '<input id="direction-radio-', direction, '" type="radio" name="direction" value="', direction, '" />',
+                '<label for="direction-radio-', direction, '" class="control-button radio-tab">', direction, '</label>',
+            ].join('')
+        }).join('');
+
+        _playbackControls = parentEl;
+        _playbackControls.classList.add('playback-controls');
+
+        _playbackControls.innerHTML = [
+            '<div class="radio-tabs">', optionsHtml, '</div>'
+        ].join('');
+
+        _playbackControls.addEventListener('change', __playbackControlsChangeListener);
+
+        this.playbackOptions = {
+            direction: this.playbackOptions.direction,  // trigger sync of DOM with state
+        }
+    }
+
+    Object.defineProperty(this, 'playbackControls', {
+        enumerable: false,
+        get: function() {
+            return _playbackControls;
+        },
+        set: function(newPlaybackControlsEl) {
+            if ((newPlaybackControlsEl instanceof HTMLElement) &&
+                (newPlaybackControlsEl !== _playbackControls))
+            {
+                _buildPlaybackControls.call(this, newPlaybackControlsEl);
+            } else if ((newPlaybackControlsEl === null) ||
+                (typeof newPlaybackControlsEl === 'undefined'))
+            {
+                _destroyPlaybackControls();
+                _playbackControls = undefined;
+            } else
+            {
+                console.error('Invalid playbackControls: must be instance of HTMLElement');
+            }
+        }
     });
 
     Object.defineProperty(this, 'hasFont', {
@@ -1043,45 +1106,6 @@ Cube.prototype.clear = function() {
     this.cells.forEach(function(cell) {
         cell.on = false;
     });
-
-    return this;    // enables multiple calls on cube to be "chained"
-};
-
-Cube.prototype.buildPlaybackControls = function(parentEl) {
-    var cube = this;
-
-    this.playbackControls = true;
-    this.playbackControlsContainerEl = parentEl;
-    this.playbackControlsContainerEl.classList.add('playback-controls');
-    this.playbackControlsContainerEl.innerHTML = (
-        '<div class="radio-tabs">' +
-            '<input id="direction-radio-back" type="radio" name="direction" value="back" />' +
-            '<label for="direction-radio-back" class="control-button radio-tab">Back</label>' +
-            '<input id="direction-radio-left" type="radio" name="direction" value="left" />' +
-            '<label for="direction-radio-left" class="control-button radio-tab">Left</label>' +
-            '<input id="direction-radio-up" type="radio" name="direction" value="up" />' +
-            '<label for="direction-radio-up" class="control-button radio-tab">Up</label>' +
-            '<input id="direction-radio-down" type="radio" name="direction" value="down" />' +
-            '<label for="direction-radio-down" class="control-button radio-tab">Down</label>' +
-            '<input id="direction-radio-right" type="radio" name="direction" value="right" />' +
-            '<label for="direction-radio-right" class="control-button radio-tab">Right</label>' +
-            '<input id="direction-radio-forward" type="radio" name="direction" value="forward" />' +
-            '<label for="direction-radio-forward" class="control-button radio-tab">Forward</label>' +
-        '</div>'
-    );
-
-    this.playbackControlsContainerEl.addEventListener('change', function(e) {
-        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'direction'))
-        {
-            cube.playbackOptions = {
-                direction: e.target.value,
-            };
-        }
-    });
-
-    this.playbackOptions = {
-        direction: this.playbackOptions.direction,  // trigger sync of DOM with state
-    }
 
     return this;    // enables multiple calls on cube to be "chained"
 };
