@@ -12,6 +12,7 @@ window.addEventListener('load', function() { // When everything is loaded
         size: 50,
     });
 
+    cube.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json');
     cube.buildPlaybackControls(document.getElementById('playback-controls'));
     cube.buildColorPicker(document.getElementById('color-picker'));
     cube.buildShapePicker(document.getElementById('shape-picker'));
