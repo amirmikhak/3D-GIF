@@ -1225,19 +1225,19 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     var cube = this;
 
     function getNewValueForShift(cell, axis) {
-        if ((cell[axis] + stepSize) >= 0 && (cell[axis] + stepSize) < cube.size)
+        var cubeSize = cube['size'];
+        var cellPlusSize = cell[axis] + stepSize;
+
+        if ((cellPlusSize >= 0) && (cellPlusSize < cubeSize))
         {   // your new coord originated from inside of bounds
-            return (cell[axis] + stepSize) % cube.size;
-        } else
-        {   // your new coord originated from outside of bounds
-            if (wrap)
-            {   // reach around the other side
-                return (cube.size + cell[axis] + stepSize) % cube.size;
-            } else
-            {   // screw it, your new value is nothing
-                return -1;
-            }
+            return (cellPlusSize) % cubeSize;
+        } else if (wrap)    // your new coord originated from outside of bounds
+        {   // reach around the other side
+            return (cubeSize + cellPlusSize) % cubeSize;
         }
+
+        // screw it, your new value is nothing
+        return -1;
     };
 
     function getNewRowForXShift(cell) {
@@ -1684,17 +1684,20 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
 
     var charPixels = cube.activeFontChars[char];
 
+    if (charPixels)
+    {
+        /**
+         * If the character is defined in the font's character set, loop over
+         * each pixel to apply the current penColor if the pixel is on.
+         */
 
-    /**
-     * Loop over each pixel to apply the current penColor if the pixel is on.
-     */
-
-    charPixels.forEach(function(cell) {
-        if (cell.on)
-        {
-            cell.color = desiredColor;
-        }
-    });
+        charPixels.forEach(function(cell) {
+            if (cell.on)
+            {
+                cell.color = desiredColor;
+            }
+        });
+    }
 
     return charPixels;
 };
