@@ -15,7 +15,6 @@ var Cube = function(size, cellOpts) {
         direction: 'back',
         stepSize: 1,
         wrap: false,
-        // interruptible: false,
     };
 
     var defaultCellOptions = {
@@ -23,18 +22,18 @@ var Cube = function(size, cellOpts) {
     };
 
     var defaultKeyListenerOptions = {
-        keys: 'all',                // values: alpha, num, alphanum, all
+        keys: 'all',                // values: alpha, num, alphanum, symbols, all
         // letterColor: [0, 0, 255],   // NOT IMPLEMENTED: color of letter pixels on generated frame: rgb array
         // backgroundColor: [0, 0, 0], // NOT IMPLEMENTED: color of non-leter pixels on generated frame: rgb array
         // startFace: 'front',         // NOT IMPLEMENTED: values: front, back, left, right, bottom, top
         // endFace: 'back',            // NOT IMPLEMENTED: values: front, back, left, right, bottom, top
         animate: false,             // animate from frontFace to backFace: boolean
-        animateRate: 125,           // delay between each playback frame
-        stepSize: 1,                // number of steps for each animation
+        animateRate: 125,           // delay between each playback frame (only applies if animate is true)
+        stepSize: 1,                // number of steps for each animation (only applies if animate is true)
     };
 
     var _playbackOptions = _.extend({}, defaultPlaybackOptions);
-    var _cellOptions = _.extend({}, defaultCellOptions);
+    var _cellOptions = _.extend({}, defaultCellOptions, cellOpts || {});
     var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
     var _container;
@@ -70,7 +69,6 @@ var Cube = function(size, cellOpts) {
      * https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
      * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
      */
-
     var htmlReadySuccessFn;
     var htmlReadyFailureFn;
     this.htmlReady = new Promise(function(resolve, reject) {
@@ -79,6 +77,11 @@ var Cube = function(size, cellOpts) {
     });
 
     Object.defineProperty(this, 'playbackOptions', {
+        /**
+         * @amirmikhak
+         * Property that is referenced to determine the correct animation callbacks
+         * to generate the next frame.
+         */
         enumerable: true,
         get: function() {
             return _playbackOptions;
@@ -135,18 +138,14 @@ var Cube = function(size, cellOpts) {
         }
     });
 
-    Object.defineProperty(this, 'cellOptions', {
-        enumerable: true,
-        get: function() {
-            return _cellOptions;
-        },
-        set: function(newOptions) {
-            _.extend(_cellOptions, newOptions);
-        }
-    });
-
-
     Object.defineProperty(this, 'keyListenerOptions', {
+        /**
+         * @amirmikhak
+         * Property that defines which keystrokes are listened for and sent to
+         * the cube, and which playback settings to use for keyboard-generated
+         * images. Custom keyboard playback settings only apply if the animate
+         * option is true).
+         */
         enumerable: true,
         get: function() {
             return _keyListenerOptions;
@@ -159,7 +158,8 @@ var Cube = function(size, cellOpts) {
     function applyCameraAngle() {
         /**
          * @amirmikhak
-         * Helper function for xAngle and yAngle properties
+         * Helper function for xAngle and yAngle properties that helps ensure
+         * that the visible angle of the cube is in sync with the internal state.
          */
         cube.htmlReady.then(function() {
             cube.html.style.transform = [
@@ -215,6 +215,11 @@ var Cube = function(size, cellOpts) {
     });
 
     Object.defineProperty(this, 'transitionTransforms', {
+        /**
+         * @amirmikhak
+         * Animate transforms on the cube (does not apply to cells, whose property
+         * is set separately).
+         */
         enumerable: false,
         get: function() {
             return _transitionTransforms;
@@ -242,6 +247,12 @@ var Cube = function(size, cellOpts) {
     });
 
     Object.defineProperty(this, 'rotateCells', {
+        /**
+         * @amirmikhak
+         * If true, each cell rotates opposite the cube so that it is always facing
+         * you. It is computationally expensive and graphically looks a little weird.
+         * It is thus not especially useful, yet I leave it here for posterity.
+         */
         enumerable: true,
         get: function() {
             return _rotateCells;
@@ -269,6 +280,11 @@ var Cube = function(size, cellOpts) {
     });
 
     Object.defineProperty(this, 'animationSteps', {
+        /**
+         * @amirmikhak
+         * Read-only dictionary of some of the atomic changes that can be made to
+         * the cube for an animation.
+         */
         writable: false,
         enumerable: false,
         value: {
@@ -318,6 +334,11 @@ var Cube = function(size, cellOpts) {
     });
 
     Object.defineProperty(this, 'animationCb', {
+        /**
+         * @amirmikhak
+         * Read-only property for the correct animation callback to use for the
+         * current action and direction.
+         */
         enumerable: false,
         set: NOOP,
         get: function() {
@@ -340,6 +361,10 @@ var Cube = function(size, cellOpts) {
     });
 
     Object.defineProperty(this, 'shapes', {
+        /**
+         * @amirmikhak
+         * An object of serialized image slices
+         */
         enumerable: true,
         writable: false,
         value: {
@@ -366,7 +391,7 @@ var Cube = function(size, cellOpts) {
         enumerable: false,
         set: NOOP,
         get: function() {
-            return this.size * this.cellOptions.size;
+            return this.size * _cellOptions.size;
         }
     });
 
@@ -378,12 +403,16 @@ var Cube = function(size, cellOpts) {
         set: function(nowPlaying) {
             _isPlaying = nowPlaying;
 
-            if (_playButton instanceof HTMLElement)
-            {
+            if (_playButton)
+            {   // if
                 _playButton.classList.toggle('playing', _isPlaying);
                 _playButton.classList.toggle('paused', !_isPlaying);
             }
 
+            /**
+             * @amirmikhak
+             * Start / stop the actual animation loop
+             */
             if (_isPlaying)
             {
                 clearInterval(this.animateInterval);
@@ -396,6 +425,12 @@ var Cube = function(size, cellOpts) {
             }
         }
     });
+
+
+    /**
+     * @amirmikhak
+     * Colors-related properties
+     */
 
     Object.defineProperty(this, 'colors', {
         enumerable: true,
@@ -465,7 +500,16 @@ var Cube = function(size, cellOpts) {
      * DOM-RELATED PROPERTIES AND HELPER FUNCTIONS
      */
 
+        /**
+         * @amirmikhak
+         * Color Picker property and helpers
+         */
     var __colorPickerChangeListener = function(e) {
+        /**
+         * @amirmikhak
+         * Undo the actions of _buildColorPicker() so that the element is left
+         * in as close a state as possible to that it was before being called.
+         */
         if ((e.target.nodeName === 'INPUT') && (e.target.name === 'color'))
         {
             cube.penColor = e.target.value;
@@ -473,6 +517,11 @@ var Cube = function(size, cellOpts) {
     };
 
     var _destroyColorPicker = function _destroyColorPicker() {
+        /**
+         * @amirmikhak
+         * Undo the actions of _buildColorPicker() so that the element is left
+         * in as close a state as possible to that it was before being called.
+         */
         if (_colorPicker)
         {
             _colorPicker.classList.remove('color-list');
@@ -485,6 +534,11 @@ var Cube = function(size, cellOpts) {
     };
 
     var _buildColorPicker = function _buildColorPicker(parentEl) {
+        /**
+         * @amirmikhak
+         * Build the color picker's components, position it, and bind its event
+         * listener(s).
+         */
         _destroyColorPicker();
 
         _colorPicker = parentEl;
@@ -533,6 +587,14 @@ var Cube = function(size, cellOpts) {
             return _colorPicker;
         },
         set: function(newColorPickerEl) {
+            /**
+             * @amirmikhak
+             * If the new parent element is a valid container for a color picker,
+             * and if it's not the same as it is now, rebuild it. Otherwise, check
+             * if the caller intended to remove the color picker, in which case
+             * destory it. If neither is true, the caller likely misunderstood what
+             * it was passing in, so show an error.
+             */
             if ((newColorPickerEl instanceof HTMLElement) &&
                 (newColorPickerEl !== _colorPicker))
             {
@@ -545,6 +607,7 @@ var Cube = function(size, cellOpts) {
             } else
             {
                 console.error('Invalid colorPicker: must be instance of HTMLElement');
+                throw 'Invalid colorPicker';
             }
         },
     });
@@ -563,6 +626,11 @@ var Cube = function(size, cellOpts) {
     };
 
     var _destroyShapePicker = function _destroyShapePicker() {
+        /**
+         * @amirmikhak
+         * Undo the actions of _buildShapePicker() so that the element is left
+         * in as close a state as possible to that it was before being called.
+         */
         if (_shapePicker)
         {
             _shapePicker.classList.add('shape-list');
@@ -575,6 +643,10 @@ var Cube = function(size, cellOpts) {
     }
 
     var _buildShapePicker = function _buildShapePicker(parentEl) {
+        /**
+         * Build the shape picker's components, position it, and bind its event
+         * listener(s).
+         */
         _destroyShapePicker();
 
         _shapePicker = parentEl;
@@ -626,6 +698,10 @@ var Cube = function(size, cellOpts) {
             return _shapePicker;
         },
         set: function(newShapePickerEl) {
+            /**
+             * @amirmikhak
+             * This property follows the same pattern as the colorPicker property.
+             */
             if ((newShapePickerEl instanceof HTMLElement) &&
                 (newShapePickerEl !== _shapePicker))
             {
@@ -638,9 +714,16 @@ var Cube = function(size, cellOpts) {
             } else
             {
                 console.error('Invalid shapePicker: must be instance of HTMLElement');
+                throw 'Invalid shapePicker';
             }
         },
     });
+
+
+        /**
+         * @amirmikhak
+         * Playback Controls property and helpers
+         */
 
     var __playbackControlsChangeListener = function(e) {
         if ((e.target.nodeName === 'INPUT') && (e.target.name === 'direction'))
@@ -652,6 +735,13 @@ var Cube = function(size, cellOpts) {
     };
 
     var _destroyPlaybackControls = function _destroyPlaybackControls() {
+        /**
+         * @amirmikhak
+         * Undo the actions of _buildPlaybackControls() so that the element is
+         * left in as close a state as possible to that it was before being
+         * called.
+         */
+
         if (_playbackControls)
         {
             _playbackControls.removeEventListener('change', __playbackControlsChangeListener);
@@ -661,8 +751,19 @@ var Cube = function(size, cellOpts) {
     };
 
     var _buildPlaybackControls = function _buildPlaybackControls(parentEl) {
+        /**
+         * @amirmikhak
+         * Build the color picker's components, position it, and bind its event
+         * listener(s).
+         */
+
         _destroyPlaybackControls();
 
+        /**
+         * @amirmikhak
+         * Compose an array of strings into HTML using a template and Array.map(),
+         * which converts each item in the array using the passed-in function.
+         */
         var directions = ['back', 'left', 'up', 'down', 'right', 'forward'];
         var optionsHtml = directions.map(function(direction) {
             return [
@@ -691,6 +792,10 @@ var Cube = function(size, cellOpts) {
             return _playbackControls;
         },
         set: function(newPlaybackControlsEl) {
+            /**
+             * @amirmikhak
+             * This property follows the same pattern as the colorPicker property.
+             */
             if ((newPlaybackControlsEl instanceof HTMLElement) &&
                 (newPlaybackControlsEl !== _playbackControls))
             {
@@ -703,9 +808,15 @@ var Cube = function(size, cellOpts) {
             } else
             {
                 console.error('Invalid playbackControls: must be instance of HTMLElement');
+                throw 'Invalid playbackControls';
             }
         }
     });
+
+        /**
+         * @amirmikhak
+         * Cube Container property
+         */
 
     Object.defineProperty(this, 'container', {
         enumerable: false,
@@ -713,6 +824,10 @@ var Cube = function(size, cellOpts) {
             return _container;
         },
         set: function(newContainer) {
+            /**
+             * @amirmikhak
+             * This property follows the same pattern as the colorPicker property.
+             */
             if ((newContainer instanceof HTMLElement) &&
                 (newContainer !== _container))
             {
@@ -726,9 +841,16 @@ var Cube = function(size, cellOpts) {
             } else
             {
                 console.error('Invalid container: must be instance of HTMLElement');
+                throw 'Invalid container';
             }
         }
     });
+
+
+        /**
+         * @amirmikhak
+         * Prev Step Button property and listener
+         */
 
     var __prevStepButtonClickListener = function(event) {
         if (cube.isPlaying)
@@ -745,12 +867,15 @@ var Cube = function(size, cellOpts) {
             return _prevStepButton;
         },
         set: function(newPrevStepButton) {
+            /**
+             * @amirmikhak
+             * This property follows the same pattern as the colorPicker property.
+             */
             if ((newPrevStepButton instanceof HTMLElement) &&
                 (newPrevStepButton !== _prevStepButton))
             {
                 if (_prevStepButton)
-                {
-                    // unbind a click listener that may have been previously bound
+                {   // unbind a click listener that may have been previously bound
                     _prevStepButton.removeEventListener('click', __prevStepButtonClickListener);
                 }
 
@@ -771,6 +896,12 @@ var Cube = function(size, cellOpts) {
         }
     });
 
+
+        /**
+         * @amirmikhak
+         * Next Step Button property and listener
+         */
+
     var __nextStepButtonClickListener = function(event) {
         cube.pause();
         cube.step();
@@ -782,12 +913,15 @@ var Cube = function(size, cellOpts) {
             return _nextStepButton;
         },
         set: function(newNextStepButton) {
+            /**
+             * @amirmikhak
+             * This property follows the same pattern as the colorPicker property.
+             */
             if ((newNextStepButton instanceof HTMLElement) &&
                 (newNextStepButton !== _nextStepButton))
             {
                 if (_nextStepButton)
-                {
-                    // unbind a click listener that may have been previously bound
+                {   // unbind a click listener that may have been previously bound
                     _nextStepButton.removeEventListener('click', __nextStepButtonClickListener);
                 }
 
@@ -808,6 +942,12 @@ var Cube = function(size, cellOpts) {
         }
     });
 
+
+        /**
+         * @amirmikhak
+         * Play Button property and listener
+         */
+
     var __playButtonClickListener = function(event) {
         cube.togglePlaying();
     };
@@ -818,12 +958,15 @@ var Cube = function(size, cellOpts) {
             return _playButton;
         },
         set: function(newPlayButton) {
+            /**
+             * @amirmikhak
+             * This property follows the same pattern as the colorPicker property.
+             */
             if ((newPlayButton instanceof HTMLElement) &&
                 (newPlayButton !== _playButton))
             {
                 if (_playButton)
-                {
-                    // unbind a click listener that may have been previously bound
+                {   // unbind a click listener that may have been previously bound
                     _playButton.removeEventListener('click', __playButtonClickListener);
                 }
 
@@ -844,6 +987,12 @@ var Cube = function(size, cellOpts) {
         }
     });
 
+
+        /**
+         * @amirmikhak
+         * Clear Button property and listener
+         */
+
     var __clearButtonClickListener = function(event) {
         cube.clear();
     };
@@ -854,12 +1003,15 @@ var Cube = function(size, cellOpts) {
             return _clearButton;
         },
         set: function(newClearButton) {
+            /**
+             * @amirmikhak
+             * This property follows the same pattern as the colorPicker property.
+             */
             if ((newClearButton instanceof HTMLElement) &&
                 (newClearButton !== _clearButton))
             {
                 if (_clearButton)
-                {
-                    // unbind a click listener that may have been previously bound
+                {   // unbind a click listener that may have been previously bound
                     _clearButton.removeEventListener('click', __clearButtonClickListener);
                 }
 
@@ -1000,9 +1152,6 @@ var Cube = function(size, cellOpts) {
 
     this.transitionTransforms = true;
 
-    this.cellOptions = defaultCellOptions;  // copy in the default options
-    this.cellOptions = typeof cellOpts !== 'undefined' ? cellOpts : {}; // copy in what the user wanted
-
     this.size = size; // How many rows and columns do I have?
 
     (function buildHTML() {
@@ -1033,7 +1182,7 @@ var Cube = function(size, cellOpts) {
                 // Create a cell
                 var cell = new Cell({
                     cube: this,
-                    size: this.cellOptions.size,
+                    size: _cellOptions.size,
                     depth: depth,
                     column: column,
                     row: row,
@@ -1088,7 +1237,6 @@ Cube.prototype.toJSON = function() {
         size: this.size,
         cells: this.cells,
         playbackOptions: this.playbackOptions,
-        cellOptions: this.cellOptions,
     };
 };
 
