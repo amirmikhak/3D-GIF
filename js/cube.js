@@ -1,4 +1,4 @@
-var Cube = function(size, parentElement, prevStepButton, nextStepButton, playButton, clearButton, cellOpts) {
+var Cube = function(size, prevStepButton, nextStepButton, playButton, clearButton, cellOpts) {
     // 'this' can point to many, different things, so we grab an easy reference to the object
     // You can read more about 'this' at:
     // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
@@ -36,6 +36,8 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
     var _playbackOptions = _.extend({}, defaultPlaybackOptions);
     var _cellOptions = _.extend({}, defaultCellOptions);
     var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
+
+    var _container;
 
     var _prevStepButton;
     var _nextStepButton;
@@ -598,6 +600,29 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
         }
     });
 
+    Object.defineProperty(this, 'container', {
+        enumerable: false,
+        get: function() {
+            return _container;
+        },
+        set: function(newContainer) {
+            if ((newContainer instanceof HTMLElement) &&
+                (newContainer !== _container))
+            {
+                _container = newContainer;
+                _container.appendChild(this.html);
+            } else if ((newContainer === null) ||
+                (typeof newContainer === 'undefined'))
+            {
+                _container.removeChild(this.html);
+                _container = undefined;
+            } else
+            {
+                console.error('Invalid playbackControls: must be instance of HTMLElement');
+            }
+        }
+    });
+
     Object.defineProperty(this, 'hasFont', {
         enumerable: true,
         set: NOOP,
@@ -715,16 +740,6 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
     this.cellOptions = typeof cellOpts !== 'undefined' ? cellOpts : {}; // copy in what the user wanted
 
     // CONFIGURE FOR ARGUMENTS
-    if (!(parentElement instanceof HTMLElement))
-    {
-        parentElement = document.getElementsByTag('body');
-        parentElement = parentElement.length ? parentElement[0] : null;
-        if (!parentElement)
-        {
-            throw 'No parent element for the cube';
-        }
-    }
-
     if (prevStepButton instanceof HTMLElement)
     {
         _prevStepButton = prevStepButton;
@@ -821,8 +836,6 @@ var Cube = function(size, parentElement, prevStepButton, nextStepButton, playBut
             }
         }
     }
-
-    parentElement.appendChild(this.html); // Actually render the cube
 
     return this;
 };

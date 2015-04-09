@@ -11,12 +11,12 @@ window.addEventListener('load', function() { // When everything is loaded
     var playbackControlsEl = document.getElementById('playback-controls');
     var shapePickerEl = document.getElementById('shape-picker');
 
-    cube = new Cube(8, cubeWrapper, prevStepButton, nextStepButton, playButton, clearButton, {
+    cube = new Cube(8, prevStepButton, nextStepButton, playButton, clearButton, {
         size: 50,
     });
 
     cube.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json');
-
+    cube.container = cubeWrapper;
     cube.colorPicker = colorPickerEl;
     cube.playbackControls = playbackControlsEl;
 
