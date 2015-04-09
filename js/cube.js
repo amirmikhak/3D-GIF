@@ -871,6 +871,8 @@ Cube.prototype.play = function(opts) {
     this.animateInterval = setInterval(function() {
         this.animationCb.apply(this);
     }.bind(this), this.playbackOptions.delay);
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.step = function(numSteps) {
@@ -912,6 +914,8 @@ Cube.prototype.step = function(numSteps) {
          */
         this.animationCb();
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 }
 
 Cube.prototype.pause = function() {
@@ -972,6 +976,8 @@ Cube.prototype.buildPlaybackControls = function(parentEl) {
     this.playbackOptions = {
         direction: this.playbackOptions.direction,  // trigger sync of DOM with state
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.buildColorPicker = function(parentEl) {
@@ -1054,6 +1060,8 @@ Cube.prototype.buildColorPicker = function(parentEl) {
          */
         this.penColor = this.penColor;
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.buildShapePicker = function(parentEl) {
@@ -1109,6 +1117,8 @@ Cube.prototype.buildShapePicker = function(parentEl) {
             }
         });
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.listenForKeystrokes = function(opts) {
@@ -1280,6 +1290,8 @@ Cube.prototype.listenForKeystrokes = function(opts) {
         document.addEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = true;
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.stopListeningForKeystrokes = function() {
@@ -1289,6 +1301,8 @@ Cube.prototype.stopListeningForKeystrokes = function() {
         document.removeEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = false;
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.getCharacterRender = function(char, desiredColor) {
@@ -1343,6 +1357,8 @@ Cube.prototype.affectXSlice = function(column, fn) {
             fn.apply(this, [row, column, depth]);
         }
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.affectYSlice = function(row, fn) {
@@ -1353,6 +1369,8 @@ Cube.prototype.affectYSlice = function(row, fn) {
             fn.apply(this, [row, column, depth]);
         }
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.affectZSlice = function(depth, fn) {
@@ -1363,6 +1381,8 @@ Cube.prototype.affectZSlice = function(depth, fn) {
             fn.apply(this, [row, column, depth]);
         }
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.readSlice = function(face, offset, output) {
@@ -1456,6 +1476,8 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         var column = (face === 'right') ? (cube.size - 1) - offset : offset;
         this.affectXSlice(column, writeCellFromData);
     }
+
+    return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.renderSliceToPng = function(slice) {
