@@ -477,6 +477,9 @@ var Cube = function(size, cellOpts) {
         {
             _colorPicker.classList.remove('color-list');
             _colorPicker.innerHTML = '';
+            _colorPicker.style.position = null;
+            _colorPicker.style.top = null;
+            _colorPicker.style.right = null;
             _colorPicker.removeEventListener('change', __colorPickerChangeListener);
         }
     };
