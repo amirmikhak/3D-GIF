@@ -363,7 +363,7 @@ var Cube = function(size, cellOpts) {
     Object.defineProperty(this, 'shapes', {
         /**
          * @amirmikhak
-         * An object of serialized image slices
+         * An object of image slice arrays, each of which could have been serialized.
          */
         enumerable: true,
         writable: false,
@@ -418,7 +418,7 @@ var Cube = function(size, cellOpts) {
                 clearInterval(this.animateInterval);
                 this.animateInterval = setInterval(function() {
                     this.animationCb.apply(this);
-                }.bind(this), this.playbackOptions.delay);
+                }.bind(this), this.playbackOptions.delay);  // Use our "outside" this inside of the setInterval callback
             } else
             {
                 clearInterval(cube.animateInterval);
@@ -663,7 +663,7 @@ var Cube = function(size, cellOpts) {
                 '<div class="swatch" data-shape="', shapeName, '" ',
                     'style="', styles, '"></div>'
             ].join('')
-        }.bind(this)).join('');
+        }.bind(this)).join('');   // Use our "outside" this inside of the map
 
         /**
          * @amirmikhak
@@ -1130,7 +1130,7 @@ var Cube = function(size, cellOpts) {
             {   // if this newly loaded font is the only one available...
                 this.activeFont = handle;   // ... use it.
             }
-        }.bind(this));
+        }.bind(this));  // Use our "outside" this inside of the ajax success callback
      };
 
      this.unloadFont = function(handle) {
@@ -1169,7 +1169,7 @@ var Cube = function(size, cellOpts) {
         ].join(' ');
 
         htmlReadySuccessFn();
-    }.bind(this)());
+    }.bind(this)());  // Use our "outside" this inside of buildHTML
 
     this.cells = [];
     for (var depth = 0; depth < this.size; depth++) {
@@ -1194,8 +1194,8 @@ var Cube = function(size, cellOpts) {
                 this.htmlReady.then(function() {
                     this.cells.forEach(function(cell) {
                         this.html.appendChild(cell.html); // Actually render the cell
-                    }.bind(this));
-                }.bind(this));
+                    }.bind(this));  // Use our "outside" this inside of the foreach
+                }.bind(this));  // Use our "outside" this inside of the promise callback
             }
         }
     }
