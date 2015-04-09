@@ -1542,6 +1542,13 @@ Cube.prototype.listenForKeystrokes = function(opts) {
     }
 
     this.validKeyFilterFn = function(e) {
+        /**
+         * @amirmikhak
+         * Call the validator for the current set of desired keys
+         * (cube.keyListenerOptions.keys) passing in the current event for
+         * evaluation. If the key is valid, allow the event to proceed,
+         * otherwise don't let other listeners see it.
+         */
         if (validKeyFns[cube.keyListenerOptions.keys](e))
         {
             return true;
@@ -1553,6 +1560,16 @@ Cube.prototype.listenForKeystrokes = function(opts) {
     }
 
     this.actionKeyListenerFn = function(e) {
+        /**
+         * @amirmikhak
+         * Capture key events that are supposed to trigger an action on the cube.
+         * In the event that an action is typed, we don't want to let the event
+         * propagate up to this.keyListenerFn(). If it were to, the letters
+         * pressed to trigger actions would appear on the cube. For example,
+         * CTRL+B would both change the cube's animation direction and show a 'b'
+         * on the front face.
+         */
+
         var keyDirectionMap = {
             37: 'left',
             38: 'up',
@@ -1572,6 +1589,19 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
         if ((e.ctrlKey && (e.keyCode === 32)) || e.keyCode === 13)  // ctrl+space, or enter
         {
+            /**
+             * @amirmikhak
+             * Prevent the browser's default behavior for the event. For example,
+             * arrow keys scroll the browser window by default. This would be
+             * prevented by e.preventDefault().
+             *
+             * Also prevent the event from "bubbling up" to higher points in the
+             * listening tree or DOM. This is useful, as mentioned in the comment
+             * above for preventing other event handlers for doing work that might
+             * conflict with that done by this handler.
+             *
+             * For a more thorough explanation, see here: http://stackoverflow.com/questions/4616694/what-is-event-bubbling-and-capturing
+             */
             e.preventDefault();
             e.stopPropagation();
 
@@ -1636,6 +1666,12 @@ Cube.prototype.listenForKeystrokes = function(opts) {
     };
 
     this.keyListenerFn = function(e) {
+        /**
+         * @amirmikhak
+         * Called for each keypress that is allowed to pass through the
+         * validation function.
+         */
+
         var char = String.fromCharCode(e.which);
 
         if (cube.keyListenerOptions.animate)
@@ -1655,19 +1691,38 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
     if (!this.listeningForKeystrokes)
     {
+        /**
+         * @amirmikhak
+         * By checking that this.listeningForKeystrokes is not already set, we
+         * prevent double-binding of these listeners to single events.
+         */
+
+        this.listeningForKeystrokes = true;
         document.addEventListener('keydown', this.validKeyFilterFn);
         document.addEventListener('keydown', this.actionKeyListenerFn);
         document.addEventListener('keypress', this.keyListenerFn);
-        this.listeningForKeystrokes = true;
     }
 
     return this;    // enables multiple calls on cube to be "chained"
 };
 
 Cube.prototype.stopListeningForKeystrokes = function() {
-    if (this.keyListenerFn instanceof Function)
+    /**
+     * @amirmikhak
+     * Removes event listeners added by cube.listenForKeystrokes()
+     */
+
+    if (this.listeningForKeystrokes)
     {
+        /**
+         * @amirmikhak
+         * By checking that we were listening for keystrokes before, we are sure
+         * that the event listeners were bound and that the functions we are
+         * referencing to unbind have been defined.
+         */
+
         document.removeEventListener('keydown', this.validKeyFilterFn);
+        document.removeEventListener('keydown', this.actionKeyListenerFn);
         document.removeEventListener('keypress', this.keyListenerFn);
         this.listeningForKeystrokes = false;
     }
@@ -1676,6 +1731,14 @@ Cube.prototype.stopListeningForKeystrokes = function() {
 };
 
 Cube.prototype.getCharacterRender = function(char, desiredColor) {
+    /**
+     * @amirmikhak
+     * Return a slice containing a character (char, a single character) in a
+     * color (desiredColor, a string) for rendering to the cube. This function
+     * does not draw to the cube; the output of this function needs to get to
+     * cube.writeSlice() for rendering.
+     */
+
     desiredColor = typeof desiredColor !== 'undefined' ? desiredColor : this.penColorRgb;
     var invalidRgbValueFn = function(val) {
         return val < 0 || val > 255;
@@ -1711,6 +1774,11 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
 };
 
 Cube.prototype.renderShape = function(shape) {
+    /**
+     * @amirmikhak
+     * Draw a shape to the front face of the cube.
+     */
+
     if (this.shapeNames.indexOf(shape) === -1)
     {
         console.error('Invalid shape. Known shapes: ' + this.shapeNames.join(', '));
@@ -1727,6 +1795,11 @@ Cube.prototype.renderShape = function(shape) {
  */
 
 Cube.prototype.affectXSlice = function(column, fn) {
+    /**
+     * @amirmikhak
+     * Call a function on each cell within a given X slice starting from the left
+     */
+
     for (var depth = cube.size - 1; depth >= 0; depth--)
     {
         for (var row = 0; row < cube.size; row++)
@@ -1739,6 +1812,11 @@ Cube.prototype.affectXSlice = function(column, fn) {
 };
 
 Cube.prototype.affectYSlice = function(row, fn) {
+    /**
+     * @amirmikhak
+     * Call a function on each cell within a given Y slice starting from the top
+     */
+
     for (var column = 0; column < this.size; column++)
     {
         for (var depth = this.size - 1; depth >= 0; depth--)
@@ -1751,6 +1829,11 @@ Cube.prototype.affectYSlice = function(row, fn) {
 };
 
 Cube.prototype.affectZSlice = function(depth, fn) {
+    /**
+     * @amirmikhak
+     * Call a function on each cell within a given Z slice starting from the front
+     */
+
     for (var column = 0; column < cube.size; column++)
     {
         for (var row = 0; row < cube.size; row++)
@@ -1763,11 +1846,27 @@ Cube.prototype.affectZSlice = function(depth, fn) {
 };
 
 Cube.prototype.readSlice = function(face, offset, output) {
-    var cube = this;
+    /**
+     * @amirmikhak
+     * Read a slice "offset" slices in from "face", and return in format: "output"
+     *
+     * Note: readSlice('left') returns the same thing as readSlice('right', 7);
+     *  they are _NOT_ reflections of each other. Both are captured as if looking
+     *  from the left with the origin in the upper left. The same applies for top
+     *  and bottom and for front and back. The intuitive faces are FRONT, TOP, and
+     *  LEFT.
+     */
 
     var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
     var validOutputs = ['object', 'object-deep', 'json'];
 
+    /**
+     * @amirmikhak
+     * Use reasonable default values if the caller didn't give you any or gave
+     * values that are out of bounds or otherwise invalid.
+     *
+     * !TODO: log an error the console?
+     */
     offset = (typeof offset !== 'undefined') ?
         Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :
         0;
@@ -1781,15 +1880,24 @@ Cube.prototype.readSlice = function(face, offset, output) {
     var cells = [];
 
     function captureCell(r, c, d) {
+        /**
+         * @amirmikhak
+         * Callback, called for each cell, for getting the cell data in the
+         * correct format and gathering them into a single data structure.
+         */
         var cell = (output === 'object-deep') ?
             _.cloneDeep(this.getCellAt(r, c, d)) :
             this.getCellAt(r, c, d);
         cells.push(cell);
     }
 
+    /**
+     * @amirmikhak
+     * Use the correct affectFooSlice function for the axis
+     */
     if ((face === 'front') || (face === 'back'))
     {
-        var depth = (face === 'back') ? (cube.size - 1) - offset : offset;
+        var depth = (face === 'back') ? (this.size - 1) - offset : offset;
         this.affectZSlice(depth, captureCell);
     } else if ((face === 'top') || (face === 'bottom'))
     {
@@ -1797,7 +1905,7 @@ Cube.prototype.readSlice = function(face, offset, output) {
         this.affectYSlice(row, captureCell);
     } else if ((face === 'left') || (face === 'right'))
     {
-        var column = (face === 'right') ? (cube.size - 1) - offset : offset;
+        var column = (face === 'right') ? (this.size - 1) - offset : offset;
         this.affectXSlice(column, captureCell);
     }
 
@@ -1810,7 +1918,13 @@ Cube.prototype.readSlice = function(face, offset, output) {
 };
 
 Cube.prototype.writeSlice = function(data, face, offset) {
-    var cube = this;
+    /**
+     * @amirmikhak
+     * Write a saved slice (recorded in the formats output by cube.readSlice) to
+     * "offset" slices in from "face".
+     *
+     * Note: Refer to note in cube.readSlice() on left/right, front/back, etc. origins.
+     */
 
     var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
 
@@ -1842,7 +1956,7 @@ Cube.prototype.writeSlice = function(data, face, offset) {
 
     if ((face === 'front') || (face === 'back'))
     {
-        var depth = (face === 'back') ? (cube.size - 1) - offset : offset;
+        var depth = (face === 'back') ? (this.size - 1) - offset : offset;
         this.affectZSlice(depth, writeCellFromData);
     } else if ((face === 'top') || (face === 'bottom'))
     {
@@ -1850,7 +1964,7 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         this.affectYSlice(row, writeCellFromData);
     } else if ((face === 'left') || (face === 'right'))
     {
-        var column = (face === 'right') ? (cube.size - 1) - offset : offset;
+        var column = (face === 'right') ? (this.size - 1) - offset : offset;
         this.affectXSlice(column, writeCellFromData);
     }
 
