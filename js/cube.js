@@ -257,8 +257,9 @@ var Cube = function(size, cellOpts) {
             return _rotateCells;
         },
         set: function(shouldRotate) {
+            var prevRotateCells = _rotateCells;
             _rotateCells = shouldRotate;
-            if (!_rotateCells)
+            if (!_rotateCells && prevRotateCells)
             {
                 /**
                  * To improve performance of applyCameraAngle(), we only iterate over
@@ -1290,13 +1291,13 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     });
 
     // Iterate over all the cells and change their on status and color to their 'previous' neighbor's
-    cube.cells.forEach(function(cell, index) {
-        cell.on = false;
-        cell.on = nextState[index].on;
-        if (cell.on) {
-            cell.color = nextState[index].color;
-        }
-    });
+    for (var i = 0, numCells = cube.cells.length; i < numCells; i++)
+    {
+        cube.cells[i].applyOptions({
+            on: nextState[i].on,
+            color: nextState[i].on ? nextState[i].color : cube.cells[i].color,
+        });
+    }
 
     return this;    // enables multiple calls on cube to be "chained"
 };

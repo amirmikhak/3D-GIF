@@ -55,6 +55,9 @@ var Cell = function(opts) {
         htmlReadyFailureFn = reject;
     });
 
+    var _htmlReady = false;
+    var __autoRender = true;
+
     function areEqual(a, b) {
         // a function for comparing simple and more complex types such as arrays
         return (
@@ -80,51 +83,51 @@ var Cell = function(opts) {
         {
             if (_options['transitionTransforms'])
             {
-                this.html.style.transitionProperty = 'transform';
-                this.html.style.transitionDuration = TRANSITION_DURATION;
-                this.html.style.transitionTimingFunction = TRANSITION_EASING;
+                cell.html.style.transitionProperty = 'transform';
+                cell.html.style.transitionDuration = TRANSITION_DURATION;
+                cell.html.style.transitionTimingFunction = TRANSITION_EASING;
             } else
             {
-                this.html.style.transitionProperty = null;
-                this.html.style.transitionDuration = null;
-                this.html.style.transitionTimingFunction = null;
+                cell.html.style.transitionProperty = null;
+                cell.html.style.transitionDuration = null;
+                cell.html.style.transitionTimingFunction = null;
             }
         }
 
         if (_dirtyOptions.on || _dirtyOptions.color)
         {
             // render the LED's on-ness
-            this.led.classList.toggle('on', _on);
-            this.html.style.opacity = _on ? 1 : null;
+            cell.led.classList.toggle('on', _on);
+            cell.html.style.opacity = _on ? 1 : null;
 
             // render the LED's color
-            this.led.style.backgroundColor = _on ?
-                ['rgba(', _colorRgbString, ',1)'].join('') :
+            cell.led.style.backgroundColor = _on ?
+                'rgba(' + _colorRgbString + ',1)' :
                 'rgba(0,0,0,1)';
-            this.html.style.backgroundColor = _on ?
-                ['rgba(', _colorRgbString, ',', 0.125, ')'].join('') :
+            cell.html.style.backgroundColor = _on ?
+                'rgba(' + _colorRgbString + ',0.125)' :
                 null;
         }
 
         // apply cell data attributes
         if (_dirtyOptions.row)
         {
-            this.html.setAttribute('data-row', _options['row']);
+            cell.html.dataset.row = _options['row'];
         }
         if (_dirtyOptions.column)
         {
-            this.html.setAttribute('data-column', _options['column']);
+            cell.html.dataset.column = _options['column'];
         }
         if (_dirtyOptions.depth)
         {
-            this.html.setAttribute('data-depth', _options['depth']);
+            cell.html.dataset.depth = _options['depth'];
         }
 
         // set the size of the cell
         if (_dirtyOptions.size)
         {
-            this.html.style.width = _size + 'px';
-            this.html.style.height = _size + 'px';
+            cell.html.style.width = _size + 'px';
+            cell.html.style.height = _size + 'px';
         }
 
         /**
@@ -142,23 +145,25 @@ var Cell = function(opts) {
             _dirtyOptions.depth ||
             _dirtyOptions.rotation)
          {
-            var xformPieces = [
-                ['translateX(', (_size * _options['column']), 'px)'].join(''),
-                ['translateY(', (_size * _options['row']), 'px)'].join(''),
-                ['translateZ(', (-1 * _size * _options['depth']), 'px)'].join(''),
-            ];
+            var xformPieces = (
+                'translateX(' + (_size * _options['column']) + 'px) ' +
+                'translateY(' + (_size * _options['row']) + 'px) ' +
+                'translateZ(' + (-1 * _size * _options['depth']) + 'px) '
+            );
 
             if (_hasRotation)
             {   // if we need to rotate the cell...
                 // ... add the rotation transform rules to the array
                 var rot = _options['rotation'];
-                xformPieces.push(['rotateX(', rot[0], 'deg)'].join(''));
-                xformPieces.push(['rotateY(', rot[1], 'deg)'].join(''));
-                xformPieces.push(['rotateZ(', rot[2], 'deg)'].join(''));
+                xformPieces += (
+                    'rotateX(' + rot[0] + 'deg) ' +
+                    'rotateY(' + rot[1] + 'deg) ' +
+                    'rotateZ(' + rot[2] + 'deg) '
+                );
             }
 
             // assign the built string to the element
-            this.html.style.transform = xformPieces.join(' ');;
+            cell.html.style.transform = xformPieces;
          }
 
     }
@@ -173,8 +178,13 @@ var Cell = function(opts) {
          */
 
         calculateDirtyOptions();
-
-        cell.htmlReady.then(updateDOM.bind(cell));
+        if (_htmlReady)
+        {
+            updateDOM();
+        } else
+        {
+            cell.htmlReady.then(updateDOM);
+        }
     }
 
     Object.defineProperty(this, 'cube', {
@@ -194,7 +204,10 @@ var Cell = function(opts) {
         },
         set: function(newRow) {
             _options['row'] = newRow;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -205,7 +218,10 @@ var Cell = function(opts) {
         },
         set: function(newColumn) {
             _options['column'] = newColumn;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -216,7 +232,10 @@ var Cell = function(opts) {
         },
         set: function(newDepth) {
             _options['depth'] = newDepth;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -232,7 +251,10 @@ var Cell = function(opts) {
             }
             _options['color'] = newColor;
             _colorRgbString = _options['color'].join(',')
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -243,7 +265,10 @@ var Cell = function(opts) {
         },
         set: function(turnOn) {
             _options['on'] = turnOn;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -254,7 +279,10 @@ var Cell = function(opts) {
         },
         set: function(newSize) {
             _options['size'] = newSize;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -386,7 +414,16 @@ var Cell = function(opts) {
             throw 'TypeError: Cell options must be object';
         }
 
-        Object.keys(newOpts).forEach(function(key) {
+        /**
+         * We may be setting many opts and don't want to rerender for each
+         * change, so we temporarily disable auto-rendering, manually render,
+         * and re-enable for other non-applyOptions() calls.
+         */
+        __autoRender = false;
+        var opts = Object.keys(newOpts);
+        for (var i = 0; i < opts.length; i++)
+        {
+            var key = opts[i];
             /**
              * For each option passed in from the caller, check that we have a
              * property by that name. If so, assign the value from newOpts to
@@ -400,7 +437,9 @@ var Cell = function(opts) {
             {
                 console.error('Invalid option for Cell:' + key);
             }
-        }.bind(this));  // Use our "outside" this inside of the foreach
+        }
+        render();   // manually render all changes
+        __autoRender = true;    // re-enable auto-rendering
     };
 
     (function buildHTML() {
@@ -416,6 +455,7 @@ var Cell = function(opts) {
         this.html.appendChild(this.led);
 
         htmlReadySuccessFn();
+        _htmlReady = true;
     }.bind(this)());  // Use our "outside" this inside of buildHTML
 
     return this;
