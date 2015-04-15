@@ -15,7 +15,8 @@ var Cell = function(opts) {
         color: [0, 0, 255],    // We'll store colors internally as an RGB array
         on: false,
         size: 50,
-        clickable: false,
+        interactive: false,
+        interactMode: 'drag',
         rotation: [0, 0, 0],
         transitionTransforms: false,
     };
@@ -55,7 +56,27 @@ var Cell = function(opts) {
         htmlReadyFailureFn = reject;
     });
 
-    function areEqual(a, b) {
+    var _htmlReady = false;
+    var __autoRender = true;
+
+    function __colorsAreEqual(c1, c2) {
+        if ((c1.length !== 3) || (c2.length !== 3))
+        {
+            return false;
+        }
+
+        for (var i = 0; i < 3; i++)
+        {
+            if (c1[i] !== c2[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function __sloppyOptionsAreEqual(a, b) {
         // a function for comparing simple and more complex types such as arrays
         return (
               (a === null || b === null) ||
@@ -68,7 +89,7 @@ var Cell = function(opts) {
     function calculateDirtyOptions() {
         for (var key in _options)
         {
-            _dirtyOptions[key] = !areEqual(_options[key], _drawnOptions[key]);
+            _dirtyOptions[key] = !__sloppyOptionsAreEqual(_options[key], _drawnOptions[key]);
         }
     }
 
@@ -80,51 +101,51 @@ var Cell = function(opts) {
         {
             if (_options['transitionTransforms'])
             {
-                this.html.style.transitionProperty = 'transform';
-                this.html.style.transitionDuration = TRANSITION_DURATION;
-                this.html.style.transitionTimingFunction = TRANSITION_EASING;
+                cell.html.style.transitionProperty = 'transform';
+                cell.html.style.transitionDuration = TRANSITION_DURATION;
+                cell.html.style.transitionTimingFunction = TRANSITION_EASING;
             } else
             {
-                this.html.style.transitionProperty = null;
-                this.html.style.transitionDuration = null;
-                this.html.style.transitionTimingFunction = null;
+                cell.html.style.transitionProperty = null;
+                cell.html.style.transitionDuration = null;
+                cell.html.style.transitionTimingFunction = null;
             }
         }
 
         if (_dirtyOptions.on || _dirtyOptions.color)
         {
             // render the LED's on-ness
-            this.led.classList.toggle('on', _on);
-            this.html.style.opacity = _on ? 1 : null;
+            cell.led.classList.toggle('on', _on);
+            cell.html.style.opacity = _on ? 1 : null;
 
             // render the LED's color
-            this.led.style.backgroundColor = _on ?
-                ['rgba(', _colorRgbString, ',1)'].join('') :
+            cell.led.style.backgroundColor = _on ?
+                'rgba(' + _colorRgbString + ',1)' :
                 'rgba(0,0,0,1)';
-            this.html.style.backgroundColor = _on ?
-                ['rgba(', _colorRgbString, ',', 0.125, ')'].join('') :
+            cell.html.style.backgroundColor = _on ?
+                'rgba(' + _colorRgbString + ',0.125)' :
                 null;
         }
 
         // apply cell data attributes
         if (_dirtyOptions.row)
         {
-            this.html.setAttribute('data-row', _options['row']);
+            cell.html.dataset.row = _options['row'];
         }
         if (_dirtyOptions.column)
         {
-            this.html.setAttribute('data-column', _options['column']);
+            cell.html.dataset.column = _options['column'];
         }
         if (_dirtyOptions.depth)
         {
-            this.html.setAttribute('data-depth', _options['depth']);
+            cell.html.dataset.depth = _options['depth'];
         }
 
         // set the size of the cell
         if (_dirtyOptions.size)
         {
-            this.html.style.width = _size + 'px';
-            this.html.style.height = _size + 'px';
+            cell.html.style.width = _size + 'px';
+            cell.html.style.height = _size + 'px';
         }
 
         /**
@@ -142,23 +163,25 @@ var Cell = function(opts) {
             _dirtyOptions.depth ||
             _dirtyOptions.rotation)
          {
-            var xformPieces = [
-                ['translateX(', (_size * _options['column']), 'px)'].join(''),
-                ['translateY(', (_size * _options['row']), 'px)'].join(''),
-                ['translateZ(', (-1 * _size * _options['depth']), 'px)'].join(''),
-            ];
+            var xformPieces = (
+                'translateX(' + (_size * _options['column']) + 'px) ' +
+                'translateY(' + (_size * _options['row']) + 'px) ' +
+                'translateZ(' + (-1 * _size * _options['depth']) + 'px) '
+            );
 
             if (_hasRotation)
             {   // if we need to rotate the cell...
                 // ... add the rotation transform rules to the array
                 var rot = _options['rotation'];
-                xformPieces.push(['rotateX(', rot[0], 'deg)'].join(''));
-                xformPieces.push(['rotateY(', rot[1], 'deg)'].join(''));
-                xformPieces.push(['rotateZ(', rot[2], 'deg)'].join(''));
+                xformPieces += (
+                    'rotateX(' + rot[0] + 'deg) ' +
+                    'rotateY(' + rot[1] + 'deg) ' +
+                    'rotateZ(' + rot[2] + 'deg) '
+                );
             }
 
             // assign the built string to the element
-            this.html.style.transform = xformPieces.join(' ');;
+            cell.html.style.transform = xformPieces;
          }
 
     }
@@ -173,8 +196,13 @@ var Cell = function(opts) {
          */
 
         calculateDirtyOptions();
-
-        cell.htmlReady.then(updateDOM.bind(cell));
+        if (_htmlReady)
+        {
+            updateDOM();
+        } else
+        {
+            cell.htmlReady.then(updateDOM);
+        }
     }
 
     Object.defineProperty(this, 'cube', {
@@ -194,7 +222,10 @@ var Cell = function(opts) {
         },
         set: function(newRow) {
             _options['row'] = newRow;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -205,7 +236,10 @@ var Cell = function(opts) {
         },
         set: function(newColumn) {
             _options['column'] = newColumn;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -216,7 +250,10 @@ var Cell = function(opts) {
         },
         set: function(newDepth) {
             _options['depth'] = newDepth;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -226,9 +263,16 @@ var Cell = function(opts) {
             return _options['color'];
         },
         set: function(newColor) {
+            if (typeof newColor === 'undefined')
+            {
+                return;
+            }
             _options['color'] = newColor;
             _colorRgbString = _options['color'].join(',')
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -239,7 +283,10 @@ var Cell = function(opts) {
         },
         set: function(turnOn) {
             _options['on'] = turnOn;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
@@ -250,33 +297,73 @@ var Cell = function(opts) {
         },
         set: function(newSize) {
             _options['size'] = newSize;
-            render();   // call to ensure that the DOM is sync with model
+            if (__autoRender)
+            {
+                render();   // call to ensure that the DOM is sync with model
+            }
         }
     });
 
-    function clickHandler(event) {
-        cell.on = !_options['on']; // Toggle my on status when someone clicks the cell
-        if (cell.cube && _options['on'])
-        {
+    function mouseClickHandler(event) {
+        cell.applyOptions({
+            on: !_options['on'], // Toggle my on status when someone clicks the cell
             /**
              * IF we have a connection to the cube and it has an opinion about
              * what color we should be, let's honor it.
              */
-            cell.color = cube.penColorRgb;
-        }
-    };
+            color: _options['on'] && _options['cube'] ? cell.cube.penColorRgb : _options['color'],
+        });
+    }
 
-    Object.defineProperty(this, 'clickable', {
+    function mouseDownHandler(event) {
+
+        // if start on an on cell the same color as we, clear next ones,
+        // otherwise continue to draw in cube's penColor
+        var newDragSetOn = !_options['on'] || (_options['cube'] ?
+            !__colorsAreEqual(_options['cube'].penColorRgb, _options['color']) :
+            false);
+
+        var newDragSetColor = _options['cube'] ?
+            _options['cube'].penColorRgb :
+            _options['color'];
+
+        CellDraggingDelegate.get().applyOptions({
+            isDragging: true,
+            dragSetOn: newDragSetOn,
+            dragSetColor: newDragSetColor,
+        });
+
+        mouseClickHandler(event);
+    }
+
+    function mouseUpHandler(event) {
+        CellDraggingDelegate.get().applyOptions({
+            isDragging: false,
+        });
+    }
+
+    function mouseMoveHandler(event) {
+        var dragDelegate = CellDraggingDelegate.get();
+        if (dragDelegate.isDragging)
+        {
+            cell.applyOptions({
+                on: dragDelegate.dragSetOn,
+                color: dragDelegate.dragSetOn ? dragDelegate.dragSetColor : _options['color'],
+            });
+        }
+    }
+
+    Object.defineProperty(this, 'interactive', {
         /**
          * Whether we listen for click events. The click event handler simply toggles
          * whether the cell is on.
          */
         enumerable: true,
         get: function() {
-            return _options['clickable'];
+            return _options['interactive'];
         },
-        set: function(newClickable) {
-            _options['clickable'] = newClickable;
+        set: function(newInteractive) {
+            _options['interactive'] = newInteractive;
             cell.htmlReady.then(function() {
                 /**
                  * The binding of even listeners is not put into the render() function
@@ -289,16 +376,52 @@ var Cell = function(opts) {
                  * were called 20 times, there would be 20 listeners that will have
                  * been added to capture a single click causing 20 callbacks to occur.
                  */
-                if (newClickable)
+                if (newInteractive)
                 {
-                    cell.html.removeEventListener('click', clickHandler);   // we don't want the same handler bound more than once
-                    cell.html.addEventListener('click', clickHandler);
-                    _options['clickable'] = newClickable;
+                    if (_options['interactMode'] === 'click' ||
+                        _options['interactMode'] === 'drag')
+                    {
+                        cell.html.removeEventListener('click', mouseClickHandler);
+                        cell.html.removeEventListener('mousedown', mouseDownHandler);
+                        cell.html.removeEventListener('mouseup', mouseUpHandler);
+                        cell.html.removeEventListener('mousemove', mouseMoveHandler);
+
+                        cell.html.addEventListener('click', mouseClickHandler);
+
+                        if (_options['interactMode'] === 'drag')
+                        {
+                            cell.html.addEventListener('mousedown', mouseDownHandler);
+                            cell.html.addEventListener('mouseup', mouseUpHandler);
+                            cell.html.addEventListener('mousemove', mouseMoveHandler);
+                        }
+                    }
+                    _options['interactive'] = newInteractive;
                 } else
                 {
-                    cell.html.removeEventListener('click', clickHandler);
+                    cell.html.removeEventListener('click', mouseClickHandler);
+                    cell.html.removeEventListener('mousedown', mouseDownHandler);
+                    cell.html.removeEventListener('mouseup', mouseUpHandler);
+                    cell.html.removeEventListener('mousemove', mouseMoveHandler);
                 }
             }.bind(this));  // Use our "outside" this inside of the promise callback
+        }
+    });
+
+    Object.defineProperty(this, 'interactMode', {
+        get: function() {
+            return _options['interactMode'];
+        },
+        set: function(newInteractMode) {
+            var validModes = ['click', 'drag'];
+            if (validModes.indexOf(newInteractMode) === -1)
+            {
+                console.error('Invalid interactMode: ' + newInteractMode + '. ' +
+                    'Valid modes: ' + validModes.join(', ') + '.');
+                return;
+            }
+
+            _options['interactMode'] = newInteractMode;
+            this.interactive = _options['interactive'];    // call to un/rebind handlers
         }
     });
 
@@ -363,10 +486,10 @@ var Cell = function(opts) {
                 row: _options['row'],
                 column: _options['column'],
                 depth: _options['depth'],
-                color:t_options['color'],
+                color: _options['color'],
                 on: _options['on'],
                 size: _options['size'],
-                clickable: _options['clickable'],
+                interactive: _options['interactive'],
                 rotation: _options['rotation'],
             };
         }
@@ -382,7 +505,16 @@ var Cell = function(opts) {
             throw 'TypeError: Cell options must be object';
         }
 
-        Object.keys(newOpts).forEach(function(key) {
+        /**
+         * We may be setting many opts and don't want to rerender for each
+         * change, so we temporarily disable auto-rendering, manually render,
+         * and re-enable for other non-applyOptions() calls.
+         */
+        __autoRender = false;
+        var opts = Object.keys(newOpts);
+        for (var i = 0; i < opts.length; i++)
+        {
+            var key = opts[i];
             /**
              * For each option passed in from the caller, check that we have a
              * property by that name. If so, assign the value from newOpts to
@@ -396,7 +528,9 @@ var Cell = function(opts) {
             {
                 console.error('Invalid option for Cell:' + key);
             }
-        }.bind(this));  // Use our "outside" this inside of the foreach
+        }
+        render();   // manually render all changes
+        __autoRender = true;    // re-enable auto-rendering
     };
 
     (function buildHTML() {
@@ -412,6 +546,7 @@ var Cell = function(opts) {
         this.html.appendChild(this.led);
 
         htmlReadySuccessFn();
+        _htmlReady = true;
     }.bind(this)());  // Use our "outside" this inside of buildHTML
 
     return this;
