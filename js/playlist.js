@@ -296,6 +296,7 @@ var Playlist = function() {
             38: 'up',
             39: 'right',
             40: 'down',
+            8: 'backspace',
         };
 
         if (Object.keys(keyMap).indexOf(e.keyCode.toString()) === -1)
@@ -303,6 +304,18 @@ var Playlist = function() {
             return;
         } else if (_focus)
         {
+            if (keyMap[e.keyCode] === 'backspace')
+            {
+                playlist.removeTile(playlist.getTile(--__userCursorPosition));
+                e.stopPropagation();
+                e.preventDefault();
+                return;
+            } else if (e.altKey && (keyMap[e.keyCode] === 'down'))
+            {
+                playlist.insertTile(new Tile(cube.readSlice()), __userCursorPosition++);
+                return;
+            }
+
             var directionNewValueMap = {
                 'up': 0,
                 'down': _tiles.length,
@@ -429,6 +442,18 @@ var Playlist = function() {
 
     this.appendTile = function(newTile) {
         _tiles.push(newTile);
+
+        __updateTileStrip();
+        __updateTileThumbs();
+        __updateTileHtmls();
+
+        __renderTileContainer();
+
+        return this;
+    };
+
+    this.removeTile = function(tile) {
+        _tiles.splice(_tiles.indexOf(tile), 1);
 
         __updateTileStrip();
         __updateTileThumbs();
