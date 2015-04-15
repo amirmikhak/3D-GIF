@@ -15,7 +15,8 @@ var Cell = function(opts) {
         color: [0, 0, 255],    // We'll store colors internally as an RGB array
         on: false,
         size: 50,
-        clickable: false,
+        interactive: false,
+        interactMode: 'drag',
         rotation: [0, 0, 0],
         transitionTransforms: false,
     };
@@ -58,7 +59,24 @@ var Cell = function(opts) {
     var _htmlReady = false;
     var __autoRender = true;
 
-    function areEqual(a, b) {
+    function __colorsAreEqual(c1, c2) {
+        if ((c1.length !== 3) || (c2.length !== 3))
+        {
+            return false;
+        }
+
+        for (var i = 0; i < 3; i++)
+        {
+            if (c1[i] !== c2[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function __sloppyOptionsAreEqual(a, b) {
         // a function for comparing simple and more complex types such as arrays
         return (
               (a === null || b === null) ||
@@ -71,7 +89,7 @@ var Cell = function(opts) {
     function calculateDirtyOptions() {
         for (var key in _options)
         {
-            _dirtyOptions[key] = !areEqual(_options[key], _drawnOptions[key]);
+            _dirtyOptions[key] = !__sloppyOptionsAreEqual(_options[key], _drawnOptions[key]);
         }
     }
 
@@ -282,29 +300,66 @@ var Cell = function(opts) {
         }
     });
 
-    function clickHandler(event) {
-        cell.on = !_options['on']; // Toggle my on status when someone clicks the cell
-        if (cell.cube && _options['on'])
-        {
+    function mouseClickHandler(event) {
+        cell.applyOptions({
+            on: !_options['on'], // Toggle my on status when someone clicks the cell
             /**
              * IF we have a connection to the cube and it has an opinion about
              * what color we should be, let's honor it.
              */
-            cell.color = cube.penColorRgb;
-        }
-    };
+            color: _options['on'] && _options['cube'] ? cell.cube.penColorRgb : _options['color'],
+        });
+    }
 
-    Object.defineProperty(this, 'clickable', {
+    function mouseDownHandler(event) {
+
+        // if start on an on cell the same color as we, clear next ones,
+        // otherwise continue to draw in cube's penColor
+        var newDragSetOn = !_options['on'] || (_options['cube'] ?
+            !__colorsAreEqual(_options['cube'].penColorRgb, _options['color']) :
+            false);
+
+        var newDragSetColor = _options['cube'] ?
+            _options['cube'].penColorRgb :
+            _options['color'];
+
+        CellDraggingDelegate.get().applyOptions({
+            isDragging: true,
+            dragSetOn: newDragSetOn,
+            dragSetColor: newDragSetColor,
+        });
+
+        mouseClickHandler(event);
+    }
+
+    function mouseUpHandler(event) {
+        CellDraggingDelegate.get().applyOptions({
+            isDragging: false,
+        });
+    }
+
+    function mouseMoveHandler(event) {
+        var dragDelegate = CellDraggingDelegate.get();
+        if (dragDelegate.isDragging)
+        {
+            cell.applyOptions({
+                on: dragDelegate.dragSetOn,
+                color: dragDelegate.dragSetOn ? dragDelegate.dragSetColor : _options['color'],
+            });
+        }
+    }
+
+    Object.defineProperty(this, 'interactive', {
         /**
          * Whether we listen for click events. The click event handler simply toggles
          * whether the cell is on.
          */
         enumerable: true,
         get: function() {
-            return _options['clickable'];
+            return _options['interactive'];
         },
-        set: function(newClickable) {
-            _options['clickable'] = newClickable;
+        set: function(newInteractive) {
+            _options['interactive'] = newInteractive;
             cell.htmlReady.then(function() {
                 /**
                  * The binding of even listeners is not put into the render() function
@@ -317,16 +372,52 @@ var Cell = function(opts) {
                  * were called 20 times, there would be 20 listeners that will have
                  * been added to capture a single click causing 20 callbacks to occur.
                  */
-                if (newClickable)
+                if (newInteractive)
                 {
-                    cell.html.removeEventListener('click', clickHandler);   // we don't want the same handler bound more than once
-                    cell.html.addEventListener('click', clickHandler);
-                    _options['clickable'] = newClickable;
+                    if (_options['interactMode'] === 'click' ||
+                        _options['interactMode'] === 'drag')
+                    {
+                        cell.html.removeEventListener('click', mouseClickHandler);
+                        cell.html.removeEventListener('mousedown', mouseDownHandler);
+                        cell.html.removeEventListener('mouseup', mouseUpHandler);
+                        cell.html.removeEventListener('mousemove', mouseMoveHandler);
+
+                        cell.html.addEventListener('click', mouseClickHandler);
+
+                        if (_options['interactMode'] === 'drag')
+                        {
+                            cell.html.addEventListener('mousedown', mouseDownHandler);
+                            cell.html.addEventListener('mouseup', mouseUpHandler);
+                            cell.html.addEventListener('mousemove', mouseMoveHandler);
+                        }
+                    }
+                    _options['interactive'] = newInteractive;
                 } else
                 {
-                    cell.html.removeEventListener('click', clickHandler);
+                    cell.html.removeEventListener('click', mouseClickHandler);
+                    cell.html.removeEventListener('mousedown', mouseDownHandler);
+                    cell.html.removeEventListener('mouseup', mouseUpHandler);
+                    cell.html.removeEventListener('mousemove', mouseMoveHandler);
                 }
             }.bind(this));  // Use our "outside" this inside of the promise callback
+        }
+    });
+
+    Object.defineProperty(this, 'interactMode', {
+        get: function() {
+            return _options['interactMode'];
+        },
+        set: function(newInteractMode) {
+            var validModes = ['click', 'drag'];
+            if (validModes.indexOf(newInteractMode) === -1)
+            {
+                console.error('Invalid interactMode: ' + newInteractMode + '. ' +
+                    'Valid modes: ' + validModes.join(', ') + '.');
+                return;
+            }
+
+            _options['interactMode'] = newInteractMode;
+            this.interactive = _options['interactive'];    // call to un/rebind handlers
         }
     });
 
@@ -394,7 +485,7 @@ var Cell = function(opts) {
                 color: _options['color'],
                 on: _options['on'],
                 size: _options['size'],
-                clickable: _options['clickable'],
+                interactive: _options['interactive'],
                 rotation: _options['rotation'],
             };
         }
