@@ -162,15 +162,20 @@ var Playlist = function(opts) {
 
     Object.defineProperty(this, 'direction', {
         get: function() { return _direction; },
-        set: function(newDirections) {
+        set: function(newDirection) {
             var validDirections = ['ccw', 'cw'];   // ccw: to the right, cw: to the left
-            if (validDirections.indexOf(newDirections) === -1)
+            if (validDirections.indexOf(newDirection) === -1)
             {
                 return;
             }
 
-            _direction = newDirections;
+            var reverseStrips = newDirection !== _direction;
+            _direction = newDirection;
 
+            if (reverseStrips)
+            {
+                _tileStrip.reverse();
+            }
             __updateAnimationCursorPosition();
             __updateAnimationColumnTouchers();
         }
@@ -395,9 +400,18 @@ var Playlist = function(opts) {
     }
 
     function __ripple() {
-        for (var i = 0; i <= 6; i++)
+        if (_direction === 'cw')
         {
-            _cube[__columnWriter](i, 0, _cube[__columnReader](i + 1, 0));
+            for (var i = 0; i <= 6; i++)
+            {
+                _cube[__columnWriter](i, 0, _cube[__columnReader](i + 1, 0));
+            }
+        } else
+        {
+            for (var i = 7; i > 0; i--)
+            {
+                _cube[__columnWriter](i, 0, _cube[__columnReader](i - 1, 0));
+            }
         }
     }
 
