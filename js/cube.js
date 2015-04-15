@@ -2023,20 +2023,36 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         face :
         'front';
 
+    var dataToUse = data;
 
     try
     {   // handle different types of data input: JSON or raw object
-        data = JSON.parse(data);    // throws SyntaxError if not valid JSON string
+        dataToUse = JSON.parse(dataToUse);    // throws SyntaxError if not valid JSON string
     } catch (err)
     {   // pass
     }
 
-    if (!(data instanceof Array) || (data.length !== Math.pow(this.size, 2)))
+    if (!(dataToUse instanceof Array) || (dataToUse.length !== Math.pow(this.size, 2)))
     {
         throw 'Malformed data';
     }
 
-    var cells = data.slice();
+    var dataTile = new Tile(dataToUse);
+
+    var facesToReflectX = ['back', 'right'];
+    var facesToReflectY = ['bottom'];
+
+    if (facesToReflectX.indexOf(face) !== -1)
+    {
+        dataTile.reflectX();
+    }
+
+    if (facesToReflectY.indexOf(face) !== -1)
+    {
+        dataTile.reflectY();
+    }
+
+    var cells = dataTile.getCells();
 
     function writeCellFromData(r, c, d) {
         var cell = cells.shift();
