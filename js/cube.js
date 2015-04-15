@@ -1305,7 +1305,7 @@ var Cube = function(size, cellOpts) {
                     depth: depth,
                     column: column,
                     row: row,
-                    clickable: depth === 0,
+                    interactive: depth === 0,
                 });
 
                 this.cells.push(cell);
