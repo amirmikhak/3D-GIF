@@ -1721,7 +1721,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 cube.clear();   // clear whole cube
             } else
             {
-                cube.writeSlice(cube.getCharacterRender(' '), 'front');   // "space" character
+                cube.writeSlice(cube.getCharacterRender(' '), this.writeFace);   // "space" character
             }
         } else if (e.ctrlKey && (e.keyCode === 189))    // ctrl+minus
         {   // prev step
@@ -1779,7 +1779,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
         if (cube.keyListenerOptions.animate)
         {
-            cube.writeSlice(cube.getCharacterRender(char), 'front');
+            cube.writeSlice(cube.getCharacterRender(char), cube.writeFace);
 
             cube.play({
                 direction: 'back',
@@ -1788,7 +1788,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             });
         } else
         {
-            cube.writeSlice(cube.getCharacterRender(char), 'front');
+            cube.writeSlice(cube.getCharacterRender(char), cube.writeFace);
         }
     };
 
@@ -1885,7 +1885,7 @@ Cube.prototype.renderShape = function(shape) {
         return;
     }
 
-    cube.writeSlice(this.shapes[shape], 'front', 0);
+    cube.writeSlice(this.shapes[shape], this.writeFace, 0);
 };
 
 
@@ -1952,7 +1952,6 @@ Cube.prototype.readSlice = function(face, offset, output) {
      *  LEFT.
      */
 
-    var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
     var validOutputs = ['object', 'object-deep', 'json'];
 
     /**
@@ -1964,9 +1963,9 @@ Cube.prototype.readSlice = function(face, offset, output) {
     offset = (typeof offset !== 'undefined') ?
         Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :
         0;
-    face = (typeof face !== 'undefined') && (validFaces.indexOf(face) !== -1) ?
+    face = (typeof face !== 'undefined') && (this.faceNames.indexOf(face) !== -1) ?
         face :
-        'front';
+        this.writeFace;
     output = (typeof output !== 'undefined') && (validOutputs.indexOf(output) !== -1) ?
         output :
         'json';
@@ -2017,14 +2016,13 @@ Cube.prototype.writeSlice = function(data, face, offset) {
      * Note: Refer to note in cube.readSlice() on left/right, front/back, etc. origins.
      */
 
-    var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
-
     offset = (typeof offset !== 'undefined') ?
         Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :
         0;
-    face = (typeof face !== 'undefined') && (validFaces.indexOf(face) !== -1) ?
+    face = (typeof face !== 'undefined') && (this.faceNames.indexOf(face) !== -1) ?
         face :
         'front';
+
 
     try
     {   // handle different types of data input: JSON or raw object
