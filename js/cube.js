@@ -1889,22 +1889,24 @@ Cube.prototype.getCharacterRender = function(char, desiredColor) {
 
     var charPixels = cube.activeFontChars[char];
 
-    if (charPixels)
+    if (!charPixels)
     {
-        /**
-         * If the character is defined in the font's character set, loop over
-         * each pixel to apply the current penColor if the pixel is on.
-         */
-
-        charPixels.forEach(function(cell) {
-            if (cell.on)
-            {
-                cell.color = desiredColor;
-            }
-        });
+        return;
     }
 
-    return charPixels;
+    /**
+     * If the character is defined in the font's character set, loop over
+     * each pixel to apply the current penColor if the pixel is on.
+     */
+    return charPixels.map(function(originalCell) {
+        return new Cell({
+            row: originalCell.row,
+            column: originalCell.column,
+            depth: originalCell.depth,
+            on: originalCell.on,
+            color: desiredColor,
+        });
+    });
 };
 
 Cube.prototype.renderShape = function(shape) {
