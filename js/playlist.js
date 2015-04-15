@@ -130,7 +130,7 @@ var Playlist = function() {
     function __updateTileHtmls() {
         __tileHtmls = _tiles.map(function(tile, idx) {
             return (
-                '<div class="tile">' +
+                '<div class="tile" data-idx="' + idx + '">' +
                     '<img src="' + __tileThumbs[idx] + '" />' +
                 '</div>'
             );
@@ -352,6 +352,13 @@ var Playlist = function() {
         e.stopPropagation();
 
         playlist.focus = true;
+
+        var closestTile = getClosest(e.target, '.tile');
+        if (closestTile)
+        {
+            var tileClicked = playlist.getTile(closestTile.dataset.idx);
+            cube.writeSlice(tileClicked.getCells());
+        }
     }
 
     function __documentMouseClickListener(e) {
