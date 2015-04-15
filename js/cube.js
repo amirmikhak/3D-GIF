@@ -607,7 +607,7 @@ var Cube = function(size, cellOpts) {
         /**
          * !TODO: Fix this. We need this correction look correct.
          */
-        writeFacePickerHeight -= 100;
+        writeFacePickerHeight -= 50;
 
         _writeFacePicker.style.position = 'absolute';
         _writeFacePicker.style.top = ['calc(50% - ', writeFacePickerHeight / 2, 'px)'].join('');
@@ -710,7 +710,7 @@ var Cube = function(size, cellOpts) {
         /**
          * !TODO: Fix this. We need this correction look correct.
          */
-        colorPickerHeight -= 100;
+        colorPickerHeight -= 50;
 
         _colorPicker.style.position = 'absolute';
         _colorPicker.style.top = ['calc(50% - ', colorPickerHeight / 2, 'px)'].join('');
@@ -815,7 +815,7 @@ var Cube = function(size, cellOpts) {
         /**
          * !TODO: Fix this. We need this correction look correct.
          */
-        shapePickerHeight -= 100;
+        shapePickerHeight -= 50;
 
         _shapePicker.style.position = 'absolute';
         _shapePicker.style.top = [
@@ -1154,6 +1154,39 @@ var Cube = function(size, cellOpts) {
                 console.error('Invalid clearButton: must be instance of HTMLElement');
             }
         }
+    });
+
+        /**
+         * Playlist Container property and helpers
+         */
+
+    Object.defineProperty(this, 'playlistContainer', {
+        enumerable: false,
+        get: function() {
+            return this.__playlist.container;
+        },
+        set: function(newPlaylistContainerEl) {
+            /**
+             * If the new parent element is a valid container for a playlist,
+             * and if it's not the same as it is now, rebuild it. Otherwise, check
+             * if the caller intended to remove the playlist container, in which case
+             * destory it. If neither is true, the caller likely misunderstood what
+             * it was passing in, so show an error.
+             */
+            if ((newPlaylistContainerEl instanceof HTMLElement) &&
+                (newPlaylistContainerEl !== this.__playlist.container))
+            {
+                this.__playlist.container = newPlaylistContainerEl;
+            } else if ((newPlaylistContainerEl === null) ||
+                (typeof newPlaylistContainerEl === 'undefined'))
+            {
+                this.__playlist.container = null;
+            } else
+            {
+                console.error('Invalid playlistContainer: must be instance of HTMLElement');
+                throw 'Invalid playlistContainer';
+            }
+        },
     });
 
 

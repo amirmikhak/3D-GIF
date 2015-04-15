@@ -72,5 +72,54 @@ var Tile = function(cells) {
         _cells = _reflectedCells;
     };
 
+    this.getPngData = function() {
+        /**
+         * Mostly copied verbatim from cube.js's Cube.prototype.getPngDataOfSlice().
+         */
+        var PNG_OUTPUT_WIDTH = 64;
+        var PNG_OUTPUT_HEIGHT = 64;
+
+        var PIXEL_MULTIPLIER_W = Math.floor(PNG_OUTPUT_WIDTH / 8);
+        var PIXEL_MULTIPLIER_H = Math.floor(PNG_OUTPUT_HEIGHT / 8);
+
+        var c = document.createElement('canvas');
+        c.width = PNG_OUTPUT_WIDTH;
+        c.height = PNG_OUTPUT_HEIGHT;
+
+        var ctx = c.getContext('2d');
+
+        var id = ctx.createImageData(1, 1);
+        var d = id.data;
+
+        for (var idx = 0, numCells = _cells.length; idx < numCells; idx++)
+        {
+            var cell = _cells[idx];
+            cell.row = !isNaN(parseInt(cell.row, 10)) ? cell.row : Math.floor(idx % 8);
+            cell.column = !isNaN(parseInt(cell.column, 10)) ? cell.column : Math.floor(idx / 8);
+
+            var pixelOffsetX = cell.row * PIXEL_MULTIPLIER_W;
+            var pixelOffsetY = cell.column * PIXEL_MULTIPLIER_H;
+
+            for (var subpixelCol = 0; subpixelCol < PIXEL_MULTIPLIER_W; subpixelCol++)
+            {
+                for (var subpixelRow = 0; subpixelRow < PIXEL_MULTIPLIER_H; subpixelRow++)
+                {
+                    d[0] = cell.color[0];
+                    d[1] = cell.color[1];
+                    d[2] = cell.color[2];
+                    d[3] = cell.on ? 255 : 0;
+
+                    var y = pixelOffsetX + subpixelRow; // the x/y are swapped in the slice serialization
+                    var x = pixelOffsetY + subpixelCol;
+
+                    ctx.putImageData(id, x, y);
+                }
+            }
+        }
+
+        return c.toDataURL();
+    };
+
+
     return this;
 };

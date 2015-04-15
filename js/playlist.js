@@ -1,7 +1,8 @@
-var Playlist = function(opts) {
+var Playlist = function() {
 
     var playlist = this;
 
+    var _container = null;
     var _cube = null;
 
     var _mode = 'through';
@@ -10,9 +11,19 @@ var Playlist = function(opts) {
     var _loops = false;
     var _frequency = 125;   // ms between each "tick"
     var _spacing = 4;       // number of ticks between tile rendering before next appears
+    var _focus = false;
 
     var _tiles = [];        // which images to show
     var _tileStrip = [];    // all tiles concatenated
+
+    var __tileThumbs = [];
+    var __tileHtmls = [];
+
+    var __userCursorPosition = 0;
+    var __userCursorEl = document.createElement('div');
+    __userCursorEl.classList.add('cursor');
+    var __userCursorHtml = __getOuterHTML(__userCursorEl);
+
     var __duration = 0;
 
     var __playbackInterval = -1; // interval timers are actually just ints
@@ -115,6 +126,43 @@ var Playlist = function(opts) {
             console.error('Cannot set cursor touchers. Can only deal with xz faces now.');
         }
     };
+
+    function __updateTileHtmls() {
+        __tileHtmls = _tiles.map(function(tile, idx) {
+            return (
+                '<div class="tile">' +
+                    '<img src="' + __tileThumbs[idx] + '" />' +
+                '</div>'
+            );
+        });
+    }
+
+    function __updateTileThumbs() {
+        __tileThumbs = _tiles.map(function(tile, idx) {
+            return tile.getPngData();
+        });
+    }
+
+    function __getOuterHTML(el) {
+        var tmpEl = document.createElement('div');
+        tmpEl.appendChild(el.cloneNode(false));
+        var outerHTML = tmpEl.innerHTML;
+        tmpEl = null;
+        return outerHTML;
+    }
+
+    function __renderTileContainer() {
+        if (_container)
+        {
+            var frags = __tileHtmls.slice();
+            frags.splice(__userCursorPosition, 0, __userCursorHtml);
+            _container.innerHTML = frags.join('');
+        } else
+        {
+            console.error('Playlist cannot render(): has no container.');
+        }
+    }
+
 
     /**
      * PROPERTIES
@@ -229,6 +277,103 @@ var Playlist = function(opts) {
         }
     });
 
+    Object.defineProperty(this, 'focus', {
+        get: function() { return _focus; },
+        set: function(inFocus) {
+            _focus = !!inFocus;
+
+            if (_container)
+            {
+                _container.classList.toggle('focus', _focus);
+                __renderTileContainer();
+            }
+        }
+    });
+
+    function __kbKeydownListener(e) {
+        var keyMap = {
+            37: 'left',
+            38: 'up',
+            39: 'right',
+            40: 'down',
+        };
+
+        if (Object.keys(keyMap).indexOf(e.keyCode.toString()) === -1)
+        {
+            return;
+        } else if (_focus)
+        {
+            var directionNewValueMap = {
+                'up': 0,
+                'down': _tiles.length,
+                'left': __userCursorPosition - 1,
+                'right': __userCursorPosition + 1,
+            };
+
+            var newPosition = directionNewValueMap[keyMap[e.keyCode]];
+            __userCursorPosition = Math.max(0, Math.min(_tiles.length, newPosition));
+            __renderTileContainer();
+
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }
+
+    function __bindContainerKeyboardListeners() {
+        /**
+         * Bind event listeners for typing to add to the playlist and to move
+         * the cursor.
+         */
+        document.addEventListener('keydown', __kbKeydownListener);
+    }
+
+    function __unbindContainerKeyboardListeners() {
+        /**
+         * Remove all of the events bound in __bindContainerKeyboardListeners()
+         */
+        document.removeEventListener('keydown', __kbKeydownListener);
+    }
+
+    function __containerMouseClickListener(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        playlist.focus = true;
+    }
+
+    function __documentMouseClickListener(e) {
+        if (e.target !== _container)
+        {
+            playlist.focus = false;
+        }
+    }
+
+    function __bindContainerMouseListeners() {
+        /**
+         * Bind event listeners for clicking and dragging to edit the playlist.
+         */
+        _container.addEventListener('click', __containerMouseClickListener);
+        document.addEventListener('click', __documentMouseClickListener);
+    }
+
+    function __unbindContainerMouseListeners() {
+        /**
+         * Remove all of the events bound in __bindContainerMouseListeners()
+         */
+        _container.removeEventListener('click', __containerMouseClickListener);
+        document.removeEventListener('click', __documentMouseClickListener);
+    }
+
+    Object.defineProperty(this, 'container', {
+        get: function() { return _container; },
+        set: function(newContainer) {
+            // don't validate input for now
+            _container = newContainer;
+            __bindContainerMouseListeners();
+            __bindContainerKeyboardListeners();
+        }
+    });
+
 
     /**
      * PUBLIC METHODS
@@ -256,6 +401,10 @@ var Playlist = function(opts) {
         _tiles.splice(newIndex, 0, _tiles.splice(tileIndex, 1));
 
         __updateTileStrip();
+        __updateTileThumbs();
+        __updateTileHtmls();
+
+        __renderTileContainer();
 
         return this;
     };
@@ -270,6 +419,10 @@ var Playlist = function(opts) {
         _tiles.splice(index, 0, newTile);
 
         __updateTileStrip();
+        __updateTileThumbs();
+        __updateTileHtmls();
+
+        __renderTileContainer();
 
         return this;
     };
@@ -278,6 +431,10 @@ var Playlist = function(opts) {
         _tiles.push(newTile);
 
         __updateTileStrip();
+        __updateTileThumbs();
+        __updateTileHtmls();
+
+        __renderTileContainer();
 
         return this;
     };
@@ -286,12 +443,16 @@ var Playlist = function(opts) {
         _tiles.splice(index, 1, tile);
 
         __updateTileStrip();
+        __updateTileThumbs();
+        __updateTileHtmls();
+
+        __renderTileContainer();
 
         return this;
     };
 
     this.getTileStrip = function() {
-        return _tileStrip;
+        return _tileStrip.slice();
     };
 
 

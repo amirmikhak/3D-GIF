@@ -3,7 +3,7 @@ window.addEventListener('load', function() { // When everything is loaded
 
     // Define cell properties for passing into the Cube
     var cellOptions = {
-        size: 50,
+        size: 45,
     };
 
     // Build a new Cube object
@@ -30,6 +30,7 @@ window.addEventListener('load', function() { // When everything is loaded
     cube.playButton = document.getElementById('play');
     cube.clearButton = document.getElementById('clear');
     cube.playbackControls = document.getElementById('playback-controls');
+    cube.playlistContainer = document.getElementById('playlist-container');
 
     // Listen for keyboard shortcuts (except nudging)
     //  and for characters being pressed to display
@@ -57,6 +58,9 @@ window.addEventListener('load', function() { // When everything is loaded
             if (e.ctrlKey || e.altKey)
             {
                 // don't try to move the cube if the ctrl or alt keys are down
+                return;
+            } else if (cube.__playlist && cube.__playlist.focus)
+            {   // don't try to move the cube if the cube's playlist has focus
                 return;
             }
 
