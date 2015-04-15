@@ -109,7 +109,9 @@ body {
  * @amirmikhak
  * List styling
  */
-.shape-list, .color-list {
+.shape-list,
+.color-list,
+.write-face-list {
     display: block;
     width: 62px;
     height: auto;
@@ -118,7 +120,9 @@ body {
     font-size: 0;
 }
 
-.shape-list .swatch, .color-list .swatch {
+.shape-list .swatch,
+.color-list .swatch,
+.write-face-list .swatch {
     box-sizing: border-box;
     position: relative;
     display: inline-block;
@@ -137,21 +141,36 @@ body {
     opacity: 1;
 }
 
-.color-list .swatch > div {
+.color-list .swatch > div,
+.write-face-list .swatch > div {
     box-sizing: border-box;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+}
+
+.color-list .swatch > div {
     background-color: attr(data-color); /* someday this will work, but not yet. JS to the rescue! */
 }
 
-.color-list .swatch > input[type="radio"] {
+.write-face-list .swatch > div {
+    box-sizing: border-box;
+    font-size: 10px;
+    text-align: center;
+    color: #000;
+    padding-top: calc(50% - 10px);
+    border: 4px solid rgba(255, 255, 255, 1);
+}
+
+.color-list .swatch > input[type="radio"],
+.write-face-list .swatch > input[type="radio"] {
     display: none;
 }
 
-.color-list .swatch > input[type="radio"]:checked + div {
+.color-list .swatch > input[type="radio"]:checked + div,
+.write-face-list .swatch > input[type="radio"]:checked + div {
     border: 4px solid rgba(190, 190, 190, 1);
 }
 
