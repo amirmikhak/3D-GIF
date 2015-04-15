@@ -19,9 +19,10 @@ window.addEventListener('load', function() { // When everything is loaded
     cube.xAngle = -30;
     cube.yAngle = 30;
 
-    // add the color and shape pickers that appear on the sides
+    // add the color, shape, and start-face pickers that appear on the sides
     cube.colorPicker = document.getElementById('color-picker');
     cube.shapePicker = document.getElementById('shape-picker');
+    cube.writeFacePicker = document.getElementById('write-face-picker');
 
     // attach buttons and other behaviors
     cube.prevStepButton = document.getElementById('prev-step');

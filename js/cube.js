@@ -45,6 +45,7 @@ var Cube = function(size, cellOpts) {
 
     var _colorPicker;
     var _shapePicker;
+    var _writeFacePicker;
     var _playbackControls;
 
     this.__playlist = new Playlist();
@@ -62,10 +63,11 @@ var Cube = function(size, cellOpts) {
 
     var _isPlaying = false;
     var _penColor = 'blue';
+    var _writeFace = 'front';
 
     var _xAngle = 0;
     var _yAngle = 0;
-    var _transitionTransforms;
+    var _transitionTransforms = true;
     var _rotateCells = false;
 
 
@@ -490,8 +492,167 @@ var Cube = function(size, cellOpts) {
 
 
     /**
+     * Faces-related properties
+     */
+
+    Object.defineProperty(this, 'faceCubeViewingAngles', {
+        enumerable: true,
+        writable: false,
+        value: {   // face: [cube.xAngle, cube.yAngle]
+            front: [-30, 30],
+            left: [-30, 60],
+            top: [-60, 30],
+            back: [-20, -155],
+            right: [-30, -60],
+            bottom: [60, 30],
+        }
+    });
+
+    Object.defineProperty(this, 'faceNames', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            return Object.keys(this.faceCubeViewingAngles);
+        },
+    });
+
+    Object.defineProperty(this, 'writeFace', {
+        enumerable: true,
+        get: function() {
+            return _writeFace;
+        },
+        set: function(newFace) {
+            if (this.faceNames.indexOf(newFace) === -1)
+            {
+                console.error('Invalid face. Known faces: ' + this.faceNames.join(', '));
+                return;
+            }
+
+            _writeFace = newFace;
+            this.xAngle = this.faceCubeViewingAngles[newFace][0];
+            this.yAngle = this.faceCubeViewingAngles[newFace][1];
+
+            if (_writeFacePicker)
+            {
+                var radioSelector = 'input[type="radio"][name="write-face"]';
+                var radioElList = _writeFacePicker.querySelectorAll(radioSelector);
+                var radioElArray = Array.prototype.slice.apply(radioElList);
+                radioElArray.forEach(function(input) {
+                    input.checked = (input.value === _writeFace);
+                    var swatch = input.nextElementSibling;
+                    swatch.innerHTML = swatch.dataset.writeFace;
+                });
+            }
+        }
+    });
+
+
+    /**
      * DOM-RELATED PROPERTIES AND HELPER FUNCTIONS
      */
+
+        /**
+         * Start Face property and helpers
+         */
+    var __writeFacePickerChangeListener = function(e) {
+        /**
+         * Undo the actions of _buildWriteFacePicker() so that the element is left
+         * in as close a state as possible to that it was before being called.
+         */
+        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'write-face'))
+        {
+            cube.writeFace = e.target.value;
+        }
+    };
+
+    var _destroyWriteFacePicker = function _destroyWriteFacePicker() {
+        /**
+         * Undo the actions of _buildWriteFacePicker() so that the element is left
+         * in as close a state as possible to that it was before being called.
+         */
+        if (_writeFacePicker)
+        {
+            _writeFacePicker.classList.remove('write-face-list');
+            _writeFacePicker.innerHTML = '';
+            _writeFacePicker.style.position = null;
+            _writeFacePicker.style.top = null;
+            _writeFacePicker.style.right = null;
+            _writeFacePicker.removeEventListener('change', __writeFacePickerChangeListener);
+        }
+    };
+
+    var _buildWriteFacePicker = function _buildWriteFacePicker(parentEl) {
+        /**
+         * Build the write-face picker's components, position it, and bind its event
+         * listener(s).
+         */
+        _destroyWriteFacePicker();
+
+        _writeFacePicker = parentEl;
+        _writeFacePicker.classList.add('write-face-list');
+        _writeFacePicker.innerHTML = this.faceNames.map(function(face) {
+            return (
+                '<label class="swatch">' +
+                    '<input type="radio" name="write-face" value="' + face + '" />' +
+                    '<div data-write-face="' + face + '"></div>' +
+                '</label>'
+            );
+        }).join('');
+
+        /**
+         * Position the write-face picker
+         */
+        var writeFacePickerHeight = _writeFacePicker.getBoundingClientRect().height;
+
+        /**
+         * !TODO: Fix this. We need this correction look correct.
+         */
+        writeFacePickerHeight -= 100;
+
+        _writeFacePicker.style.position = 'absolute';
+        _writeFacePicker.style.top = ['calc(50% - ', writeFacePickerHeight / 2, 'px)'].join('');
+        _writeFacePicker.style.left = ['calc(50% - ', (this.outerDimensions + 75), 'px)'].join('');
+
+        /**
+         * Add event listener for change in DOM to be reflected in Cube's model
+         */
+        _writeFacePicker.addEventListener('change', __writeFacePickerChangeListener);
+
+        /**
+         * Sync DOM/Cube on build
+         */
+        this.writeFace = this.writeFace;
+    };
+
+    Object.defineProperty(this, 'writeFacePicker', {
+        enumerable: false,
+        get: function() {
+            return _writeFacePicker;
+        },
+        set: function(newWriteFacePickerEl) {
+            /**
+             * If the new parent element is a valid container for a write-face picker,
+             * and if it's not the same as it is now, rebuild it. Otherwise, check
+             * if the caller intended to remove the write-face picker, in which case
+             * destory it. If neither is true, the caller likely misunderstood what
+             * it was passing in, so show an error.
+             */
+            if ((newWriteFacePickerEl instanceof HTMLElement) &&
+                (newWriteFacePickerEl !== _writeFacePicker))
+            {
+                _buildWriteFacePicker.call(this, newWriteFacePickerEl);
+            } else if ((newWriteFacePickerEl === null) ||
+                (typeof newWriteFacePickerEl === 'undefined'))
+            {
+                _destroyWriteFacePicker();
+                _writeFacePicker = undefined;
+            } else
+            {
+                console.error('Invalid writeFacePicker: must be instance of HTMLElement');
+                throw 'Invalid writeFacePicker';
+            }
+        },
+    });
 
         /**
          * Color Picker property and helpers
@@ -1108,7 +1269,7 @@ var Cube = function(size, cellOpts) {
         }
      };
 
-    this.transitionTransforms = true;
+    this.transitionTransforms = _transitionTransforms;
 
     this.size = size; // How many rows and columns do I have?
 
@@ -1560,7 +1721,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
                 cube.clear();   // clear whole cube
             } else
             {
-                cube.writeSlice(cube.getCharacterRender(' '), 'front');   // "space" character
+                cube.writeSlice(cube.getCharacterRender(' '), this.writeFace);   // "space" character
             }
         } else if (e.ctrlKey && (e.keyCode === 189))    // ctrl+minus
         {   // prev step
@@ -1618,7 +1779,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
         if (cube.keyListenerOptions.animate)
         {
-            cube.writeSlice(cube.getCharacterRender(char), 'front');
+            cube.writeSlice(cube.getCharacterRender(char), cube.writeFace);
 
             cube.play({
                 direction: 'back',
@@ -1627,7 +1788,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             });
         } else
         {
-            cube.writeSlice(cube.getCharacterRender(char), 'front');
+            cube.writeSlice(cube.getCharacterRender(char), cube.writeFace);
         }
     };
 
@@ -1724,7 +1885,7 @@ Cube.prototype.renderShape = function(shape) {
         return;
     }
 
-    cube.writeSlice(this.shapes[shape], 'front', 0);
+    cube.writeSlice(this.shapes[shape], this.writeFace, 0);
 };
 
 
@@ -1791,7 +1952,6 @@ Cube.prototype.readSlice = function(face, offset, output) {
      *  LEFT.
      */
 
-    var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
     var validOutputs = ['object', 'object-deep', 'json'];
 
     /**
@@ -1803,9 +1963,9 @@ Cube.prototype.readSlice = function(face, offset, output) {
     offset = (typeof offset !== 'undefined') ?
         Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :
         0;
-    face = (typeof face !== 'undefined') && (validFaces.indexOf(face) !== -1) ?
+    face = (typeof face !== 'undefined') && (this.faceNames.indexOf(face) !== -1) ?
         face :
-        'front';
+        this.writeFace;
     output = (typeof output !== 'undefined') && (validOutputs.indexOf(output) !== -1) ?
         output :
         'json';
@@ -1856,28 +2016,43 @@ Cube.prototype.writeSlice = function(data, face, offset) {
      * Note: Refer to note in cube.readSlice() on left/right, front/back, etc. origins.
      */
 
-    var validFaces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
-
     offset = (typeof offset !== 'undefined') ?
         Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :
         0;
-    face = (typeof face !== 'undefined') && (validFaces.indexOf(face) !== -1) ?
+    face = (typeof face !== 'undefined') && (this.faceNames.indexOf(face) !== -1) ?
         face :
         'front';
 
+    var dataToUse = data;
+
     try
     {   // handle different types of data input: JSON or raw object
-        data = JSON.parse(data);    // throws SyntaxError if not valid JSON string
+        dataToUse = JSON.parse(dataToUse);    // throws SyntaxError if not valid JSON string
     } catch (err)
     {   // pass
     }
 
-    if (!(data instanceof Array) || (data.length !== Math.pow(this.size, 2)))
+    if (!(dataToUse instanceof Array) || (dataToUse.length !== Math.pow(this.size, 2)))
     {
         throw 'Malformed data';
     }
 
-    var cells = data.slice();
+    var dataTile = new Tile(dataToUse);
+
+    var facesToReflectX = ['back', 'right'];
+    var facesToReflectY = ['bottom'];
+
+    if (facesToReflectX.indexOf(face) !== -1)
+    {
+        dataTile.reflectX();
+    }
+
+    if (facesToReflectY.indexOf(face) !== -1)
+    {
+        dataTile.reflectY();
+    }
+
+    var cells = dataTile.getCells();
 
     function writeCellFromData(r, c, d) {
         var cell = cells.shift();
