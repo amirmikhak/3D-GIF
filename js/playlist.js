@@ -74,12 +74,12 @@ var Playlist = function(opts) {
         if (_mode === 'across')
         {
             __animator = __animatorAcross;
-        } else if (_mode === 'through')
-        {
-            __animator = __animatorThrough;
         } else if (_mode === 'around')
         {
             __animator = __animatorAround;
+        } else if (_mode === 'through')
+        {
+            __animator = __animatorThrough;
         }
     }
 
@@ -399,10 +399,17 @@ var Playlist = function(opts) {
         return __getCursorColumnForAnimationAround();
     }
 
-    function __ripple() {
+    function __stopIfShould(renderTime) {
+        if (!_loops && (renderTime > __animationStartTime + __duration))
+        {
+            playlist.stop();
+        }
+    }
+
+    function __rippleAcross() {
         if (_direction === 'cw')
         {
-            for (var i = 0; i <= 6; i++)
+            for (var i = 0; i < 7; i++)
             {
                 _cube[__columnWriter](i, 0, _cube[__columnReader](i + 1, 0));
             }
@@ -415,13 +422,6 @@ var Playlist = function(opts) {
         }
     }
 
-    function __stopIfShould(renderTime) {
-        if (!_loops && (renderTime > __animationStartTime + __duration))
-        {
-            playlist.stop();
-        }
-    }
-
     function __animatorAcross() {
         var renderTime = Date.now();
         var strip = __getTileStripCursorAtMs(renderTime - __animationStartTime);
@@ -430,7 +430,48 @@ var Playlist = function(opts) {
 
         if ((stripIdx !== __prevStripIdx) && (stripIdx !== -1))
         {
-            __ripple();
+            __rippleAcross();
+            _cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
+            __prevStripIdx = stripIdx;
+        }
+
+        __stopIfShould(renderTime);
+    }
+
+    function __rippleAround() {
+        var start = __getCursorColumnForAnimationAround();
+        var dirtyCols = [start];
+        for (var i = 0; i < 27; i++)    // 7 * 4 = the perimeter
+        {
+            var lv = dirtyCols[dirtyCols.length - 1]; // lv: last value
+            var nd = __getNextColumnForAnimationAround(lv[0], lv[1]); // nd: new dimensions
+            dirtyCols.push(nd);
+        }
+
+        dirtyCols.reverse();
+
+        for (var i = 0; i < 27; i++)
+        {
+            var srcDim1 = dirtyCols[i + 1][0];
+            var srcDim2 = dirtyCols[i + 1][1];
+            var data = _cube[__columnReader](srcDim1, srcDim2);
+
+            var destDim1 = dirtyCols[i][0];
+            var destDim2 = dirtyCols[i][1];
+
+            _cube[__columnWriter](destDim1, destDim2, data);
+        }
+    }
+
+    function __animatorAround() {
+        var renderTime = Date.now();
+        var strip = __getTileStripCursorAtMs(renderTime - __animationStartTime);
+        var stripIdx = strip.idx;
+        var stripData = strip.strip;
+
+        if ((stripIdx !== __prevStripIdx) && (stripIdx !== -1))
+        {
+            __rippleAround();
             _cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
             __prevStripIdx = stripIdx;
         }

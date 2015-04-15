@@ -49,10 +49,10 @@ var Cube = function(size, cellOpts) {
 
     this.__playlist = new Playlist();
     this.__playlist.cube = this;
-    this.__playlist.mode = 'across';
+    this.__playlist.mode = 'around';
     this.__playlist.direction = 'cw';
     this.__playlist.face = 'front';
-    this.__playlist.frequency = 200;
+    this.__playlist.frequency = 100;
     this.__playlist.spacing = 1;
     this.__playlist.loops = true;
 
