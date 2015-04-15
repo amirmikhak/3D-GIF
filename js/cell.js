@@ -245,10 +245,6 @@ var Cell = function(opts) {
             return _options['color'];
         },
         set: function(newColor) {
-            if (typeof newColor === 'undefined')
-            {
-                return;
-            }
             _options['color'] = newColor;
             _colorRgbString = _options['color'].join(',')
             if (__autoRender)
@@ -432,7 +428,7 @@ var Cell = function(opts) {
              */
             if (this.hasOwnProperty(key))
             {
-                this[key] = _options[key] = newOpts[key];
+                this[key] = newOpts[key];
             } else
             {
                 console.error('Invalid option for Cell:' + key);
