@@ -226,6 +226,10 @@ var Cell = function(opts) {
             return _options['color'];
         },
         set: function(newColor) {
+            if (typeof newColor === 'undefined')
+            {
+                return;
+            }
             _options['color'] = newColor;
             _colorRgbString = _options['color'].join(',')
             render();   // call to ensure that the DOM is sync with model
@@ -363,7 +367,7 @@ var Cell = function(opts) {
                 row: _options['row'],
                 column: _options['column'],
                 depth: _options['depth'],
-                color:t_options['color'],
+                color: _options['color'],
                 on: _options['on'],
                 size: _options['size'],
                 clickable: _options['clickable'],

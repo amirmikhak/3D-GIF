@@ -47,6 +47,16 @@ var Cube = function(size, cellOpts) {
     var _shapePicker;
     var _playbackControls;
 
+    this.__playlist = new Playlist();
+    this.__playlist.cube = this;
+    this.__playlist.mode = 'across';
+    this.__playlist.direction = 'cw';
+    this.__playlist.face = 'front';
+    this.__playlist.frequency = 200;
+    this.__playlist.spacing = 1;
+    this.__playlist.loops = true;
+
+
     var _fontMap = {};
     var _activeFont;
 
@@ -1797,7 +1807,7 @@ Cube.prototype.readSlice = function(face, offset, output) {
         'front';
     output = (typeof output !== 'undefined') && (validOutputs.indexOf(output) !== -1) ?
         output :
-        'object-deep';
+        'json';
 
     var cells = [];
 
@@ -1888,6 +1898,103 @@ Cube.prototype.writeSlice = function(data, face, offset) {
     }
 
     return this;    // enables multiple calls on cube to be "chained"
+};
+
+Cube.prototype.affectCol = function(dims, dim1, dim2, cb) {
+    var validDims = ['xz', 'xy', 'yz'];
+    if ((typeof dims !== 'string') || (dims.length !== 2))
+    {
+        console.error('affectCol(): Bad dimensions. Valid dimensions: ' + validDims.join(', '), dims);
+        return;
+    } else if ((dim1 < 0) || (dim1 >= this.size))
+    {
+        var dimName = dims.charAt(0).toUpperCase();
+        console.error('affectCol(): Bad ' + dimName, dim1);
+        return;
+    } else if ((dim2 < 0) || (dim2 >= this.size))
+    {
+        var dimName = dims.charAt(1).toUpperCase();
+        console.error('affectCol(): Bad ' + dimName, dim2);
+        return;
+    }
+
+    if (dims === 'xz')
+    {
+        for (idx = 0; idx < this.size; idx++)
+        {
+            cb.apply(this, [idx, dim1, dim2, idx]);
+        }
+    } else if (dims === 'xy')
+    {   // not tested
+        for (idx = 0; idx < this.size; idx++)
+        {
+            cb.apply(this, [dim1, dim2, idx, idx]);
+        }
+    } else if (dims === 'yz')
+    {   // not tested
+        for (idx = 0; idx < this.size; idx++)
+        {
+            cb.apply(this, [dim1, idx, dim2, idx]);
+        }
+    } else
+    {
+        console.error('Callback not called due to no "dims" match.', dims);
+    }
+};
+
+Cube.prototype.writeXZCol = function(x, z, cells) {
+    var cube = this;
+    this.affectCol('xz', x, z, function(r, c, d, idx) {
+        this.setCellAt(r, c, d, cells[idx]);
+    });
+    return this;
+};
+
+Cube.prototype.readXZCol = function(x, z) {
+    var cube = this;
+    var strip = [];
+    this.affectCol('xz', x, z, function(r, c, d, idx) {
+        strip.push(cube.getCellAt(r, c, d));
+    });
+    return strip;
+};
+
+Cube.prototype.writeXYCol = function(x, y, cells) {
+    // NOT TESTED
+    var cube = this;
+    this.affectCol('xy', x, y, function(r, c, d, idx) {
+        this.setCellAt(r, c, d, cells[idx]);
+    });
+    return this;
+};
+
+Cube.prototype.readXYCol = function(x, y) {
+    // NOT TESTED
+    var cube = this;
+    var strip = [];
+    this.affectCol('xy', x, y, function(r, c, d, idx) {
+        strip.push(cube.getCellAt(r, c, d));
+    });
+    return strip;
+};
+
+Cube.prototype.writeYZCol = function(y, z, cells) {
+    // NOT TESTED
+    var cube = this;
+    this.affectCol('yz', y, z, function(r, c, d, idx) {
+        this.setCellAt(r, c, d, cells[idx]);
+    });
+    return this;
+};
+
+Cube.prototype.readYZCol = function(y, z) {
+    // NOT TESTED
+    var cube = this;
+    var strip = [];
+    this.affectCol('yz', y, z, function(r, c, d, idx) {
+        strip.push(cube.getCellAt(r, c, d));
+    });
+    return strip;
 };
 
 Cube.prototype.getPngDataOfSlice = function(slice) {
