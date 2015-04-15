@@ -23,7 +23,6 @@ body {
 }
 
 /**
- * @amirmikhak
  * Controls styling
  */
 #controls {
@@ -106,7 +105,6 @@ body {
 }
 
 /**
- * @amirmikhak
  * List styling
  */
 .shape-list,
@@ -176,7 +174,6 @@ body {
 
 
 /**
- * @amirmikhak
  * Cube and cell styling
  */
 #cube {
@@ -193,7 +190,6 @@ body {
 
 .cell:after {
     /*
-     * @amirmikhak
      * Mimic the vertical "sticks" to which the LEDs are attached in the cube
      */
     content: '';    /* necessary to make the pseudo-element render */
@@ -207,7 +203,6 @@ body {
 
 .cell:not([data-depth="0"])  {
     /*
-     * @amirmikhak
      * The top row needs to cut the "stick" in half because it doesn't continue above
      * the LED in the actual box.
      */
@@ -216,7 +211,6 @@ body {
 
 .cell[data-row="0"]:after  {
     /*
-     * @amirmikhak
      * The top row needs to cut the "stick" in half because it doesn't continue above
      * the LED in the actual box.
      */
@@ -225,7 +219,6 @@ body {
 
 .cell[data-row="7"]:before  {
     /*
-     * @amirmikhak
      * This style is an effort to make show a "base" for the cube, but it doesn't work.
      * Instead, the rotateX(90deg) makes the element invisible from the front face, but
      * is also not visible from the side or bottom. I'm not sure why elements seem not
@@ -252,7 +245,6 @@ body {
     transform: translateY(-50%) translateX(-50%);
 
     /*
-     * @amirmikhak
      * Show the LED "in front" of the "stick" that holds the LEDs.
      */
     z-index: 1;
