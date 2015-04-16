@@ -975,7 +975,7 @@ var Playlist = function(opts) {
         var tileIdx = tile.idx;
         var tileData = tile.tile;
 
-        if ((tileIdx !== __prevTileIdx) && (tileIdx !== -1))
+        if (tileData && (tileIdx !== __prevTileIdx) && (tileIdx !== -1))
         {
             // !TODO: desperate need of refactor
             _cube.playbackOptions.action = 'slide';

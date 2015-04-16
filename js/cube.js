@@ -504,12 +504,20 @@ var Cube = function(size, cellOpts) {
             if (_isPlaying)
             {
                 clearInterval(this.animateInterval);
-                this.animateInterval = setInterval(function() {
-                    this.animationCb.apply(this);
-                }.bind(this), this.playbackOptions.delay);  // Use our "outside" this inside of the setInterval callback
+                if (_playbackMode === 'real-time')
+                {
+                    _playlist.stop();
+                    this.animateInterval = setInterval(function() {
+                        this.animationCb.apply(this);
+                    }.bind(this), this.playbackOptions.delay);  // Use our "outside" this inside of the setInterval callback
+                } else if (_playbackMode === 'playlist')
+                {
+                    _playlist.play();
+                }
             } else
             {
                 clearInterval(cube.animateInterval);
+                _playlist.stop();
             }
         }
     });
