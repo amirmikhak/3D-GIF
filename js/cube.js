@@ -665,7 +665,7 @@ var Cube = function(size, cellOpts) {
                 var radioElArray = Array.prototype.slice.apply(radioElList);
                 radioElArray.forEach(function(input) {
                     input.checked = (input.value === _writeFace) ?
-                        _playlist.currentSupportedFaces.indexOf(input.value) === -1 :
+                        _playlist.currentSupportedFaces.indexOf(input.value) !== -1 :
                         false;
                     input.disabled = _playbackMode === 'playlist' ?
                         _playlist.currentSupportedFaces.indexOf(input.value) === -1 :
