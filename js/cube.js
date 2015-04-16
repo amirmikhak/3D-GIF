@@ -36,17 +36,22 @@ var Cube = function(size, cellOpts) {
     var _cellOptions = _.extend({}, defaultCellOptions, cellOpts || {});
     var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
-    var _container;
+    var _container = null;
 
-    var _prevStepButton;
-    var _nextStepButton;
-    var _playButton;
-    var _clearButton;
+    var _playbackModeButton = null;
+    var _prevStepButton = null;
+    var _nextStepButton = null;
+    var _playButton = null;
+    var _clearButton = null;
 
-    var _colorPicker;
-    var _shapePicker;
-    var _writeFacePicker;
-    var _playbackControls;
+    var _colorPicker = null;
+    var _shapePicker = null;
+    var _writeFacePicker = null;
+    var _realtimeControls = null;
+
+
+    var __validPlaybackModes = ['real-time', 'playlist'];
+    var _playbackMode = __validPlaybackModes[0];
 
     var _playlist = new Playlist({
         cube: this,
@@ -59,7 +64,7 @@ var Cube = function(size, cellOpts) {
     });
 
     var _fontMap = {};
-    var _activeFont;
+    var _activeFont = null;
 
     var _isPlaying = false;
     var _penColor = 'blue';
@@ -70,6 +75,41 @@ var Cube = function(size, cellOpts) {
     var _transitionTransforms = true;
     var _rotateCells = false;
 
+
+    function __updatePlaybackModeRelatedDOM() {
+        if (_playbackModeButton)
+        {
+            _playbackModeButton.innerHTML = _playbackMode;
+        }
+
+        if (_playbackMode === 'real-time')
+        {
+            if (cube.realtimeControls)
+            {
+                cube.realtimeControls.style.opacity = 1;
+            }
+
+            if (cube.playlistContainer)
+            {
+                cube.playlistContainer.style.opacity = 0;
+            }
+
+            cube.writeFace = cube.writeFace;    // update the DOM
+        } else if (_playbackMode === 'playlist')
+        {
+            if (cube.realtimeControls)
+            {
+                cube.realtimeControls.style.opacity = 0;
+            }
+
+            if (cube.playlistContainer)
+            {
+                cube.playlistContainer.style.opacity = 1;
+            }
+
+            cube.writeFace = cube.writeFace;    // update the DOM
+        }
+    };
 
     /**
      * We use this "Promise" and expose these callbacks to ensure that functions
@@ -93,6 +133,25 @@ var Cube = function(size, cellOpts) {
         get: function() {
             return _playlist;
         },
+    });
+
+    Object.defineProperty(this, 'playbackMode', {
+        enumerable: true,
+        get: function() {
+            return _playbackMode;
+        },
+        set: function(newMode) {
+            if (__validPlaybackModes.indexOf(newMode) === -1)
+            {
+                console.error('Invalid playbackMode: ' + newMode + '. ' +
+                    'Valid modes: ' + __validPlaybackModes.join(', '));
+                return;
+            }
+
+            _playbackMode = newMode;
+
+            __updatePlaybackModeRelatedDOM();
+        }
     });
 
     Object.defineProperty(this, 'playbackOptions', {
@@ -121,10 +180,10 @@ var Cube = function(size, cellOpts) {
                  * If there are playback controls that are rendered, we want to keep
                  * them in sync with our internal state.
                  */
-                if (this.playbackControls)
+                if (this.realtimeControls)
                 {
                     var radioSelector = 'input[type="radio"][name="direction"]';
-                    var radiosElList = this.playbackControls.querySelectorAll(radioSelector)
+                    var radiosElList = this.realtimeControls.querySelectorAll(radioSelector)
                     var radioElArray = Array.prototype.slice.apply(radiosElList);
                     radioElArray.forEach(function(input) {
                         // check or uncheck each of the radio buttons
@@ -507,9 +566,9 @@ var Cube = function(size, cellOpts) {
         enumerable: true,
         writable: false,
         value: {   // face: [cube.xAngle, cube.yAngle]
+            top: [-60, 30],
             front: [-30, 30],
             left: [-30, 60],
-            top: [-60, 30],
             back: [-20, -155],
             right: [-30, -60],
             bottom: [60, 30],
@@ -546,7 +605,13 @@ var Cube = function(size, cellOpts) {
                 var radioElList = _writeFacePicker.querySelectorAll(radioSelector);
                 var radioElArray = Array.prototype.slice.apply(radioElList);
                 radioElArray.forEach(function(input) {
-                    input.checked = (input.value === _writeFace);
+                    input.checked = (input.value === _writeFace) ?
+                        _playlist.supportedFaces.indexOf(input.value) === -1 :
+                        false;
+                    input.disabled = _playbackMode === 'playlist' ?
+                        _playlist.supportedFaces.indexOf(input.value) === -1 :
+                        false;
+
                     var swatch = input.nextElementSibling;
                     swatch.innerHTML = swatch.dataset.writeFace;
                 });
@@ -615,7 +680,7 @@ var Cube = function(size, cellOpts) {
         /**
          * !TODO: Fix this. We need this correction look correct.
          */
-        writeFacePickerHeight -= 50;
+        writeFacePickerHeight -= 120;
 
         _writeFacePicker.style.position = 'absolute';
         _writeFacePicker.style.top = ['calc(50% - ', writeFacePickerHeight / 2, 'px)'].join('');
@@ -718,7 +783,7 @@ var Cube = function(size, cellOpts) {
         /**
          * !TODO: Fix this. We need this correction look correct.
          */
-        colorPickerHeight -= 50;
+        colorPickerHeight -= 120;
 
         _colorPicker.style.position = 'absolute';
         _colorPicker.style.top = ['calc(50% - ', colorPickerHeight / 2, 'px)'].join('');
@@ -823,7 +888,7 @@ var Cube = function(size, cellOpts) {
         /**
          * !TODO: Fix this. We need this correction look correct.
          */
-        shapePickerHeight -= 50;
+        shapePickerHeight -= 120;
 
         _shapePicker.style.position = 'absolute';
         _shapePicker.style.top = [
@@ -871,7 +936,7 @@ var Cube = function(size, cellOpts) {
          * Playback Controls property and helpers
          */
 
-    var __playbackControlsChangeListener = function(e) {
+    var __realtimeControlsChangeListener = function(e) {
         if ((e.target.nodeName === 'INPUT') && (e.target.name === 'direction'))
         {
             cube.playbackOptions = {
@@ -880,28 +945,28 @@ var Cube = function(size, cellOpts) {
         }
     };
 
-    var _destroyPlaybackControls = function _destroyPlaybackControls() {
+    var _destroyRealtimeControls = function _destroyRealtimeControls() {
         /**
-         * Undo the actions of _buildPlaybackControls() so that the element is
+         * Undo the actions of _buildRealtimeControls() so that the element is
          * left in as close a state as possible to that it was before being
          * called.
          */
 
-        if (_playbackControls)
+        if (_realtimeControls)
         {
-            _playbackControls.removeEventListener('change', __playbackControlsChangeListener);
-            _playbackControls.classList.remove('playback-controls');
-            _playbackControls.innerHTML = '';
+            _realtimeControls.removeEventListener('change', __realtimeControlsChangeListener);
+            _realtimeControls.classList.remove('playback-controls');
+            _realtimeControls.innerHTML = '';
         }
     };
 
-    var _buildPlaybackControls = function _buildPlaybackControls(parentEl) {
+    var _buildRealtimeControls = function _buildRealtimeControls(parentEl) {
         /**
          * Build the color picker's components, position it, and bind its event
          * listener(s).
          */
 
-        _destroyPlaybackControls();
+        _destroyRealtimeControls();
 
         /**
          * Compose an array of strings into HTML using a template and Array.map(),
@@ -915,42 +980,43 @@ var Cube = function(size, cellOpts) {
             ].join('')
         }).join('');
 
-        _playbackControls = parentEl;
-        _playbackControls.classList.add('playback-controls');
+        _realtimeControls = parentEl;
+        _realtimeControls.classList.add('playback-controls');
 
-        _playbackControls.innerHTML = [
+        _realtimeControls.innerHTML = [
             '<div class="radio-tabs">', optionsHtml, '</div>'
         ].join('');
 
-        _playbackControls.addEventListener('change', __playbackControlsChangeListener);
+        _realtimeControls.addEventListener('change', __realtimeControlsChangeListener);
 
         this.playbackOptions = {
             direction: this.playbackOptions.direction,  // trigger sync of DOM with state
         }
     }
 
-    Object.defineProperty(this, 'playbackControls', {
+    Object.defineProperty(this, 'realtimeControls', {
         enumerable: false,
         get: function() {
-            return _playbackControls;
+            return _realtimeControls;
         },
-        set: function(newPlaybackControlsEl) {
+        set: function(newRealtimeControlsEl) {
             /**
              * This property follows the same pattern as the colorPicker property.
              */
-            if ((newPlaybackControlsEl instanceof HTMLElement) &&
-                (newPlaybackControlsEl !== _playbackControls))
+            if ((newRealtimeControlsEl instanceof HTMLElement) &&
+                (newRealtimeControlsEl !== _realtimeControls))
             {
-                _buildPlaybackControls.call(this, newPlaybackControlsEl);
-            } else if ((newPlaybackControlsEl === null) ||
-                (typeof newPlaybackControlsEl === 'undefined'))
+                _buildRealtimeControls.call(this, newRealtimeControlsEl);
+                __updatePlaybackModeRelatedDOM();
+            } else if ((newRealtimeControlsEl === null) ||
+                (typeof newRealtimeControlsEl === 'undefined'))
             {
-                _destroyPlaybackControls();
-                _playbackControls = undefined;
+                _destroyRealtimeControls();
+                _realtimeControls = undefined;
             } else
             {
-                console.error('Invalid playbackControls: must be instance of HTMLElement');
-                throw 'Invalid playbackControls';
+                console.error('Invalid realtimeControls: must be instance of HTMLElement');
+                throw 'Invalid realtimeControls';
             }
         }
     });
@@ -982,6 +1048,53 @@ var Cube = function(size, cellOpts) {
             {
                 console.error('Invalid container: must be instance of HTMLElement');
                 throw 'Invalid container';
+            }
+        }
+    });
+
+
+        /**
+         * Playback Mode Button property and listener
+         */
+
+    var __playbackModeButtonClickListener = function(event) {
+        var currModeIndex = __validPlaybackModes.indexOf(_playbackMode);
+        var numModes = __validPlaybackModes.length;
+        cube.playbackMode = __validPlaybackModes[(currModeIndex + 1) % numModes];
+    };
+
+    Object.defineProperty(this, 'playbackModeButton', {
+        enumerable: false,
+        get: function() {
+            return _playbackModeButton;
+        },
+        set: function(newPlaybackModeButton) {
+            /**
+             * This property follows the same pattern as the colorPicker property.
+             */
+            if ((newPlaybackModeButton instanceof HTMLElement) &&
+                (newPlaybackModeButton !== _playbackModeButton))
+            {
+                if (_playbackModeButton)
+                {   // unbind a click listener that may have been previously bound
+                    _playbackModeButton.removeEventListener('click', __playbackModeButtonClickListener);
+                }
+
+                // get the new button
+                _playbackModeButton = newPlaybackModeButton;
+
+                // bind the click listener to the new button
+                _playbackModeButton.addEventListener('click', __playbackModeButtonClickListener);
+
+                __updatePlaybackModeRelatedDOM();
+            } else if ((newPlaybackModeButton === null) ||
+                (typeof newPlaybackModeButton === 'undefined'))
+            {
+                _playbackModeButton.removeEventListener('click', __playbackModeButtonClickListener);
+                _playbackModeButton = undefined;
+            } else
+            {
+                console.error('Invalid playbackModeButton: must be instance of HTMLElement');
             }
         }
     });
@@ -1185,6 +1298,7 @@ var Cube = function(size, cellOpts) {
                 (newPlaylistContainerEl !== _playlist.container))
             {
                 _playlist.container = newPlaylistContainerEl;
+                __updatePlaybackModeRelatedDOM();
             } else if ((newPlaylistContainerEl === null) ||
                 (typeof newPlaylistContainerEl === 'undefined'))
             {

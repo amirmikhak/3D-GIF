@@ -278,6 +278,18 @@ var Playlist = function(opts) {
         value: ['through', 'across', 'around'],
     });
 
+    Object.defineProperty(this, 'supportedFaces', {
+        enumerable: false,
+        set: NOOP,
+        get: function() {
+            return {
+                'through': __allFaces.slice(),
+                'across': __xzFaces.slice(),
+                'around': __xzFaces.slice(),
+            }[_mode];
+        }
+    });
+
     Object.defineProperty(this, 'directions', {
         enumerable: true,
         writable: false,

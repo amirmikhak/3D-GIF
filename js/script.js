@@ -25,12 +25,13 @@ window.addEventListener('load', function() { // When everything is loaded
     cube.writeFacePicker = document.getElementById('write-face-picker');
 
     // attach buttons and other behaviors
+    cube.playbackModeButton = document.getElementById('playback-mode');
     cube.prevStepButton = document.getElementById('prev-step');
     cube.nextStepButton = document.getElementById('next-step');
     cube.playButton = document.getElementById('play');
     cube.clearButton = document.getElementById('clear');
-    cube.playbackControls = document.getElementById('playback-controls');
-    cube.playlistContainer = document.getElementById('playlist-container');
+    cube.realtimeControls = document.getElementById('realtime-controls');
+    cube.playlistContainer = document.getElementById('playlist-controls');
 
     // Listen for keyboard shortcuts (except nudging)
     //  and for characters being pressed to display

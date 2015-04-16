@@ -26,20 +26,24 @@ body {
  * Controls styling
  */
 #controls {
-    width: 100%;
-    text-align: center;
-    text-transform: uppercase;
     position: absolute;
     bottom: -120px;
-    background: #fff;
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    letter-spacing: 0.125em;
     z-index: 2;
-    font-size: 0;
 
     -webkit-user-select: none;
 }
 
+#controls > div {
+}
+
 .control-button:not(.radio-tab) {
-    padding: 12px 24px;
+    padding: 12px 18px;
 }
 
 .control-button:hover {
@@ -69,12 +73,6 @@ body {
 
 #play.playing {
     background-color: #999;
-}
-
-#playback-controls input {
-    text-align: center;
-    font-family: 'Helvetica Neue';
-    font-size: 20px;
 }
 
 .radio-tabs {
@@ -187,7 +185,7 @@ body {
 
 .write-face-list .swatch > div {
     box-sizing: border-box;
-    font-size: 10px;
+    font-size: 9px;
     text-align: center;
     color: #000;
     padding-top: calc(50% - 10px);
@@ -202,6 +200,11 @@ body {
 .color-list .swatch > input[type="radio"]:checked + div,
 .write-face-list .swatch > input[type="radio"]:checked + div {
     border: 4px solid rgba(190, 190, 190, 1);
+}
+
+.write-face-list .swatch > input[type="radio"]:disabled + div {
+    color: #ccc;
+    cursor: default;
 }
 
 
@@ -292,17 +295,32 @@ body {
     opacity: 0.25;
 }
 
+#playback-controls {
+    position: relative;
+    width: 100%;
+    height: 70px;
+}
+
+#playback-controls > div {
+    transition: opacity 300ms ease-in-out;
+}
+
+#realtime-controls {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
 
 /**
  * Playlist styling
  */
 
-#playlist-container {
+#playlist-controls {
     box-sizing: border-box;
     position: absolute;
-    bottom: -54px;
+    top: 0;
     width: 100%;
-    height: 70px;
+    height: 100%;
     border: 1px solid #ccc;
     padding: 0 2px;
     z-index: 2;
@@ -310,7 +328,7 @@ body {
     -webkit-user-select: none;
 }
 
-#playlist-container .tile-tray {
+#playlist-controls .tile-tray {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -324,7 +342,7 @@ body {
     background: #fff;
 }
 
-#playlist-container .mode-selector {
+#playlist-controls .mode-selector {
     box-sizing: border-box;
     position: absolute;
     top: calc(50% - 37.5px);
@@ -338,7 +356,7 @@ body {
     transition: left 300ms ease-in-out;
 }
 
-#playlist-container .direction-selector {
+#playlist-controls .direction-selector {
     box-sizing: border-box;
     position: absolute;
     top: calc(50% - 37.5px);
@@ -354,15 +372,15 @@ body {
         width 300ms ease-in-out;
 }
 
-#playlist-container.show-direction-selector .mode-selector {
+#playlist-controls.show-direction-selector .mode-selector {
     left: -182px;
 }
 
-#playlist-container.show-direction-selector .direction-selector {
+#playlist-controls.show-direction-selector .direction-selector {
     width: 50px;
 }
 
-#playlist-container .loop-cb {
+#playlist-controls .loop-cb {
     box-sizing: border-box;
     position: absolute;
     top: calc(50% - 25px);
@@ -375,7 +393,7 @@ body {
     text-align: center;
 }
 
-#playlist-container .loop-cb span {
+#playlist-controls .loop-cb span {
     display: block;
     position: absolute;
     top: 0;
@@ -386,35 +404,35 @@ body {
     color: #ccc;
 }
 
-#playlist-container .loop-cb:hover span {
+#playlist-controls .loop-cb:hover span {
     background: #fff;
     color: #9f9;
 }
 
-#playlist-container .loop-cb:active span {
+#playlist-controls .loop-cb:active span {
     background: #ccc;
     color: #555;
 }
 
-#playlist-container .loop-cb input {
+#playlist-controls .loop-cb input {
     z-index: -1;
     opacity: 0.1;
 }
 
-#playlist-container .loop-cb input[name="loop"]:checked + span {
+#playlist-controls .loop-cb input[name="loop"]:checked + span {
     background: #21C721;
     color: #fff;
 }
 
-#playlist-container .loop-cb:hover input[name="loop"]:checked + span {
+#playlist-controls .loop-cb:hover input[name="loop"]:checked + span {
     color: #9f9;
 }
 
-#playlist-container.focus {
+#playlist-controls.focus {
     border-color: #777;
 }
 
-#playlist-container .tile {
+#playlist-controls .tile {
     box-sizing: border-box;
     display: inline-block;
     border: 1px solid #ccc;
@@ -424,7 +442,7 @@ body {
     margin: 4px;
 }
 
-#playlist-container .tile img {
+#playlist-controls .tile img {
     width: 100%;
     height: 100%;
 }
@@ -434,7 +452,7 @@ body {
   50.01% { opacity: 1 } 100% { opacity: 1 }
 }
 
-#playlist-container .cursor {
+#playlist-controls .cursor {
     position: relative;
     left: -4px;
     width: 10px;
@@ -442,14 +460,14 @@ body {
     display: none;
 }
 
-#playlist-container.focus .cursor {
+#playlist-controls.focus .cursor {
     display: inline-block;
     -webkit-animation: blink 700ms infinite linear alternate;
     -webkit-font-smoothing: antialiased;
 }
 
-#playlist-container .cursor:after,
-#playlist-container .cursor:before {
+#playlist-controls .cursor:after,
+#playlist-controls .cursor:before {
     position: absolute;
     top: 5px;
     left: 3px;
@@ -463,7 +481,7 @@ body {
     text-align: center;
 }
 
-#playlist-container .cursor:before {
+#playlist-controls .cursor:before {
     perspective: 10px;
     transform-style: preserve-3d;
     transform-origin: 90% 50%;
