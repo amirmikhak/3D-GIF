@@ -224,7 +224,7 @@ var Playlist = function(opts) {
     }
 
     function __updateDirectionRadios() {
-        var radioSelector = 'input[type="radio"][name="direction"]';
+        var radioSelector = 'input[type="radio"][name="wrap-direction"]';
         var radiosElList = __directionSelectorEl.querySelectorAll(radioSelector)
         var radioElArray = Array.prototype.slice.apply(radiosElList);
         radioElArray.forEach(function(input) {
@@ -653,7 +653,7 @@ var Playlist = function(opts) {
 
         var directionOptionsHtml = playlist.directions.map(function(direction) {
             return (
-                '<input id="direction-radio-' + direction + '" type="radio" name="direction" value="' + direction + '" />' +
+                '<input id="direction-radio-' + direction + '" type="radio" name="wrap-direction" value="' + direction + '" />' +
                 '<label for="direction-radio-' + direction + '" class="control-button radio-tab"><span>' + direction + '</span></label>'
             );
         }).join('');
@@ -705,6 +705,8 @@ var Playlist = function(opts) {
                 (newContainer !== _containerEl))
             {
                 __buildPlaylistEl(newContainer);
+                this.mode = _mode;
+                this.direction = _direction;
             } else if ((newContainer === null) ||
                 (typeof newContainer === 'undefined'))
             {

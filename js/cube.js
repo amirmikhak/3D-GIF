@@ -125,7 +125,8 @@ var Cube = function(size, cellOpts) {
             }
         }
 
-        cube.writeFace = cube.writeFace;    // update the DOM
+        cube.writeFace = _writeFace;
+        cube.playbackOptions = _playbackOptions;
     }
 
     /**
