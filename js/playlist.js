@@ -528,7 +528,7 @@ var Playlist = function(opts) {
                 e.stopPropagation();
                 e.preventDefault();
                 return;
-            } else if (e.altKey && (keyMap[e.keyCode] === 'down'))
+            } else if (e.altKey && (keyMap[e.keyCode] === 'up'))
             {
                 playlist.insertTile(new Tile(cube.readSlice()), __userCursorPosition++);
                 return;
