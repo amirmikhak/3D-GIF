@@ -979,7 +979,7 @@ var Playlist = function(opts) {
         {
             // !TODO: desperate need of refactor
             _cube.playbackOptions.action = 'slide';
-            _cube.playbackOptions.wrapDirection = __throughFaceDirectionMap[_face];
+            _cube.playbackOptions.direction = __throughFaceDirectionMap[_face];
             _cube.animationCb();
             _cube.writeSlice(tileData.getCells(), _face, 0);
             __prevTileIdx = tileIdx;
