@@ -231,7 +231,13 @@ var Playlist = function() {
     }
 
     function __updateModeRadios() {
-
+        var radioSelector = 'input[type="radio"][name="mode"]';
+        var radiosElList = __modeSelectorEl.querySelectorAll(radioSelector)
+        var radioElArray = Array.prototype.slice.apply(radiosElList);
+        radioElArray.forEach(function(input) {
+            // check or uncheck each of the radio buttons
+            input.checked = (input.value == _mode);
+        });
     }
 
     /**
@@ -259,6 +265,7 @@ var Playlist = function() {
 
             if (_containerEl)
             {
+                __updateModeRadios();
                 __updateDirectionRadios();
                 _containerEl.classList.toggle('show-direction-selector', (_mode !== 'through'));
             }
