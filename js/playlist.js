@@ -2,8 +2,15 @@ var Playlist = function() {
 
     var playlist = this;
 
-    var _container = null;
+    var NOOP = function() {};
+
     var _cube = null;
+
+    var _containerEl = null;
+    var __tileTrayEl = null;
+    var __loopsCbEl = null;
+    var __modeSelectorEl = null;
+    var __directionSelectorEl = null;
 
     var _mode = 'through';
     var _face = 'front';
@@ -13,6 +20,7 @@ var Playlist = function() {
     var _spacing = 4;       // number of ticks between tile rendering before next appears
     var _focus = false;
 
+    var _modes = ['through', 'across', 'around'];
     var _tiles = [];        // which images to show
 
     var __tileStrip = [];    // all tiles concatenated (for column-based animations)
@@ -40,7 +48,7 @@ var Playlist = function() {
 
     var __columnReader = '';
     var __columnWriter = '';
-    var __animator = function(){};
+    var __animator = NOOP;
 
     /**
      * PRIVATE HELPERS
@@ -48,12 +56,14 @@ var Playlist = function() {
 
     var __throughFaceDirectionMap = {
         'front': 'back',
-        'back': 'forward',
         'left': 'right',
+        'back': 'forward',
         'right': 'left',
         'top': 'down',
         'bottom': 'up',
     };
+
+    var __allFaces = ['front', 'left', 'back', 'right', 'top', 'bottom'];
 
     var __xzFaces = ['front', 'left', 'back', 'right'];
     var __xzFacesCursorsMap = {
@@ -157,8 +167,6 @@ var Playlist = function() {
         }
 
         // mode is across / around
-
-        var __xzFaces = ['front', 'left', 'back', 'right'];
         if (__xzFaces.indexOf(_face) !== -1)
         {
             __columnReader = 'readXZCol';
@@ -192,11 +200,11 @@ var Playlist = function() {
     }
 
     function __renderTileContainer() {
-        if (_container)
+        if (__tileTrayEl)
         {
             var frags = __tileHtmls.slice();
             frags.splice(__userCursorPosition, 0, __userCursorHtml);
-            _container.innerHTML = frags.join('');
+            __tileTrayEl.innerHTML = frags.join('');
         } else
         {
             console.error('Playlist cannot render(): has no container.');
@@ -212,6 +220,19 @@ var Playlist = function() {
         __renderTileContainer();
     }
 
+    function __updateDirectionRadios() {
+        var radioSelector = 'input[type="radio"][name="direction"]';
+        var radiosElList = __directionSelectorEl.querySelectorAll(radioSelector)
+        var radioElArray = Array.prototype.slice.apply(radiosElList);
+        radioElArray.forEach(function(input) {
+            // check or uncheck each of the radio buttons
+            input.checked = (input.value == _direction);
+        });
+    }
+
+    function __updateModeRadios() {
+
+    }
 
     /**
      * PROPERTIES
@@ -227,8 +248,7 @@ var Playlist = function() {
     Object.defineProperty(this, 'mode', {
         get: function() { return _mode; },
         set: function(newMode) {
-            var validModes = ['through', 'across', 'around'];
-            if (validModes.indexOf(newMode) === -1)
+            if (this.modes.indexOf(newMode) === -1)
             {
                 return;
             }
@@ -236,14 +256,46 @@ var Playlist = function() {
             _mode = newMode;
 
             __updateAnimationSettings();
+
+            if (_containerEl)
+            {
+                __updateDirectionRadios();
+                _containerEl.classList.toggle('show-direction-selector', (_mode !== 'through'));
+            }
         }
+    });
+
+    Object.defineProperty(this, 'modes', {
+        enumerable: true,
+        writable: false,
+        value: ['through', 'across', 'around'],
+    });
+
+    Object.defineProperty(this, 'directions', {
+        enumerable: true,
+        writable: false,
+        value: ['ccw', 'cw'],   // ccw: to the right, cw: to the left
+    });
+
+    Object.defineProperty(this, 'faces', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            if (_mode === 'through')
+            {
+                return __allFaces.slice();
+            } else if ((_mode === 'across') || (_mode === 'around'))
+            {
+                return __xzFaces.slice();
+            }
+            return [];
+        },
     });
 
     Object.defineProperty(this, 'face', {
         get: function() { return _face; },
         set: function(newFace) {
-            var validFaces = ['front', 'back', 'top', 'bottom', 'left', 'right'];
-            if (validFaces.indexOf(newFace) === -1)
+            if (this.faces.indexOf(newFace) === -1)
             {
                 return;
             }
@@ -257,8 +309,7 @@ var Playlist = function() {
     Object.defineProperty(this, 'direction', {
         get: function() { return _direction; },
         set: function(newDirection) {
-            var validDirections = ['ccw', 'cw'];   // ccw: to the right, cw: to the left
-            if (validDirections.indexOf(newDirection) === -1)
+            if (this.directions.indexOf(newDirection) === -1)
             {
                 return;
             }
@@ -279,6 +330,11 @@ var Playlist = function() {
         get: function() { return _loops; },
         set: function(shouldLoop) {
             _loops = !!shouldLoop;
+
+            if (_containerEl)
+            {
+                __loopsCbEl.checked = _loops;
+            }
         }
     });
 
@@ -329,13 +385,23 @@ var Playlist = function() {
         set: function(inFocus) {
             _focus = !!inFocus;
 
-            if (_container)
+            if (_containerEl)
             {
-                _container.classList.toggle('focus', _focus);
+                _containerEl.classList.toggle('focus', _focus);
                 __renderTileContainer();
             }
         }
     });
+
+    function __resyncStateToDOM() {
+        if (_containerEl)
+        {
+            playlist.mode = _mode;
+            playlist.direction = _direction;
+            playlist.loops = _loops;
+            __renderTileContainer();
+        }
+    };
 
     function __kbKeydownListener(e) {
         var keyMap = {
@@ -408,7 +474,7 @@ var Playlist = function() {
     }
 
     function __documentMouseClickListener(e) {
-        if (e.target !== _container)
+        if (e.target !== _containerEl)
         {
             playlist.focus = false;
         }
@@ -418,7 +484,7 @@ var Playlist = function() {
         /**
          * Bind event listeners for clicking and dragging to edit the playlist.
          */
-        _container.addEventListener('click', __containerMouseClickListener);
+        _containerEl.addEventListener('click', __containerMouseClickListener);
         document.addEventListener('click', __documentMouseClickListener);
     }
 
@@ -426,17 +492,122 @@ var Playlist = function() {
         /**
          * Remove all of the events bound in __bindContainerMouseListeners()
          */
-        _container.removeEventListener('click', __containerMouseClickListener);
+        _containerEl.removeEventListener('click', __containerMouseClickListener);
         document.removeEventListener('click', __documentMouseClickListener);
     }
 
+    function __containerChangeListener(e) {
+        if ((e.target.nodeName === 'INPUT'))
+        {
+            if (e.target.name === 'loop')
+            {
+                playlist.loops = e.target.checked;
+            } else if (e.target.name === 'mode')
+            {
+                playlist.mode = e.target.value;
+            } else if (e.target.name === 'direction')
+            {
+                playlist.direction = e.target.value;
+            }
+        }
+    }
+
+    function __bindContainerChangeListeners() {
+        /**
+         * Bind event listeners for clicking and dragging to edit the playlist.
+         */
+        _containerEl.addEventListener('change', __containerChangeListener);
+    }
+
+    function __unbindContainerChangeListeners() {
+        /**
+         * Remove all of the events bound in __bindContainerChangeListeners()
+         */
+        _containerEl.removeEventListener('change', __containerChangeListener);
+    }
+
+    function __destroyPlaylistEl() {
+        __unbindContainerMouseListeners();
+        __unbindContainerChangeListeners();
+        __unbindContainerKeyboardListeners();
+
+        _containerEl = null;
+        __tileTrayEl = null;
+        __loopsCbEl = null;
+        __modeSelectorEl = null;
+        __directionSelectorEl = null;
+    }
+
+    function __buildModeSelectorHtml() {
+        var modeOptionsHtml = playlist.modes.map(function(mode) {
+            return (
+                '<input id="mode-radio-' + mode + '" type="radio" name="mode" value="' + mode + '" />' +
+                '<label for="mode-radio-' + mode + '" class="control-button radio-tab"><span>' + mode + '</span></label>'
+            );
+        }).join('');
+
+        var directionOptionsHtml = playlist.directions.map(function(direction) {
+            return (
+                '<input id="direction-radio-' + direction + '" type="radio" name="direction" value="' + direction + '" />' +
+                '<label for="direction-radio-' + direction + '" class="control-button radio-tab"><span>' + direction + '</span></label>'
+            );
+        }).join('');
+
+        return (
+            '<div class="mode-selector radio-tabs mini vertical">' +
+                modeOptionsHtml +
+            '</div>' +
+            '<div class="direction-selector radio-tabs mini vertical">' +
+                directionOptionsHtml +
+            '</div>'
+        );
+    }
+
+    function __buildPlaylistEl(newContainer) {
+        if (_containerEl)
+        {
+            __destroyPlaylistEl();
+        }
+
+        var modeSelectorHtml = __buildModeSelectorHtml();
+
+        _containerEl = newContainer;
+        _containerEl.innerHTML = (
+            '<div class="tile-tray"></div>' +
+            modeSelectorHtml +
+            '<label class="loop-cb">' +
+                '<input type="checkbox" name="loop">' +
+                '<span><i class="fa fa-refresh"></i></span>' +
+            '</label>'
+        );
+
+        __tileTrayEl = _containerEl.querySelector('.tile-tray');
+        __loopsCbEl = _containerEl.querySelector('input[name="loop"]');
+        __modeSelectorEl = _containerEl.querySelector('.mode-selector');
+        __directionSelectorEl = _containerEl.querySelector('.direction-selector');
+
+        __bindContainerMouseListeners();
+        __bindContainerChangeListeners();
+        __bindContainerKeyboardListeners();
+
+        __resyncStateToDOM();
+    }
+
     Object.defineProperty(this, 'container', {
-        get: function() { return _container; },
+        get: function() { return _containerEl; },
         set: function(newContainer) {
-            // don't validate input for now
-            _container = newContainer;
-            __bindContainerMouseListeners();
-            __bindContainerKeyboardListeners();
+            if ((newContainer instanceof HTMLElement) &&
+                (newContainer !== _containerEl))
+            {
+                __buildPlaylistEl(newContainer);
+            } else if ((newContainer === null) ||
+                (typeof newContainer === 'undefined'))
+            {
+                if (_containerEl)
+                {
+                    __destroyPlaylistEl();
+                }
+            }
         }
     });
 
