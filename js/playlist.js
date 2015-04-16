@@ -502,65 +502,79 @@ var Playlist = function() {
         return [__animationCursorDim1, __animationCursorDim2];
     }
 
-    function __getNextCursorColumn(dim1, dim2) {
+    function __nextCCXZFaceCw(dim1, dim2) {
         var nextDims = [dim1, dim2];  // nextDim1, nextDim2
 
+        if ((dim1 === 0) && (dim2 === 0))   // front -> left corner
+        {
+            nextDims[1] += 1;
+        } else if ((dim1 === 0) && (dim2 === 7))    // left -> back corner
+        {
+            nextDims[0] += 1;
+        } else if ((dim1 === 7) && (dim2 === 7))   // back -> right corner
+        {
+            nextDims[1] -= 1;
+        } else if ((dim1 === 7) && (dim2 === 0))   // right -> front corner
+        {
+            nextDims[0] -= 1;
+        } else if (dim1 === 0)   // left edge (^)
+        {
+            nextDims[1] += 1;
+        } else if (dim1 === 7)   // right edge (v)
+        {
+            nextDims[1] -= 1;
+        } else if (dim2 === 0)   // front edge (<-)
+        {
+            nextDims[0] -= 1;
+        } else if (dim2 === 7)   // back edge (->)
+        {
+            nextDims[0] += 1;
+        }
+
+        return nextDims;
+    }
+
+    function __nextCCXZFaceCcw(dim1, dim2) {
+        var nextDims = [dim1, dim2];  // nextDim1, nextDim2
+
+        if ((dim1 === 0) && (dim2 === 0))   // left -> front corner
+        {
+            nextDims[0] += 1;
+        } else if ((dim1 === 0) && (dim2 === 7))   // back -> left corner
+        {
+            nextDims[1] -= 1;
+        } else if ((dim1 === 7) && (dim2 === 7))   // right -> back corner
+        {
+            nextDims[0] -= 1;
+        } else if ((dim1 === 7) && (dim2 === 0))   // front -> right corner
+        {
+            nextDims[1] += 1;
+        } else if (dim1 === 0)   // left edge (v)
+        {
+            nextDims[1] -= 1;
+        } else if (dim1 === 7)   // right edge (^)
+        {
+            nextDims[1] += 1;
+        } else if (dim2 === 0)   // front edge (->)
+        {
+            nextDims[0] += 1;
+        } else if (dim2 === 7)   // back edge (<-)
+        {
+            nextDims[0] -= 1;
+        }
+
+        return nextDims;
+    }
+
+    function __getNextCursorColumn(dim1, dim2) {
         if (__xzFaces.indexOf(_face) !== -1)
         {
             if (_direction === 'cw')
             {   // x = dim1, z = dim2
-                if ((dim1 === 0) && (dim2 === 0))   // front -> left corner
-                {
-                    nextDims[1] += 1;
-                } else if ((dim1 === 0) && (dim2 === 7))    // left -> back corner
-                {
-                    nextDims[0] += 1;
-                } else if ((dim1 === 7) && (dim2 === 7))   // back -> right corner
-                {
-                    nextDims[1] -= 1;
-                } else if ((dim1 === 7) && (dim2 === 0))   // right -> front corner
-                {
-                    nextDims[0] -= 1;
-                } else if (dim1 === 0)   // left edge (^)
-                {
-                    nextDims[1] += 1;
-                } else if (dim1 === 7)   // right edge (v)
-                {
-                    nextDims[1] -= 1;
-                } else if (dim2 === 0)   // front edge (<-)
-                {
-                    nextDims[0] -= 1;
-                } else if (dim2 === 7)   // back edge (->)
-                {
-                    nextDims[0] += 1;
-                }
+                return __nextCCXZFaceCw(dim1, dim2);
             } else
             {   // _direction === 'ccw'; x = dim1, z = dim2
-                if ((dim1 === 0) && (dim2 === 0))   // left -> front corner
-                {
-                    nextDims[0] += 1;
-                } else if ((dim1 === 0) && (dim2 === 7))   // back -> left corner
-                {
-                    nextDims[1] -= 1;
-                } else if ((dim1 === 7) && (dim2 === 7))   // right -> back corner
-                {
-                    nextDims[0] -= 1;
-                } else if ((dim1 === 7) && (dim2 === 0))   // front -> right corner
-                {
-                    nextDims[1] += 1;
-                } else if (dim1 === 0)   // left edge (v)
-                {
-                    nextDims[1] -= 1;
-                } else if (dim1 === 7)   // right edge (^)
-                {
-                    nextDims[1] += 1;
-                } else if (dim2 === 0)   // front edge (->)
-                {
-                    nextDims[0] += 1;
-                } else if (dim2 === 7)   // back edge (<-)
-                {
-                    nextDims[0] -= 1;
-                }
+                return __nextCCXZFaceCcw(dim1, dim2);
             }
         }
 
