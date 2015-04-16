@@ -167,7 +167,11 @@ body {
     opacity: 0.5;
 }
 
-.shape-list .swatch:hover {
+.shape-list.disabled .swatch {
+    cursor: default;
+}
+
+.shape-list:not(.disabled) .swatch:hover {
     opacity: 1;
 }
 

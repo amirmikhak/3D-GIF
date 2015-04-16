@@ -104,6 +104,11 @@ var Cube = function(size, cellOpts) {
 
         if (_playbackMode === 'real-time')
         {
+            if (_shapePicker)
+            {
+                _shapePicker.classList.remove('disabled');
+            }
+
             if (_prevStepButton)
             {
                 _prevStepButton.style.display = 'inherit';
@@ -129,6 +134,11 @@ var Cube = function(size, cellOpts) {
         } else if (_playbackMode === 'playlist')
         {
             _playlist.face = _writeFace;
+
+            if (_shapePicker && _playlist.isPlaying)
+            {
+                _shapePicker.classList.add('disabled');
+            }
 
             if (_prevStepButton)
             {
@@ -535,11 +545,21 @@ var Cube = function(size, cellOpts) {
                 } else if (_playbackMode === 'playlist')
                 {
                     _playlist.play();
+
+                    if (_shapePicker)
+                    {
+                        _shapePicker.classList.add('disabled');
+                    }
                 }
             } else
             {
-                clearInterval(cube.animateInterval);
+                clearInterval(this.animateInterval);
                 _playlist.stop();
+
+                if (_shapePicker)
+                {
+                    _shapePicker.classList.remove('disabled');
+                }
             }
         }
     });
@@ -895,9 +915,13 @@ var Cube = function(size, cellOpts) {
          */
 
     var __shapePickerClickListener = function(e) {
-        if (e.target.dataset && e.target.dataset.shape)
+        if (_playbackMode === 'real-time' ||
+            ((_playbackMode === 'playlist') && !_playlist.isPlaying))
         {
-            cube.renderShape(e.target.dataset.shape);
+            if (e.target.dataset && e.target.dataset.shape)
+            {
+                cube.renderShape(e.target.dataset.shape);
+            }
         }
     };
 
