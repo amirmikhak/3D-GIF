@@ -104,6 +104,16 @@ var Cube = function(size, cellOpts) {
 
         if (_playbackMode === 'real-time')
         {
+            if (_prevStepButton)
+            {
+                _prevStepButton.style.display = 'inherit';
+            }
+
+            if (_nextStepButton)
+            {
+                _nextStepButton.style.display = 'inherit';
+            }
+
             if (cube.realtimeControls)
             {
                 cube.realtimeControls.style.opacity = 1;
@@ -118,6 +128,18 @@ var Cube = function(size, cellOpts) {
 
         } else if (_playbackMode === 'playlist')
         {
+            _playlist.face = _writeFace;
+
+            if (_prevStepButton)
+            {
+                _prevStepButton.style.display = 'none';
+            }
+
+            if (_nextStepButton)
+            {
+                _nextStepButton.style.display = 'none';
+            }
+
             if (cube.realtimeControls)
             {
                 cube.realtimeControls.style.opacity = 0;
@@ -173,11 +195,6 @@ var Cube = function(size, cellOpts) {
             }
 
             _playbackMode = newMode;
-
-            if (_playbackMode === 'playlist')
-            {
-                _playlist.face = _writeFace;
-            }
 
             __updatePlaybackModeRelatedDOM();
         }

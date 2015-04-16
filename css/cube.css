@@ -32,7 +32,7 @@ body {
 
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: center;
     letter-spacing: 0.125em;
     z-index: 2;
 
