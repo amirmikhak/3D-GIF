@@ -60,7 +60,7 @@ window.addEventListener('load', function() { // When everything is loaded
             {
                 // don't try to move the cube if the ctrl or alt keys are down
                 return;
-            } else if (cube.__playlist && cube.__playlist.focus)
+            } else if (cube.playlist && cube.playlist.focus)
             {   // don't try to move the cube if the cube's playlist has focus
                 return;
             }
