@@ -87,11 +87,13 @@ var Cube = function(size, cellOpts) {
             if (cube.realtimeControls)
             {
                 cube.realtimeControls.style.opacity = 1;
+                cube.realtimeControls.style.zIndex = 2;
             }
 
             if (cube.playlistContainer)
             {
                 cube.playlistContainer.style.opacity = 0;
+                cube.playlistContainer.style.zIndex = -1;
             }
 
             cube.writeFace = cube.writeFace;    // update the DOM
@@ -100,11 +102,13 @@ var Cube = function(size, cellOpts) {
             if (cube.realtimeControls)
             {
                 cube.realtimeControls.style.opacity = 0;
+                cube.realtimeControls.style.zIndex = -1;
             }
 
             if (cube.playlistContainer)
             {
                 cube.playlistContainer.style.opacity = 1;
+                cube.playlistContainer.style.zIndex = 2;
             }
 
             cube.writeFace = cube.writeFace;    // update the DOM
