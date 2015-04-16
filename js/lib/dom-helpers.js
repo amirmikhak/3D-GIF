@@ -9,10 +9,17 @@ var getOuterHTML = function(el) {
 var getClosest = function (elem, selector) {
     // http://gomakethings.com/ditching-jquery/
 
-    var firstChar = selector.charAt(0);
+    var firstChar = selector instanceof HTMLElement ? '' : selector.charAt(0);
 
     // Get closest match
     for ( ; elem && elem !== document; elem = elem.parentNode ) {
+
+        // If "selector" is an element
+        if ( firstChar === '' ) {
+            if ( elem === selector ) {
+                return elem;
+            }
+        }
 
         // If selector is a class
         if ( firstChar === '.' ) {

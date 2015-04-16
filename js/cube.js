@@ -1908,6 +1908,15 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             e.stopPropagation();
 
             cube.step();
+        } else if (e.ctrlKey && (e.keyCode === 192))    // ctrl+`
+        {   // toggle playlist focus
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (cube.playbackMode === 'playlist')
+            {
+                cube.playlist.focus = !cube.playlist.focus;
+            }
         } else if (e.ctrlKey && keyIsDirectionalAction(e))
         {
             e.preventDefault();

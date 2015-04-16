@@ -579,7 +579,8 @@ var Playlist = function(opts) {
     }
 
     function __documentMouseClickListener(e) {
-        if (e.target !== _containerEl)
+        var closestTileTray = getClosest(e.target, __tileTrayEl);
+        if (!closestTileTray)
         {
             playlist.focus = false;
         }
