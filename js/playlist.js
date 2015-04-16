@@ -14,10 +14,13 @@ var Playlist = function() {
     var _focus = false;
 
     var _tiles = [];        // which images to show
-    var _tileStrip = [];    // all tiles concatenated
 
+    var __tileStrip = [];    // all tiles concatenated (for column-based animations)
+    var __tilesWithSpacing = [];    // tiles but with empty tiles inserts between (for "through" animation)
     var __tileThumbs = [];
     var __tileHtmls = [];
+
+    var __emptyTile = new EmptyTile();
 
     var __userCursorPosition = 0;
     var __userCursorEl = document.createElement('div');
@@ -32,15 +35,25 @@ var Playlist = function() {
     var __animationCursorDim1 = 0;
     var __animationCursorDim2 = 0;
     var __animationStartTime = 0;
-    var __prevStripIdx = -1;
+    var __prevStripIdx = -1;    // used by across/around animations
+    var __prevTileIdx = -1;     // used by through animations
 
-    var __columnReader = function(){};
-    var __columnWriter = function(){};
+    var __columnReader = '';
+    var __columnWriter = '';
     var __animator = function(){};
 
     /**
      * PRIVATE HELPERS
      */
+
+    var __throughFaceDirectionMap = {
+        'front': 'back',
+        'back': 'forward',
+        'left': 'right',
+        'right': 'left',
+        'top': 'down',
+        'bottom': 'up',
+    };
 
     var __xzFaces = ['front', 'left', 'back', 'right'];
     var __xzFacesCursorsMap = {
@@ -57,8 +70,8 @@ var Playlist = function() {
     var __c = new Cell({on: false, color: [0,0,0]});
     var __emptyStrip = [__c,__c,__c,__c,__c,__c,__c,__c];
 
-    function __makeSpacingStrips(numStrips) {
-        numStrips = typeof numStrips !== 'undefined' ? numStrips : _spacing;
+    function __makeSpacingStrips(nStrips) {
+        var numStrips = typeof nStrips !== 'undefined' ? nStrips : _spacing;
 
         var strips = [];
 
@@ -70,15 +83,37 @@ var Playlist = function() {
         return strips;
     }
 
+    function __makeSpacingTiles(nTiles) {
+        var numTiles = typeof nTiles !== 'undefined' ? nTiles : _spacing;
+
+        var tiles = [];
+
+        for (var i = 0; i < numTiles; i++)
+        {
+            tiles.push(__emptyTile);
+        }
+
+        return tiles;
+    }
+
+    function __updateTilesWithSpacing() {
+        __tilesWithSpacing = _tiles.reduce(function(tilesWithSpacing, tile) {
+            return tilesWithSpacing.concat([tile].concat(__makeSpacingTiles()));
+        }, [])
+        __updateDuration();
+    }
+
     function __updateTileStrip() {
-        _tileStrip = _tiles.reduce(function(strips, tile) {
+        __tileStrip = _tiles.reduce(function(strips, tile) {
             return strips.concat(tile.getAsStrips()).concat(__makeSpacingStrips());
         }, []);
         __updateDuration();
     }
 
     function __updateDuration() {
-        __duration = _tileStrip.length * _frequency; // update duration, used for _loops
+        __duration = _mode === 'through' ?
+            __tilesWithSpacing.length * _frequency :
+            __tileStrip.length * _frequency; // update duration, used for _loops
     }
 
     function __updateAnimator() {
@@ -116,6 +151,13 @@ var Playlist = function() {
     }
 
     function __updateAnimationColumnTouchers() {
+        if (_mode === 'though')
+        {
+            return;
+        }
+
+        // mode is across / around
+
         var __xzFaces = ['front', 'left', 'back', 'right'];
         if (__xzFaces.indexOf(_face) !== -1)
         {
@@ -170,6 +212,7 @@ var Playlist = function() {
     }
 
     function __updateForTileChange() {
+        __updateTilesWithSpacing();
         __updateTileStrip();
         __updateTileThumbs();
         __updateTileHtmls();
@@ -233,7 +276,7 @@ var Playlist = function() {
 
             if (reverseStrips)
             {
-                _tileStrip.reverse();
+                __tileStrip.reverse();
             }
 
             __updateAnimationSettings();
@@ -271,6 +314,7 @@ var Playlist = function() {
             }
 
             _spacing = Math.max(0, parsed);   // must be int greater than 0
+            __updateTilesWithSpacing();
             __updateTileStrip();
         }
     });
@@ -475,7 +519,7 @@ var Playlist = function() {
     };
 
     this.getTileStrip = function() {
-        return _tileStrip.slice();
+        return __tileStrip.slice();
     };
 
 
@@ -487,13 +531,26 @@ var Playlist = function() {
          * PLAYBACK HELPERS
          */
 
-    function __getTileStripCursorAtMs(ms) {
-        var tick = Math.floor((_loops ? (ms % __duration) : ms) / _frequency);
-        var strip = tick > (_tileStrip.length - 1) ?
-            __emptyStrip.slice() :
-            _tileStrip[tick];
+    function __getTileAtMs(ms) {
+        var localTime = _loops ? (ms % __duration) : ms;
+        var tick = Math.floor(localTime / _frequency);
+        var tile = tick > (__tilesWithSpacing.length - 1) ?
+            __emptyTile :
+            __tilesWithSpacing[tick];
         return {
-            idx: _tileStrip.indexOf(strip), // is actually same as tick, I think?
+            idx: tick,
+            tile: tile,
+        };
+    };
+
+    function __getTileStripCursorAtMs(ms) {
+        var localTime = (_loops ? (ms % __duration) : ms);
+        var tick = Math.floor(localTime / _frequency);
+        var strip = tick > (__tileStrip.length - 1) ?
+            __emptyStrip.slice() :
+            __tileStrip[tick];
+        return {
+            idx: __tileStrip.indexOf(strip), // is actually same as tick, I think?
             strip: strip,
         };
     };
@@ -635,6 +692,25 @@ var Playlist = function() {
 
     function __animatorAround() {
         __animatorPropigateColumns(27);
+    }
+
+    function __animatorThrough() {
+        var renderTime = Date.now();
+        var tile = __getTileAtMs(renderTime - __animationStartTime);
+        var tileIdx = tile.idx;
+        var tileData = tile.tile;
+
+        if ((tileIdx !== __prevTileIdx) && (tileIdx !== -1))
+        {
+            // !TODO: desperate need of refactor
+            _cube.playbackOptions.action = 'slide';
+            _cube.playbackOptions.direction = __throughFaceDirectionMap[_face];
+            _cube.animationCb();
+            _cube.writeSlice(tileData.getCells(), _face, 0);
+            __prevTileIdx = tileIdx;
+        }
+
+        __stopIfShould(renderTime);
     }
 
         /**
