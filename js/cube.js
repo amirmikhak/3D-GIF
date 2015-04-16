@@ -51,14 +51,14 @@ var Cube = function(size, cellOpts) {
 
 
     var __validPlaybackModes = ['real-time', 'playlist'];
-    var _playbackMode = __validPlaybackModes[0];
+    var _playbackMode = __validPlaybackModes[1];
 
     var _playlist = new Playlist({
         cube: this,
         mode: 'through',
         wrapDirection: 'cw',
         face: 'front',
-        frequency: 125,
+        frequency: 100,
         spacing: 6,
         loops: true,
     });
@@ -86,8 +86,7 @@ var Cube = function(size, cellOpts) {
 
         if (data.detail.setting === 'mode')
         {
-            cube.writeFace = _writeFace;    // update the DOM
-            _playlist.face = _writeFace;    // update the playlist's model
+            cube.writeFace = _playlist.face;    // update the DOM
         }
     }
 
@@ -643,10 +642,10 @@ var Cube = function(size, cellOpts) {
                 var radioElArray = Array.prototype.slice.apply(radioElList);
                 radioElArray.forEach(function(input) {
                     input.checked = (input.value === _writeFace) ?
-                        _playlist.supportedFaces.indexOf(input.value) === -1 :
+                        _playlist.currentSupportedFaces.indexOf(input.value) === -1 :
                         false;
                     input.disabled = _playbackMode === 'playlist' ?
-                        _playlist.supportedFaces.indexOf(input.value) === -1 :
+                        _playlist.currentSupportedFaces.indexOf(input.value) === -1 :
                         false;
 
                     var swatch = input.nextElementSibling;

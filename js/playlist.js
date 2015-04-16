@@ -130,16 +130,11 @@ var Playlist = function(opts) {
     }
 
     function __updateAnimator() {
-        if (_mode === 'across')
-        {
-            __animator = __animatorAcross;
-        } else if (_mode === 'around')
-        {
-            __animator = __animatorAround;
-        } else if (_mode === 'through')
-        {
-            __animator = __animatorThrough;
-        }
+        __animator = {
+            'across': __animatorAcross,
+            'around': __animatorAround,
+            'through': __animatorThrough,
+        }[_mode];
     }
 
     function __updateAnimationCursorPosition() {
@@ -181,9 +176,15 @@ var Playlist = function(opts) {
     };
 
     function __updateAnimationSettings() {
+        __updateDuration();
         __updateAnimator();
         __updateAnimationCursorPosition();
         __updateAnimationColumnTouchers();
+
+        if (playlist.isPlaying)
+        {
+            playlist.play();
+        }
     }
 
     function __updateTileHtmls() {
@@ -272,6 +273,11 @@ var Playlist = function(opts) {
                 return;
             }
 
+            if (this.supportedFaces[newMode].indexOf(_face) === -1)
+            {
+                this.face = _face = this.supportedFaces[newMode][0];
+            }
+
             var prevMode = _mode;
             _mode = newMode;
 
@@ -302,13 +308,19 @@ var Playlist = function(opts) {
 
     Object.defineProperty(this, 'supportedFaces', {
         enumerable: false,
+        writable: false,
+        value: {
+            'through': __allFaces.slice(),
+            'across': __xzFaces.slice(),
+            'around': __xzFaces.slice(),
+        }
+    });
+
+    Object.defineProperty(this, 'currentSupportedFaces', {
+        enumerable: false,
         set: NOOP,
         get: function() {
-            return {
-                'through': __allFaces.slice(),
-                'across': __xzFaces.slice(),
-                'around': __xzFaces.slice(),
-            }[_mode];
+            return this.supportedFaces[_mode];
         }
     });
 
@@ -366,11 +378,10 @@ var Playlist = function(opts) {
                 return;
             }
 
-            var prevDirection = _wrapDirection;
-            var reverseStrips = newWrapDirection !== _wrapDirection;
+            var prevWrapDirection = _wrapDirection;
             _wrapDirection = newWrapDirection;
 
-            if (reverseStrips)
+            if (_wrapDirection !== prevWrapDirection)
             {
                 __tileStrip.reverse();
             }
@@ -381,7 +392,7 @@ var Playlist = function(opts) {
                 detail: {
                     setting: 'wrapDirection',
                     newValue: _wrapDirection,
-                    oldValue: prevDirection,
+                    oldValue: prevWrapDirection,
                 }
             }));
         }
