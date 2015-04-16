@@ -1,3 +1,11 @@
+var getOuterHTML = function(el) {
+    var tmpEl = document.createElement('div');
+    tmpEl.appendChild(el.cloneNode(false));
+    var outerHTML = tmpEl.innerHTML;
+    tmpEl = null;
+    return outerHTML;
+};
+
 var getClosest = function (elem, selector) {
     // http://gomakethings.com/ditching-jquery/
 

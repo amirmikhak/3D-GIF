@@ -25,7 +25,7 @@ var Playlist = function() {
     var __userCursorPosition = 0;
     var __userCursorEl = document.createElement('div');
     __userCursorEl.classList.add('cursor');
-    var __userCursorHtml = __getOuterHTML(__userCursorEl);
+    var __userCursorHtml = getOuterHTML(__userCursorEl);
 
     var __duration = 0;
 
@@ -189,14 +189,6 @@ var Playlist = function() {
         __tileThumbs = _tiles.map(function(tile, idx) {
             return tile.getPngData();
         });
-    }
-
-    function __getOuterHTML(el) {
-        var tmpEl = document.createElement('div');
-        tmpEl.appendChild(el.cloneNode(false));
-        var outerHTML = tmpEl.innerHTML;
-        tmpEl = null;
-        return outerHTML;
     }
 
     function __renderTileContainer() {
