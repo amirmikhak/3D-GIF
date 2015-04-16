@@ -1853,12 +1853,12 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             38: 'up',
             39: 'right',
             40: 'down',
-            70 : 'front',   // "Front:  CTRL+F"
-            66 : 'back',    // "Back:   CTRL+B"
-            85 : 'up',      // "Up:     CTRL+U"
-            68 : 'down',    // "Down:   CTRL+D"
-            82 : 'right',   // "Right:  CTRL+R"
-            76 : 'left',    // "Left:   CTRL+L"
+            70: 'front',   // "Front:  CTRL+F"
+            66: 'back',    // "Back:   CTRL+B"
+            85: 'up',      // "Up:     CTRL+U"
+            68: 'down',    // "Down:   CTRL+D"
+            82: 'right',   // "Right:  CTRL+R"
+            76: 'left',    // "Left:   CTRL+L"
         };
 
         function keyIsDirectionalAction() {
@@ -1883,7 +1883,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             e.stopPropagation();
 
             cube.togglePlaying();
-        } else if (e.keyCode === 8) // delete
+        } else if (e.keyCode === 8) // backspace
         {
             e.preventDefault();
             e.stopPropagation();
@@ -1892,7 +1892,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
             {
                 cube.pause();
                 cube.clear();   // clear whole cube
-            } else
+            } else if (cube.playbackMode !== 'playlist')
             {
                 cube.writeSlice(cube.getCharacterRender(' '), this.writeFace);   // "space" character
             }
@@ -1959,18 +1959,25 @@ Cube.prototype.listenForKeystrokes = function(opts) {
 
         var char = String.fromCharCode(e.which);
 
-        if (cube.keyListenerOptions.animate)
+        if (cube.playbackMode === 'real-time')
         {
-            cube.writeSlice(cube.getCharacterRender(char), cube.writeFace);
+            if (cube.keyListenerOptions.animate)
+            {
+                cube.writeSlice(cube.getCharacterRender(char), cube.writeFace);
 
-            cube.play({
-                direction: 'back',
-                stepSize: cube.keyListenerOptions.stepSize,
-                delay: cube.keyListenerOptions.animateRate,
-            });
-        } else
+                cube.play({
+                    direction: 'back',
+                    stepSize: cube.keyListenerOptions.stepSize,
+                    delay: cube.keyListenerOptions.animateRate,
+                });
+            } else
+            {
+                cube.writeSlice(cube.getCharacterRender(char), cube.writeFace);
+            }
+        } else if ((cube.playbackMode === 'playlist') && (cube.playlist.focus))
         {
-            cube.writeSlice(cube.getCharacterRender(char), cube.writeFace);
+            var tileContents = cube.getCharacterRender(char);
+            cube.playlist.insertTileAtAndMoveCursor(new Tile(tileContents))
         }
     };
 

@@ -530,7 +530,7 @@ var Playlist = function(opts) {
                 return;
             } else if (e.altKey && (keyMap[e.keyCode] === 'up'))
             {
-                playlist.insertTile(new Tile(cube.readSlice()), __userCursorPosition++);
+                playlist.insertTileAtAndMoveCursor(new Tile(cube.readSlice()));
                 return;
             }
 
@@ -763,6 +763,11 @@ var Playlist = function(opts) {
 
         return this;
     };
+
+    this.insertTileAtAndMoveCursor = function(newTile)
+    {
+        return this.insertTile(newTile, __userCursorPosition++);
+    }
 
     this.appendTile = function(newTile) {
         _tiles.push(newTile);
