@@ -395,9 +395,6 @@ var Playlist = function() {
     }
 
     function __containerMouseClickListener(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
         playlist.focus = true;
 
         var closestTile = getClosest(e.target, '.tile');
@@ -405,6 +402,8 @@ var Playlist = function() {
         {
             var tileClicked = playlist.getTile(closestTile.dataset.idx);
             cube.writeSlice(tileClicked.getCells());
+            e.preventDefault();
+            e.stopPropagation();
         }
     }
 
