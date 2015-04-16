@@ -87,6 +87,7 @@ var Cube = function(size, cellOpts) {
         if (data.detail.setting === 'mode')
         {
             cube.writeFace = _writeFace;    // update the DOM
+            _playlist.face = _writeFace;    // update the playlist's model
         }
     }
 
@@ -167,6 +168,11 @@ var Cube = function(size, cellOpts) {
             }
 
             _playbackMode = newMode;
+
+            if (_playbackMode === 'playlist')
+            {
+                _playlist.face = _writeFace;
+            }
 
             __updatePlaybackModeRelatedDOM();
         }
@@ -616,6 +622,11 @@ var Cube = function(size, cellOpts) {
             _writeFace = newFace;
             this.xAngle = this.faceCubeViewingAngles[newFace][0];
             this.yAngle = this.faceCubeViewingAngles[newFace][1];
+
+            if (_playbackMode === 'playlist')
+            {
+                _playlist.face = _writeFace;
+            }
 
             if (_writeFacePicker)
             {
