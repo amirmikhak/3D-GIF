@@ -1,4 +1,4 @@
-var Playlist = function() {
+var Playlist = function(opts) {
 
     var playlist = this;
 
@@ -902,6 +902,30 @@ var Playlist = function() {
         clearInterval(__playbackInterval);
         __animationStartTime = 0;
     };
+
+    this.applyOptions = function(newOpts) {
+        if (!(newOpts instanceof Object))
+        {
+            throw 'TypeError: Playlist options must be object';
+        }
+
+        var opts = Object.keys(newOpts);
+        for (var i = 0, numOpts = opts.length; i < numOpts; i++)
+        {
+            var key = opts[i];
+            if (this.hasOwnProperty(key))
+            {
+                this[key] = newOpts[key];
+            } else
+            {
+                console.error('Invalid option for Playlist:' + key);
+            }
+        }
+
+        return this;
+    };
+
+    this.applyOptions(opts);
 
     return this;
 

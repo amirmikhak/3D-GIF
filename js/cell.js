@@ -508,7 +508,7 @@ var Cell = function(opts) {
          */
         __autoRender = false;
         var opts = Object.keys(newOpts);
-        for (var i = 0; i < opts.length; i++)
+        for (var i = 0, numOpts = opts.length; i < numOpts; i++)
         {
             var key = opts[i];
             /**

@@ -48,15 +48,15 @@ var Cube = function(size, cellOpts) {
     var _writeFacePicker;
     var _playbackControls;
 
-    this.__playlist = new Playlist();
-    this.__playlist.cube = this;
-    this.__playlist.mode = 'around';
-    this.__playlist.direction = 'cw';
-    this.__playlist.face = 'front';
-    this.__playlist.frequency = 100;
-    this.__playlist.spacing = 6;
-    this.__playlist.loops = true;
-
+    var _playlist = new Playlist({
+        cube: this,
+        mode: 'through',
+        direction: 'cw',
+        face: 'front',
+        frequency: 125,
+        spacing: 6,
+        loops: true,
+    });
 
     var _fontMap = {};
     var _activeFont;
@@ -85,6 +85,14 @@ var Cube = function(size, cellOpts) {
     this.htmlReady = new Promise(function(resolve, reject) {
         htmlReadySuccessFn = resolve;
         htmlReadyFailureFn = reject;
+    });
+
+    Object.defineProperty(this, 'playlist', {
+        enumerable: false,
+        set: NOOP,
+        get: function() {
+            return _playlist;
+        },
     });
 
     Object.defineProperty(this, 'playbackOptions', {
@@ -1163,7 +1171,7 @@ var Cube = function(size, cellOpts) {
     Object.defineProperty(this, 'playlistContainer', {
         enumerable: false,
         get: function() {
-            return this.__playlist.container;
+            return _playlist.container;
         },
         set: function(newPlaylistContainerEl) {
             /**
@@ -1174,13 +1182,13 @@ var Cube = function(size, cellOpts) {
              * it was passing in, so show an error.
              */
             if ((newPlaylistContainerEl instanceof HTMLElement) &&
-                (newPlaylistContainerEl !== this.__playlist.container))
+                (newPlaylistContainerEl !== _playlist.container))
             {
-                this.__playlist.container = newPlaylistContainerEl;
+                _playlist.container = newPlaylistContainerEl;
             } else if ((newPlaylistContainerEl === null) ||
                 (typeof newPlaylistContainerEl === 'undefined'))
             {
-                this.__playlist.container = null;
+                _playlist.container = null;
             } else
             {
                 console.error('Invalid playlistContainer: must be instance of HTMLElement');
