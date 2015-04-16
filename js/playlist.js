@@ -47,7 +47,7 @@ var Playlist = function() {
         'front-cw': [7, 0],
         'front-ccw': [0, 0],
         'left-cw': [0, 0],
-        'left-ccw': [7, 7],
+        'left-ccw': [0, 7],
         'back-cw': [0, 7],
         'back-ccw': [7, 7],
         'right-cw': [7, 7],
