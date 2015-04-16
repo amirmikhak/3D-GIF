@@ -544,6 +544,7 @@ var Cube = function(size, cellOpts) {
                     }.bind(this), this.playbackOptions.delay);  // Use our "outside" this inside of the setInterval callback
                 } else if (_playbackMode === 'playlist')
                 {
+                    this.clear();
                     _playlist.play();
 
                     if (_shapePicker)
