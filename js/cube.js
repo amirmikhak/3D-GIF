@@ -87,6 +87,12 @@ var Cube = function(size, cellOpts) {
         if (data.detail.setting === 'mode')
         {
             cube.writeFace = _playlist.face;    // update the DOM
+        } else if (data.detail.setting === 'isPlaying')
+        {
+            if (!data.detail.newValue)
+            {
+                cube.isPlaying = false;
+            }
         }
     }
 

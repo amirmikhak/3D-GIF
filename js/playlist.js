@@ -927,7 +927,7 @@ var Playlist = function(opts) {
     function __stopIfShould(renderTime) {
         if (!_loops && (renderTime > __animationStartTime + __duration))
         {
-            playlist.stop();
+            playlist.isPlaying = false;
         }
     }
 
