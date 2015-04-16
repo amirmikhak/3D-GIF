@@ -63,6 +63,8 @@ var Cube = function(size, cellOpts) {
         loops: true,
     });
 
+    document.addEventListener('playlistSettingsChange', __playlistSettingsChangeListener);
+
     var _fontMap = {};
     var _activeFont = null;
 
@@ -75,6 +77,18 @@ var Cube = function(size, cellOpts) {
     var _transitionTransforms = true;
     var _rotateCells = false;
 
+
+    function __playlistSettingsChangeListener(data) {
+        if (_playbackMode !== 'playlist')
+        {
+            return;
+        }
+
+        if (data.detail.setting === 'mode')
+        {
+            cube.writeFace = _writeFace;    // update the DOM
+        }
+    }
 
     function __updatePlaybackModeRelatedDOM() {
         if (_playbackModeButton)
@@ -96,7 +110,6 @@ var Cube = function(size, cellOpts) {
                 cube.playlistContainer.style.zIndex = -1;
             }
 
-            cube.writeFace = cube.writeFace;    // update the DOM
         } else if (_playbackMode === 'playlist')
         {
             if (cube.realtimeControls)
@@ -110,10 +123,10 @@ var Cube = function(size, cellOpts) {
                 cube.playlistContainer.style.opacity = 1;
                 cube.playlistContainer.style.zIndex = 2;
             }
-
-            cube.writeFace = cube.writeFace;    // update the DOM
         }
-    };
+
+        cube.writeFace = cube.writeFace;    // update the DOM
+    }
 
     /**
      * We use this "Promise" and expose these callbacks to ensure that functions

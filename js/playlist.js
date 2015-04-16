@@ -19,6 +19,7 @@ var Playlist = function(opts) {
     var _frequency = 125;   // ms between each "tick"
     var _spacing = 4;       // number of ticks between tile rendering before next appears
     var _focus = false;
+    var _settingsChangeListener = NOOP;
 
     var _modes = ['through', 'across', 'around'];
     var _tiles = [];        // which images to show
@@ -49,6 +50,8 @@ var Playlist = function(opts) {
     var __columnReader = '';
     var __columnWriter = '';
     var __animator = NOOP;
+
+    var PLAYLIST_SETTINGS_CHANGE_NAME = 'playlistSettingsChange';
 
     /**
      * PRIVATE HELPERS
@@ -247,7 +250,17 @@ var Playlist = function(opts) {
         get: function() { return _cube; },
         set: function(newCube) {
             playlist.stop()
+
+            var prevCube = _cube;
             _cube = newCube;
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'cube',
+                    newValue: _cube,
+                    oldValue: prevCube,
+                }
+            }));
         }
     });
 
@@ -259,6 +272,7 @@ var Playlist = function(opts) {
                 return;
             }
 
+            var prevMode = _mode;
             _mode = newMode;
 
             __updateAnimationSettings();
@@ -269,6 +283,14 @@ var Playlist = function(opts) {
                 __updateDirectionRadios();
                 _containerEl.classList.toggle('show-direction-selector', (_mode !== 'through'));
             }
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'mode',
+                    newValue: _mode,
+                    oldValue: prevMode,
+                }
+            }));
         }
     });
 
@@ -319,9 +341,18 @@ var Playlist = function(opts) {
                 return;
             }
 
+            var prevFace = _face;
             _face = newFace;
 
             __updateAnimationSettings();
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'face',
+                    newValue: _face,
+                    oldValue: prevFace,
+                }
+            }));
         }
     });
 
@@ -333,6 +364,7 @@ var Playlist = function(opts) {
                 return;
             }
 
+            var prevDirection = _direction;
             var reverseStrips = newDirection !== _direction;
             _direction = newDirection;
 
@@ -342,18 +374,35 @@ var Playlist = function(opts) {
             }
 
             __updateAnimationSettings();
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'direction',
+                    newValue: _direction,
+                    oldValue: prevDirection,
+                }
+            }));
         }
     });
 
     Object.defineProperty(this, 'loops', {
         get: function() { return _loops; },
         set: function(shouldLoop) {
+            var prevLoops = _loops;
             _loops = !!shouldLoop;
 
             if (_containerEl)
             {
                 __loopsCbEl.checked = _loops;
             }
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'loops',
+                    newValue: _loops,
+                    oldValue: prevLoops,
+                }
+            }));
         }
     });
 
@@ -366,8 +415,17 @@ var Playlist = function(opts) {
                 return;
             }
 
+            var prevFrequency = _frequency;
             _frequency = Math.max(0, parsed);   // must be int greater than 0
             __updateDuration();
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'frequency',
+                    newValue: _frequency,
+                    oldValue: prevFrequency,
+                }
+            }));
         }
     });
 
@@ -380,15 +438,26 @@ var Playlist = function(opts) {
                 return;
             }
 
+            var prevSpacing = _spacing;
             _spacing = Math.max(0, parsed);   // must be int greater than 0
             __updateTilesWithSpacing();
             __updateTileStrip();
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'spacing',
+                    newValue: _spacing,
+                    oldValue: prevSpacing,
+                }
+            }));
         }
     });
 
     Object.defineProperty(this, 'isPlaying', {
         get: function() { return __animationStartTime !== 0; },
         set: function(shouldPlay) {
+            var prevPlaying = this.isPlaying;
+
             if (!!shouldPlay)
             {
                 playlist.play();
@@ -396,12 +465,21 @@ var Playlist = function(opts) {
             {
                 playlist.stop();
             }
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'isPlaying',
+                    newValue: shouldPlay,
+                    oldValue: prevPlaying,
+                }
+            }));
         }
     });
 
     Object.defineProperty(this, 'focus', {
         get: function() { return _focus; },
         set: function(inFocus) {
+            var prevFocus = _focus;
             _focus = !!inFocus;
 
             if (_containerEl)
@@ -409,6 +487,14 @@ var Playlist = function(opts) {
                 _containerEl.classList.toggle('focus', _focus);
                 __renderTileContainer();
             }
+
+            document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
+                detail: {
+                    setting: 'focus',
+                    newValue: _focus,
+                    oldValue: prevFocus,
+                }
+            }));
         }
     });
 
