@@ -36,6 +36,8 @@ var Cube = function(size, cellOpts) {
     var _cellOptions = _.extend({}, defaultCellOptions, cellOpts || {});
     var _keyListenerOptions = _.extend({}, defaultKeyListenerOptions);
 
+    var _cells = [];
+
     var _container = null;
 
     var _playbackModeButton = null;
@@ -181,6 +183,14 @@ var Cube = function(size, cellOpts) {
     this.htmlReady = new Promise(function(resolve, reject) {
         htmlReadySuccessFn = resolve;
         htmlReadyFailureFn = reject;
+    });
+
+    Object.defineProperty(this, 'cells', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            return _cells;
+        },
     });
 
     Object.defineProperty(this, 'playlist', {
@@ -671,8 +681,29 @@ var Cube = function(size, cellOpts) {
             }
 
             _writeFace = newFace;
+
+            // set Cube viewing angle
             this.xAngle = this.faceCubeViewingAngles[newFace][0];
             this.yAngle = this.faceCubeViewingAngles[newFace][1];
+
+            // set which cells are interactive
+            for (var i = 0, numCells = _cells.length; i < numCells; i++)
+            {
+                var cell = _cells[i];
+
+                var shouldBeInteractive = {
+                    front: (cell.depth === 0),
+                    left: (cell.column === 0),
+                    back: (cell.depth === 7),
+                    right: (cell.column === 7),
+                    top: (cell.row === 0),
+                    bottom: (cell.row === 7),
+                }[_writeFace];
+
+                cell.applyOptions({
+                    interactive: shouldBeInteractive,
+                });
+            }
 
             if (_playbackMode === 'playlist')
             {
