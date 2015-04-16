@@ -127,6 +127,12 @@ var Playlist = function() {
         }
     };
 
+    function __updateAnimationSettings() {
+        __updateAnimator();
+        __updateAnimationCursorPosition();
+        __updateAnimationColumnTouchers();
+    }
+
     function __updateTileHtmls() {
         __tileHtmls = _tiles.map(function(tile, idx) {
             return (
@@ -163,6 +169,14 @@ var Playlist = function() {
         }
     }
 
+    function __updateForTileChange() {
+        __updateTileStrip();
+        __updateTileThumbs();
+        __updateTileHtmls();
+
+        __renderTileContainer();
+    }
+
 
     /**
      * PROPERTIES
@@ -186,9 +200,7 @@ var Playlist = function() {
 
             _mode = newMode;
 
-            __updateAnimator();
-            __updateAnimationCursorPosition();
-            __updateAnimationColumnTouchers();
+            __updateAnimationSettings();
         }
     });
 
@@ -203,8 +215,7 @@ var Playlist = function() {
 
             _face = newFace;
 
-            __updateAnimationCursorPosition();
-            __updateAnimationColumnTouchers();
+            __updateAnimationSettings();
         }
     });
 
@@ -224,8 +235,8 @@ var Playlist = function() {
             {
                 _tileStrip.reverse();
             }
-            __updateAnimationCursorPosition();
-            __updateAnimationColumnTouchers();
+
+            __updateAnimationSettings();
         }
     });
 
@@ -420,11 +431,7 @@ var Playlist = function() {
 
         _tiles.splice(newIndex, 0, _tiles.splice(tileIndex, 1));
 
-        __updateTileStrip();
-        __updateTileThumbs();
-        __updateTileHtmls();
-
-        __renderTileContainer();
+        __updateForTileChange();
 
         return this;
     };
@@ -438,11 +445,7 @@ var Playlist = function() {
 
         _tiles.splice(index, 0, newTile);
 
-        __updateTileStrip();
-        __updateTileThumbs();
-        __updateTileHtmls();
-
-        __renderTileContainer();
+        __updateForTileChange();
 
         return this;
     };
@@ -450,11 +453,7 @@ var Playlist = function() {
     this.appendTile = function(newTile) {
         _tiles.push(newTile);
 
-        __updateTileStrip();
-        __updateTileThumbs();
-        __updateTileHtmls();
-
-        __renderTileContainer();
+        __updateForTileChange();
 
         return this;
     };
@@ -462,11 +461,7 @@ var Playlist = function() {
     this.removeTile = function(tile) {
         _tiles.splice(_tiles.indexOf(tile), 1);
 
-        __updateTileStrip();
-        __updateTileThumbs();
-        __updateTileHtmls();
-
-        __renderTileContainer();
+        __updateForTileChange();
 
         return this;
     };
@@ -474,11 +469,7 @@ var Playlist = function() {
     this.replaceTile = function(index, tile) {
         _tiles.splice(index, 1, tile);
 
-        __updateTileStrip();
-        __updateTileThumbs();
-        __updateTileHtmls();
-
-        __renderTileContainer();
+        __updateForTileChange();
 
         return this;
     };
