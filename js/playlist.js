@@ -498,23 +498,11 @@ var Playlist = function() {
         };
     };
 
-    function __getCursorColumnForAnimationAround() {
-        if (_face === 'front')
-        {
-            return _direction === 'cw' ? [7, 0] : [0, 0];
-        } else if (_face === 'left')
-        {
-            return _direction === 'cw' ? [0, 0] : [0, 7];
-        } else if (_face === 'back')
-        {
-            return _direction === 'cw' ? [7, 0] : [7, 7];
-        } else if (_face === 'right')
-        {
-            return _direction === 'cw' ? [7, 7] : [7, 0];
-        }
+    function __getCursorColumn() {
+        return [__animationCursorDim1, __animationCursorDim2];
     }
 
-    function __getNextColumnForAnimationAround(dim1, dim2) {
+    function __getNextCursorColumn(dim1, dim2) {
         var nextDims = [dim1, dim2];  // nextDim1, nextDim2
 
         if (__xzFaces.indexOf(_face) !== -1)
@@ -579,10 +567,6 @@ var Playlist = function() {
         return nextDims;
     }
 
-    function __getCursorColumnForAnimationAcross() {
-        return __getCursorColumnForAnimationAround();
-    }
-
     function __stopIfShould(renderTime) {
         if (!_loops && (renderTime > __animationStartTime + __duration))
         {
@@ -590,51 +574,19 @@ var Playlist = function() {
         }
     }
 
-    function __rippleAcross() {
-        if (_direction === 'cw')
-        {
-            for (var i = 0; i < 7; i++)
-            {
-                _cube[__columnWriter](i, 0, _cube[__columnReader](i + 1, 0));
-            }
-        } else
-        {
-            for (var i = 7; i > 0; i--)
-            {
-                _cube[__columnWriter](i, 0, _cube[__columnReader](i - 1, 0));
-            }
-        }
-    }
-
-    function __animatorAcross() {
-        var renderTime = Date.now();
-        var strip = __getTileStripCursorAtMs(renderTime - __animationStartTime);
-        var stripIdx = strip.idx;
-        var stripData = strip.strip;
-
-        if ((stripIdx !== __prevStripIdx) && (stripIdx !== -1))
-        {
-            __rippleAcross();
-            _cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
-            __prevStripIdx = stripIdx;
-        }
-
-        __stopIfShould(renderTime);
-    }
-
-    function __rippleAround() {
-        var start = __getCursorColumnForAnimationAround();
+    function __propigateColumns(numColumns) {
+        var start = __getCursorColumn();
         var dirtyCols = [start];
-        for (var i = 0; i < 27; i++)    // 7 * 4 = the perimeter
+        for (var i = 0; i < numColumns; i++)
         {
             var lv = dirtyCols[dirtyCols.length - 1]; // lv: last value
-            var nd = __getNextColumnForAnimationAround(lv[0], lv[1]); // nd: new dimensions
+            var nd = __getNextCursorColumn(lv[0], lv[1]); // nd: new dimensions
             dirtyCols.push(nd);
         }
 
         dirtyCols.reverse();
 
-        for (var i = 0; i < 27; i++)
+        for (var i = 0; i < numColumns; i++)
         {
             var srcDim1 = dirtyCols[i + 1][0];
             var srcDim2 = dirtyCols[i + 1][1];
@@ -647,7 +599,7 @@ var Playlist = function() {
         }
     }
 
-    function __animatorAround() {
+    function __animatorPropigateColumns(numColumns) {
         var renderTime = Date.now();
         var strip = __getTileStripCursorAtMs(renderTime - __animationStartTime);
         var stripIdx = strip.idx;
@@ -655,12 +607,20 @@ var Playlist = function() {
 
         if ((stripIdx !== __prevStripIdx) && (stripIdx !== -1))
         {
-            __rippleAround();
+            __propigateColumns(numColumns);
             _cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
             __prevStripIdx = stripIdx;
         }
 
         __stopIfShould(renderTime);
+    }
+
+    function __animatorAcross() {
+        __animatorPropigateColumns(7);
+    }
+
+    function __animatorAround() {
+        __animatorPropigateColumns(27);
     }
 
         /**
