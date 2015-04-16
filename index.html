@@ -3,8 +3,10 @@
 
 <head>
     <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
     <link rel="stylesheet" type="text/css" href="css/cube.css" />
     <script type="text/javascript" src="js/lib/lodash.js"></script>
+    <script type="text/javascript" src="js/lib/dom-helpers.js"></script>
 </head>
 
 <body class="l3d">
@@ -12,8 +14,12 @@
         <div id="cube-wrapper">
             <div id="write-face-picker"></div>
             <div id="color-picker"></div>
-            <div id="playback-controls"></div>
+            <div id="playback-controls">
+                <div id="realtime-controls"></div>
+                <div id="playlist-controls"></div>
+            </div>
             <div id="controls">
+                <div id="playback-mode" class="control-button">--</div>
                 <div id="prev-step" class="control-button">Prev</div>
                 <div id="next-step" class="control-button">Next</div>
                 <div id="play" class="control-button">Play</div>
