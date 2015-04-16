@@ -300,7 +300,9 @@ var Cell = function(opts) {
         }
     });
 
-    function mouseClickHandler(event) {
+    function mouseClickHandler(e) {
+        e.preventDefault();
+
         cell.applyOptions({
             on: !_options['on'], // Toggle my on status when someone clicks the cell
             /**
@@ -311,7 +313,8 @@ var Cell = function(opts) {
         });
     }
 
-    function mouseDownHandler(event) {
+    function mouseDownHandler(e) {
+        e.preventDefault();
 
         // if start on an on cell the same color as we, clear next ones,
         // otherwise continue to draw in cube's penColor
@@ -328,17 +331,19 @@ var Cell = function(opts) {
             dragSetOn: newDragSetOn,
             dragSetColor: newDragSetColor,
         });
-
-        mouseClickHandler(event);
     }
 
-    function mouseUpHandler(event) {
+    function mouseUpHandler(e) {
+        e.preventDefault();
+
         CellDraggingDelegate.get().applyOptions({
             isDragging: false,
         });
     }
 
-    function mouseMoveHandler(event) {
+    function mouseMoveHandler(e) {
+        e.preventDefault();
+
         var dragDelegate = CellDraggingDelegate.get();
         if (dragDelegate.isDragging)
         {
