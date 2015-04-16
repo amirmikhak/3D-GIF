@@ -164,7 +164,7 @@ var Playlist = function(opts) {
     }
 
     function __updateAnimationColumnTouchers() {
-        if (_mode === 'though')
+        if (_mode === 'through')
         {
             return;
         }
@@ -176,7 +176,7 @@ var Playlist = function(opts) {
             __columnWriter = 'writeXZCol';
         } else
         {
-            console.error('Cannot set cursor touchers. Can only deal with xz faces now.');
+            console.error('Cannot set cursor touchers. Can only deal with xz faces now.', _mode);
         }
     };
 
