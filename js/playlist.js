@@ -911,8 +911,6 @@ var Playlist = function(opts) {
                 return __nextCCXZFaceCcw(dim1, dim2);
             }
         }
-
-        return nextDims;
     }
 
     function __stopIfShould(renderTime) {
