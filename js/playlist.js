@@ -10,11 +10,11 @@ var Playlist = function(opts) {
     var __tileTrayEl = null;
     var __loopsCbEl = null;
     var __modeSelectorEl = null;
-    var __directionSelectorEl = null;
+    var __wrapDirectionSelectorEl = null;
 
     var _mode = 'through';
     var _face = 'front';
-    var _direction = 'cw';
+    var _wrapDirection = 'cw';
     var _loops = false;
     var _frequency = 125;   // ms between each "tick"
     var _spacing = 4;       // number of ticks between tile rendering before next appears
@@ -150,11 +150,11 @@ var Playlist = function(opts) {
             return;
         }
 
-        var cursorMapKey = [_face, _direction].join('-');
+        var cursorMapKey = [_face, _wrapDirection].join('-');
 
         if (Object.keys(__xzFacesCursorsMap).indexOf(cursorMapKey) === -1)
         {
-            console.error('Could not update animator cursor for current settings', _face, _direction);
+            console.error('Could not update animator cursor for current settings', _face, _wrapDirection);
             return;
         }
 
@@ -223,13 +223,13 @@ var Playlist = function(opts) {
         __renderTileContainer();
     }
 
-    function __updateDirectionRadios() {
+    function __updateWrapDirectionRadios() {
         var radioSelector = 'input[type="radio"][name="wrap-direction"]';
-        var radiosElList = __directionSelectorEl.querySelectorAll(radioSelector)
+        var radiosElList = __wrapDirectionSelectorEl.querySelectorAll(radioSelector)
         var radioElArray = Array.prototype.slice.apply(radiosElList);
         radioElArray.forEach(function(input) {
             // check or uncheck each of the radio buttons
-            input.checked = (input.value == _direction);
+            input.checked = (input.value == _wrapDirection);
         });
     }
 
@@ -280,7 +280,7 @@ var Playlist = function(opts) {
             if (_containerEl)
             {
                 __updateModeRadios();
-                __updateDirectionRadios();
+                __updateWrapDirectionRadios();
                 _containerEl.classList.toggle('show-direction-selector', (_mode !== 'through'));
             }
 
@@ -312,7 +312,7 @@ var Playlist = function(opts) {
         }
     });
 
-    Object.defineProperty(this, 'directions', {
+    Object.defineProperty(this, 'wrapDirections', {
         enumerable: true,
         writable: false,
         value: ['ccw', 'cw'],   // ccw: to the right, cw: to the left
@@ -356,17 +356,19 @@ var Playlist = function(opts) {
         }
     });
 
-    Object.defineProperty(this, 'direction', {
-        get: function() { return _direction; },
-        set: function(newDirection) {
-            if (this.directions.indexOf(newDirection) === -1)
+    Object.defineProperty(this, 'wrapDirection', {
+        get: function() { return _wrapDirection; },
+        set: function(newWrapDirection) {
+            if (this.wrapDirections.indexOf(newWrapDirection) === -1)
             {
+                console.error('Invalid wrapDirection: ' + newWrapDirection + '. ' +
+                    'Valid wrapDirections: ' + this.wrapDirections);
                 return;
             }
 
-            var prevDirection = _direction;
-            var reverseStrips = newDirection !== _direction;
-            _direction = newDirection;
+            var prevDirection = _wrapDirection;
+            var reverseStrips = newWrapDirection !== _wrapDirection;
+            _wrapDirection = newWrapDirection;
 
             if (reverseStrips)
             {
@@ -377,8 +379,8 @@ var Playlist = function(opts) {
 
             document.dispatchEvent(new CustomEvent(PLAYLIST_SETTINGS_CHANGE_NAME, {
                 detail: {
-                    setting: 'direction',
-                    newValue: _direction,
+                    setting: 'wrapDirection',
+                    newValue: _wrapDirection,
                     oldValue: prevDirection,
                 }
             }));
@@ -502,7 +504,7 @@ var Playlist = function(opts) {
         if (_containerEl)
         {
             playlist.mode = _mode;
-            playlist.direction = _direction;
+            playlist.wrapDirection = _wrapDirection;
             playlist.loops = _loops;
             __renderTileContainer();
         }
@@ -534,14 +536,14 @@ var Playlist = function(opts) {
                 return;
             }
 
-            var directionNewValueMap = {
+            var wrapDirectionNewValueMap = {
                 'up': 0,
                 'down': _tiles.length,
                 'left': __userCursorPosition - 1,
                 'right': __userCursorPosition + 1,
             };
 
-            var newPosition = directionNewValueMap[keyMap[e.keyCode]];
+            var newPosition = wrapDirectionNewValueMap[keyMap[e.keyCode]];
             __userCursorPosition = Math.max(0, Math.min(_tiles.length, newPosition));
             __renderTileContainer();
 
@@ -611,9 +613,9 @@ var Playlist = function(opts) {
             } else if (e.target.name === 'mode')
             {
                 playlist.mode = e.target.value;
-            } else if (e.target.name === 'direction')
+            } else if (e.target.name === 'wrap-direction')
             {
-                playlist.direction = e.target.value;
+                playlist.wrapDirection = e.target.value;
             }
         }
     }
@@ -641,7 +643,7 @@ var Playlist = function(opts) {
         __tileTrayEl = null;
         __loopsCbEl = null;
         __modeSelectorEl = null;
-        __directionSelectorEl = null;
+        __wrapDirectionSelectorEl = null;
     }
 
     function __buildModeSelectorHtml() {
@@ -652,10 +654,10 @@ var Playlist = function(opts) {
             );
         }).join('');
 
-        var directionOptionsHtml = playlist.directions.map(function(direction) {
+        var wrapDirectionOptionsHtml = playlist.wrapDirections.map(function(wrapDirection) {
             return (
-                '<input id="direction-radio-' + direction + '" type="radio" name="wrap-direction" value="' + direction + '" />' +
-                '<label for="direction-radio-' + direction + '" class="control-button radio-tab"><span>' + direction + '</span></label>'
+                '<input id="wrap-direction-radio-' + wrapDirection + '" type="radio" name="wrap-direction" value="' + wrapDirection + '" />' +
+                '<label for="wrap-direction-radio-' + wrapDirection + '" class="control-button radio-tab"><span>' + wrapDirection + '</span></label>'
             );
         }).join('');
 
@@ -663,8 +665,8 @@ var Playlist = function(opts) {
             '<div class="mode-selector radio-tabs mini vertical">' +
                 modeOptionsHtml +
             '</div>' +
-            '<div class="direction-selector radio-tabs mini vertical">' +
-                directionOptionsHtml +
+            '<div class="wrap-direction-selector radio-tabs mini vertical">' +
+                wrapDirectionOptionsHtml +
             '</div>'
         );
     }
@@ -690,7 +692,7 @@ var Playlist = function(opts) {
         __tileTrayEl = _containerEl.querySelector('.tile-tray');
         __loopsCbEl = _containerEl.querySelector('input[name="loop"]');
         __modeSelectorEl = _containerEl.querySelector('.mode-selector');
-        __directionSelectorEl = _containerEl.querySelector('.direction-selector');
+        __wrapDirectionSelectorEl = _containerEl.querySelector('.wrap-direction-selector');
 
         __bindContainerMouseListeners();
         __bindContainerChangeListeners();
@@ -707,7 +709,7 @@ var Playlist = function(opts) {
             {
                 __buildPlaylistEl(newContainer);
                 this.mode = _mode;
-                this.direction = _direction;
+                this.wrapDirection = _wrapDirection;
             } else if ((newContainer === null) ||
                 (typeof newContainer === 'undefined'))
             {
@@ -901,11 +903,11 @@ var Playlist = function(opts) {
     function __getNextCursorColumn(dim1, dim2) {
         if (__xzFaces.indexOf(_face) !== -1)
         {
-            if (_direction === 'cw')
+            if (_wrapDirection === 'cw')
             {   // x = dim1, z = dim2
                 return __nextCCXZFaceCw(dim1, dim2);
             } else
-            {   // _direction === 'ccw'; x = dim1, z = dim2
+            {   // _wrapDirection === 'ccw'; x = dim1, z = dim2
                 return __nextCCXZFaceCcw(dim1, dim2);
             }
         }
@@ -979,7 +981,7 @@ var Playlist = function(opts) {
         {
             // !TODO: desperate need of refactor
             _cube.playbackOptions.action = 'slide';
-            _cube.playbackOptions.direction = __throughFaceDirectionMap[_face];
+            _cube.playbackOptions.wrapDirection = __throughFaceDirectionMap[_face];
             _cube.animationCb();
             _cube.writeSlice(tileData.getCells(), _face, 0);
             __prevTileIdx = tileIdx;

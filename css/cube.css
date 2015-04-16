@@ -358,7 +358,7 @@ body {
     transition: left 300ms ease-in-out;
 }
 
-#playlist-controls .direction-selector {
+#playlist-controls .wrap-direction-selector {
     box-sizing: border-box;
     position: absolute;
     top: calc(50% - 37.5px);
@@ -378,7 +378,7 @@ body {
     left: -182px;
 }
 
-#playlist-controls.show-direction-selector .direction-selector {
+#playlist-controls.show-direction-selector .wrap-direction-selector {
     width: 50px;
 }
 

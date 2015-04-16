@@ -56,7 +56,7 @@ var Cube = function(size, cellOpts) {
     var _playlist = new Playlist({
         cube: this,
         mode: 'through',
-        direction: 'cw',
+        wrapDirection: 'cw',
         face: 'front',
         frequency: 125,
         spacing: 6,
