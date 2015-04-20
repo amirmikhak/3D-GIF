@@ -1,7 +1,11 @@
+
 function fetchJSONFile(path, successCb, failureCb) {
     /**
      * Helper function to make AJAX loading nicer. Grabbed from here: http://stackoverflow.com/questions/14388452/how-do-i-load-a-json-object-from-a-file-with-ajax
      */
+
+    var NOOP = function() {};
+
     var httpRequest = new XMLHttpRequest();
     httpRequest.onreadystatechange = function() {
         if (httpRequest.readyState === 4)
@@ -20,9 +24,11 @@ function fetchJSONFile(path, successCb, failureCb) {
     };
     httpRequest.open('GET', path);
     httpRequest.send();
+
 }
 
 function tryJSON(data, validator) {
+
     var retData = data;
     try
     {   // handle different types of data input: JSON or raw object
@@ -37,4 +43,5 @@ function tryJSON(data, validator) {
     }
 
     return retData;
+
 }

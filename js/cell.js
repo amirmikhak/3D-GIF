@@ -532,6 +532,8 @@ var Cell = function(opts) {
         }
         render();   // manually render all changes
         __autoRender = true;    // re-enable auto-rendering
+
+        return this;
     };
 
     (function buildHTML() {
@@ -557,7 +559,7 @@ Cell.prototype.setFromCell = function(otherCell) {
     /**
      * Copy visual properties from another cell into self.
      */
-    this.applyOptions({
+    return this.applyOptions({
         color: otherCell.color,
         on: otherCell.on,
     });

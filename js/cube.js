@@ -1714,8 +1714,7 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     return this;    // enables multiple calls on cube to be "chained"
 };
 
-Cell.prototype.dimensionOutOfBounds = function(dimValue) {
-    return (vimValue < 0) || (vimValue >= this.size);
+Cube.prototype.dimensionOutOfBounds = function(dimValue) {
 }
 
 Cell.prototype.invalidCoord = function(r, c, d) {
