@@ -22,3 +22,19 @@ function fetchJSONFile(path, successCb, failureCb) {
     httpRequest.send();
 }
 
+function tryJSON(data, validator) {
+    var retData = data;
+    try
+    {   // handle different types of data input: JSON or raw object
+        retData = JSON.parse(retData);    // throws SyntaxError if not valid JSON string
+    } catch (err)
+    {   // pass
+    }
+
+    if (!validator(retData))
+    {
+        throw 'Malformed data';
+    }
+
+    return retData;
+}

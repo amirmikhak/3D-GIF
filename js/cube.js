@@ -2297,19 +2297,7 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         face :
         'front';
 
-    var dataToUse = data;
-
-    try
-    {   // handle different types of data input: JSON or raw object
-        dataToUse = JSON.parse(dataToUse);    // throws SyntaxError if not valid JSON string
-    } catch (err)
-    {   // pass
-    }
-
-    if (!(dataToUse instanceof Array) || (dataToUse.length !== Math.pow(this.size, 2)))
-    {
-        throw 'Malformed data';
-    }
+    var dataToUse = tryJSON(data, this.sliceValidator.bind(this));
 
     var dataTile = new Tile(dataToUse);
 
