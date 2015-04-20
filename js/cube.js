@@ -65,8 +65,6 @@ var Cube = function(size, cellOpts) {
         loops: true,
     });
 
-    document.addEventListener('playlistSettingsChange', __playlistSettingsChangeListener);
-
     var _fontMap = {};
     var _activeFont = null;
 
@@ -79,6 +77,7 @@ var Cube = function(size, cellOpts) {
     var _transitionTransforms = true;
     var _rotateCells = false;
 
+    document.addEventListener('playlistSettingsChange', __playlistSettingsChangeListener);
 
     function __playlistSettingsChangeListener(data) {
         if (_playbackMode !== 'playlist')
@@ -1478,42 +1477,43 @@ var Cube = function(size, cellOpts) {
         },
     });
 
+
     /**
      * These functions are attached inside of the original definition of the cube
      * because they need access to "private" variables: _fontMap, _shapeMap.
      */
 
-     this.loadFont = function(handle, url) {
-         /**
-          * Load a remote JSON file of a map of characters that can be displayed on
-          * the cube. Save the loaded map of shapes by a handle for optional removal.
-          */
+    this.loadFont = function(handle, url) {
+        /**
+         * Load a remote JSON file of a map of characters that can be displayed on
+         * the cube. Save the loaded map of shapes by a handle for optional removal.
+         */
 
-        // this fetch is asynchronous
-        fetchJSONFile(url, function(fontData) {
-            _fontMap[handle] = fontData;
-            if (Object.keys(_fontMap).length === 1)
-            {   // if this newly loaded font is the only one available...
-                this.activeFont = handle;   // ... use it.
-            }
-        }.bind(this));  // Use our "outside" this inside of the ajax success callback
-     };
+       // this fetch is asynchronous
+       fetchJSONFile(url, function(fontData) {
+           _fontMap[handle] = fontData;
+           if (Object.keys(_fontMap).length === 1)
+           {   // if this newly loaded font is the only one available...
+               this.activeFont = handle;   // ... use it.
+           }
+       }.bind(this));  // Use our "outside" this inside of the ajax success callback
+    };
 
-     this.unloadFont = function(handle) {
-         /**
-          * Unload a previously loaded font.
-          */
+    this.unloadFont = function(handle) {
+        /**
+        * Unload a previously loaded font.
+        */
 
-        delete(_fontMap[handle]);
+       delete(_fontMap[handle]);
 
-        if (!Object.keys(_fontMap).length)
-        {   // if there aren't any more loaded fonts after unloading this one...
-            _activeFont = undefined;    // ... we can't have an active font
-        } else if (handle === _activeFont)
-        {   // if we unloaded our current font, but have another available...
-            _activeFont = Object.keys(_fontMap)[0]; // ... use it
-        }
-     };
+       if (!Object.keys(_fontMap).length)
+       {   // if there aren't any more loaded fonts after unloading this one...
+           _activeFont = undefined;    // ... we can't have an active font
+       } else if (handle === _activeFont)
+       {   // if we unloaded our current font, but have another available...
+           _activeFont = Object.keys(_fontMap)[0]; // ... use it
+       }
+    };
 
     /**
      * INIT CODE
