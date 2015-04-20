@@ -73,9 +73,6 @@ var Tile = function(cells) {
     };
 
     this.getPngData = function() {
-        /**
-         * Mostly copied verbatim from cube.js's Cube.prototype.getPngDataOfSlice().
-         */
         var PNG_OUTPUT_WIDTH = 64;
         var PNG_OUTPUT_HEIGHT = 64;
 

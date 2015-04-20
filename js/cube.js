@@ -38,22 +38,8 @@ var Cube = function(size, cellOpts) {
 
     var _cells = [];
 
-    var _container = null;
-
-    var _playbackModeButton = null;
-    var _prevStepButton = null;
-    var _nextStepButton = null;
-    var _playButton = null;
-    var _clearButton = null;
-
-    var _colorPicker = null;
-    var _shapePicker = null;
-    var _writeFacePicker = null;
-    var _realtimeControls = null;
-
-
     var __validPlaybackModes = ['real-time', 'playlist'];
-    var _playbackMode = __validPlaybackModes[1];
+    var _playbackMode = __validPlaybackModes[0];
 
     var _playlist = new Playlist({
         cube: this,
@@ -77,6 +63,8 @@ var Cube = function(size, cellOpts) {
     var _transitionTransforms = true;
     var _rotateCells = false;
 
+    var _html = document.createElement('div');
+
     document.addEventListener('playlistSettingsChange', __playlistSettingsChangeListener);
 
     function __playlistSettingsChangeListener(data) {
@@ -97,76 +85,12 @@ var Cube = function(size, cellOpts) {
         }
     }
 
-    function __updatePlaybackModeRelatedDOM() {
-        if (_playbackModeButton)
-        {
-            _playbackModeButton.innerHTML = _playbackMode;
-        }
-
-        if (_playbackMode === 'real-time')
-        {
-            if (_shapePicker)
-            {
-                _shapePicker.classList.remove('disabled');
-            }
-
-            if (_prevStepButton)
-            {
-                _prevStepButton.style.display = 'inherit';
-            }
-
-            if (_nextStepButton)
-            {
-                _nextStepButton.style.display = 'inherit';
-            }
-
-            if (cube.realtimeControls)
-            {
-                cube.realtimeControls.style.opacity = 1;
-                cube.realtimeControls.style.zIndex = 2;
-            }
-
-            if (cube.playlistContainer)
-            {
-                cube.playlistContainer.style.opacity = 0;
-                cube.playlistContainer.style.zIndex = -1;
-            }
-
-        } else if (_playbackMode === 'playlist')
-        {
-            _playlist.face = _writeFace;
-
-            if (_shapePicker && _playlist.isPlaying)
-            {
-                _shapePicker.classList.add('disabled');
-            }
-
-            if (_prevStepButton)
-            {
-                _prevStepButton.style.display = 'none';
-            }
-
-            if (_nextStepButton)
-            {
-                _nextStepButton.style.display = 'none';
-            }
-
-            if (cube.realtimeControls)
-            {
-                cube.realtimeControls.style.opacity = 0;
-                cube.realtimeControls.style.zIndex = -1;
-            }
-
-            if (cube.playlistContainer)
-            {
-                cube.playlistContainer.style.opacity = 1;
-                cube.playlistContainer.style.zIndex = 2;
-            }
-        }
-
-        cube.writeFace = _writeFace;
-        cube.playbackOptions = _playbackOptions;
-    }
+    this.sliceValidator = function(dataToValidate) {
+        /**
+         * Verify that a "slice" object is is valid (enough)
+         */
+        return (dataToValidate instanceof Array) && (dataToValidate.length === Math.pow(this.size, 2));
+    };
 
     /**
      * We use this "Promise" and expose these callbacks to ensure that functions
@@ -177,34 +101,46 @@ var Cube = function(size, cellOpts) {
      * https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
      * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
      */
-    var htmlReadySuccessFn;
-    var htmlReadyFailureFn;
-    this.htmlReady = new Promise(function(resolve, reject) {
-        htmlReadySuccessFn = resolve;
-        htmlReadyFailureFn = reject;
+    var __htmlReadySuccessFn;
+    var __htmlReadyFailureFn;
+    var _htmlReady = new Promise(function(resolve, reject) {
+        __htmlReadySuccessFn = resolve;
+        __htmlReadyFailureFn = reject;
+    });
+
+    Object.defineProperty(this, 'html', {
+        enumerable: false,
+        set: NOOP,
+        get: function() { return _html; },
+    });
+
+    Object.defineProperty(this, 'htmlReady', {
+        enumerable: false,
+        set: NOOP,
+        get: function() { return _htmlReady; },
+    });
+
+    Object.defineProperty(this, 'outerDimensions', {
+        enumerable: false,
+        set: NOOP,
+        get: function() { return this.size * _cellOptions.size; }
     });
 
     Object.defineProperty(this, 'cells', {
         enumerable: true,
         set: NOOP,
-        get: function() {
-            return _cells;
-        },
+        get: function() { return _cells; },
     });
 
     Object.defineProperty(this, 'playlist', {
         enumerable: false,
         set: NOOP,
-        get: function() {
-            return _playlist;
-        },
+        get: function() { return _playlist; },
     });
 
     Object.defineProperty(this, 'playbackMode', {
         enumerable: true,
-        get: function() {
-            return _playbackMode;
-        },
+        get: function() { return _playbackMode; },
         set: function(newMode) {
             if (__validPlaybackModes.indexOf(newMode) === -1)
             {
@@ -213,9 +149,26 @@ var Cube = function(size, cellOpts) {
                 return;
             }
 
+            var prevPlaybackMode = _playbackMode;
             _playbackMode = newMode;
 
-            __updatePlaybackModeRelatedDOM();
+            _html.dispatchEvent(new CustomEvent('propertyChanged', {
+                detail: {
+                    setting: 'playbackMode',
+                    newValue: _playbackMode,
+                    oldValue: prevPlaybackMode,
+                }
+            }));
+        }
+    });
+
+    Object.defineProperty(this, 'nextPlaybackMode', {
+        enumerable: true,
+        set: NOOP,
+        get: function() {
+            var currModeIndex = __validPlaybackModes.indexOf(_playbackMode);
+            var numModes = __validPlaybackModes.length;
+            return __validPlaybackModes[(currModeIndex + 1) % numModes];
         }
     });
 
@@ -225,13 +178,9 @@ var Cube = function(size, cellOpts) {
          * to generate the next frame.
          */
         enumerable: true,
-        get: function() {
-            return _playbackOptions;
-        },
+        get: function() { return _playbackOptions; },
         set: function(newOptions) {
-            var validDirections = ['forward', 'back', 'up', 'down', 'left', 'right'];
-
-            var resumePlayingAfterChange = cube.isPlaying;
+            var resumePlayingAfterChange = _isPlaying;
 
             cube.pause();
 
@@ -239,7 +188,7 @@ var Cube = function(size, cellOpts) {
              * Verify that the new direction, if present, is valid.
              */
             if (newOptions.direction &&
-                validDirections.indexOf(newOptions.direction) !== -1)
+                this.directions.indexOf(newOptions.direction) !== -1)
             {
                 /**
                  * If there are playback controls that are rendered, we want to keep
@@ -297,22 +246,22 @@ var Cube = function(size, cellOpts) {
          * Helper function for xAngle and yAngle properties that helps ensure
          * that the visible angle of the cube is in sync with the internal state.
          */
-        cube.htmlReady.then(function() {
-            cube.html.style.transform = [
-                ['rotateX(', cube.xAngle, 'deg)'].join(''),
-                ['rotateY(', cube.yAngle, 'deg)'].join(''),
-            ].join(' ');
+        _htmlReady.then(function() {
+            _html.style.transform = (
+                'rotateX(' + _xAngle + 'deg) ' +
+                'rotateY(' + _yAngle + 'deg)'
+            );
 
-            if (cube.rotateCells)
+            if (_rotateCells)
             {
                 /**
                  * Only apply rotations if we need to because iterating over the cells
                  * is very expensive and reduces performance significantly. See the
                  * rotateCells property on "this" for more information.
                  */
-                cube.cells.forEach(function(cell) {
+                _cells.forEach(function(cell) {
                     cell.applyOptions({
-                        rotation: [-1 * cube.xAngle, -1 * cube.yAngle, 0],
+                        rotation: [-1 * _xAngle, -1 * _yAngle, 0],
                     });
                 });
             }
@@ -364,17 +313,17 @@ var Cube = function(size, cellOpts) {
             var TRANSITION_DURATION = '300ms';
             var TRANSITION_EASING = 'ease-in-out';
 
-            this.htmlReady.then(function() {
+            _htmlReady.then(function() {
                 if (shouldTransition)
                 {
-                    cube.html.style.transitionProperty = 'transform';
-                    cube.html.style.transitionDuration = TRANSITION_DURATION;
-                    cube.html.style.transitionTimingFunction = TRANSITION_EASING;
+                    _html.style.transitionProperty = 'transform';
+                    _html.style.transitionDuration = TRANSITION_DURATION;
+                    _html.style.transitionTimingFunction = TRANSITION_EASING;
                 } else
                 {
-                    cube.html.style.transitionProperty = null;
-                    cube.html.style.transitionDuration = null;
-                    cube.html.style.transitionTimingFunction = null;
+                    _html.style.transitionProperty = null;
+                    _html.style.transitionDuration = null;
+                    _html.style.transitionTimingFunction = null;
                 }
             });
         }
@@ -401,7 +350,7 @@ var Cube = function(size, cellOpts) {
                  * the cells but were previously, we need to "clear" their rotation
                  * manually because applyCameraAngle() won't if the property is false.
                  */
-                cube.cells.forEach(function(cell) {
+                _cells.forEach(function(cell) {
                     cell.applyOptions({
                         rotation: [0, 0, 0],
                     });
@@ -410,6 +359,12 @@ var Cube = function(size, cellOpts) {
 
             applyCameraAngle();
         }
+    });
+
+    Object.defineProperty(this, 'directions', {
+        enumerable: true,
+        writable: false,
+        value: ['back', 'right', 'down', 'up', 'left', 'forward'],
     });
 
     Object.defineProperty(this, 'animationSteps', {
@@ -517,27 +472,22 @@ var Cube = function(size, cellOpts) {
         },
     });
 
-    Object.defineProperty(this, 'outerDimensions', {
-        enumerable: false,
-        set: NOOP,
-        get: function() {
-            return this.size * _cellOptions.size;
-        }
-    });
-
     Object.defineProperty(this, 'isPlaying', {
         enumerable: false,
         get: function() {
             return _isPlaying;
         },
         set: function(nowPlaying) {
+            var prevIsPlaying = _isPlaying;
             _isPlaying = nowPlaying;
 
-            if (_playButton)
-            {   // if
-                _playButton.classList.toggle('playing', _isPlaying);
-                _playButton.classList.toggle('paused', !_isPlaying);
-            }
+            _html.dispatchEvent(new CustomEvent('propertyChanged', {
+                detail: {
+                    setting: 'isPlaying',
+                    newValue: _isPlaying,
+                    oldValue: prevIsPlaying,
+                }
+            }));
 
             /**
              * Start / stop the actual animation loop
@@ -555,21 +505,11 @@ var Cube = function(size, cellOpts) {
                 {
                     this.clear();
                     _playlist.play();
-
-                    if (_shapePicker)
-                    {
-                        _shapePicker.classList.add('disabled');
-                    }
                 }
             } else
             {
                 clearInterval(this.animateInterval);
                 _playlist.stop();
-
-                if (_shapePicker)
-                {
-                    _shapePicker.classList.remove('disabled');
-                }
             }
         }
     });
@@ -625,19 +565,16 @@ var Cube = function(size, cellOpts) {
                 return;
             }
 
+            var prevPenColor = _penColor;
             _penColor = newColor;
 
-            if (_colorPicker)
-            {
-                var radioSelector = 'input[type="radio"][name="color"]';
-                var radioElList = _colorPicker.querySelectorAll(radioSelector);
-                var radioElArray = Array.prototype.slice.apply(radioElList);
-                radioElArray.forEach(function(input) {
-                    input.checked = (input.value === _penColor);
-                    var swatch = input.nextElementSibling;
-                    swatch.style.backgroundColor = swatch.dataset.color;
-                });
-            }
+            _html.dispatchEvent(new CustomEvent('propertyChanged', {
+                detail: {
+                    setting: 'penColor',
+                    newValue: _penColor,
+                    oldValue: prevPenColor,
+                }
+            }));
         }
     });
 
@@ -679,6 +616,7 @@ var Cube = function(size, cellOpts) {
                 return;
             }
 
+            var prevWriteFace = _writeFace;
             _writeFace = newFace;
 
             // set Cube viewing angle
@@ -709,720 +647,14 @@ var Cube = function(size, cellOpts) {
                 _playlist.face = _writeFace;
             }
 
-            if (_writeFacePicker)
-            {
-                var radioSelector = 'input[type="radio"][name="write-face"]';
-                var radioElList = _writeFacePicker.querySelectorAll(radioSelector);
-                var radioElArray = Array.prototype.slice.apply(radioElList);
-                radioElArray.forEach(function(input) {
-                    input.checked = (input.value === _writeFace) ?
-                        _playlist.currentSupportedFaces.indexOf(input.value) !== -1 :
-                        false;
-                    input.disabled = _playbackMode === 'playlist' ?
-                        _playlist.currentSupportedFaces.indexOf(input.value) === -1 :
-                        false;
-
-                    var swatch = input.nextElementSibling;
-                    swatch.innerHTML = swatch.dataset.writeFace;
-                });
-            }
-        }
-    });
-
-
-    /**
-     * DOM-RELATED PROPERTIES AND HELPER FUNCTIONS
-     */
-
-        /**
-         * Start Face property and helpers
-         */
-    var __writeFacePickerChangeListener = function(e) {
-        /**
-         * Undo the actions of _buildWriteFacePicker() so that the element is left
-         * in as close a state as possible to that it was before being called.
-         */
-        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'write-face'))
-        {
-            cube.writeFace = e.target.value;
-        }
-    };
-
-    var _destroyWriteFacePicker = function _destroyWriteFacePicker() {
-        /**
-         * Undo the actions of _buildWriteFacePicker() so that the element is left
-         * in as close a state as possible to that it was before being called.
-         */
-        if (_writeFacePicker)
-        {
-            _writeFacePicker.classList.remove('write-face-list');
-            _writeFacePicker.innerHTML = '';
-            _writeFacePicker.style.position = null;
-            _writeFacePicker.style.top = null;
-            _writeFacePicker.style.right = null;
-            _writeFacePicker.removeEventListener('change', __writeFacePickerChangeListener);
-        }
-    };
-
-    var _buildWriteFacePicker = function _buildWriteFacePicker(parentEl) {
-        /**
-         * Build the write-face picker's components, position it, and bind its event
-         * listener(s).
-         */
-        _destroyWriteFacePicker();
-
-        _writeFacePicker = parentEl;
-        _writeFacePicker.classList.add('write-face-list');
-        _writeFacePicker.innerHTML = this.faceNames.map(function(face) {
-            return (
-                '<label class="swatch">' +
-                    '<input type="radio" name="write-face" value="' + face + '" />' +
-                    '<div data-write-face="' + face + '"></div>' +
-                '</label>'
-            );
-        }).join('');
-
-        /**
-         * Position the write-face picker
-         */
-        var writeFacePickerHeight = _writeFacePicker.getBoundingClientRect().height;
-
-        /**
-         * !TODO: Fix this. We need this correction look correct.
-         */
-        writeFacePickerHeight -= 120;
-
-        _writeFacePicker.style.position = 'absolute';
-        _writeFacePicker.style.top = ['calc(50% - ', writeFacePickerHeight / 2, 'px)'].join('');
-        _writeFacePicker.style.left = ['calc(50% - ', (this.outerDimensions + 75), 'px)'].join('');
-
-        /**
-         * Add event listener for change in DOM to be reflected in Cube's model
-         */
-        _writeFacePicker.addEventListener('change', __writeFacePickerChangeListener);
-
-        /**
-         * Sync DOM/Cube on build
-         */
-        this.writeFace = this.writeFace;
-    };
-
-    Object.defineProperty(this, 'writeFacePicker', {
-        enumerable: false,
-        get: function() {
-            return _writeFacePicker;
-        },
-        set: function(newWriteFacePickerEl) {
-            /**
-             * If the new parent element is a valid container for a write-face picker,
-             * and if it's not the same as it is now, rebuild it. Otherwise, check
-             * if the caller intended to remove the write-face picker, in which case
-             * destory it. If neither is true, the caller likely misunderstood what
-             * it was passing in, so show an error.
-             */
-            if ((newWriteFacePickerEl instanceof HTMLElement) &&
-                (newWriteFacePickerEl !== _writeFacePicker))
-            {
-                _buildWriteFacePicker.call(this, newWriteFacePickerEl);
-            } else if ((newWriteFacePickerEl === null) ||
-                (typeof newWriteFacePickerEl === 'undefined'))
-            {
-                _destroyWriteFacePicker();
-                _writeFacePicker = undefined;
-            } else
-            {
-                console.error('Invalid writeFacePicker: must be instance of HTMLElement');
-                throw 'Invalid writeFacePicker';
-            }
-        },
-    });
-
-        /**
-         * Color Picker property and helpers
-         */
-    var __colorPickerChangeListener = function(e) {
-        /**
-         * Undo the actions of _buildColorPicker() so that the element is left
-         * in as close a state as possible to that it was before being called.
-         */
-        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'color'))
-        {
-            cube.penColor = e.target.value;
-        }
-    };
-
-    var _destroyColorPicker = function _destroyColorPicker() {
-        /**
-         * Undo the actions of _buildColorPicker() so that the element is left
-         * in as close a state as possible to that it was before being called.
-         */
-        if (_colorPicker)
-        {
-            _colorPicker.classList.remove('color-list');
-            _colorPicker.innerHTML = '';
-            _colorPicker.style.position = null;
-            _colorPicker.style.top = null;
-            _colorPicker.style.right = null;
-            _colorPicker.removeEventListener('change', __colorPickerChangeListener);
-        }
-    };
-
-    var _buildColorPicker = function _buildColorPicker(parentEl) {
-        /**
-         * Build the color picker's components, position it, and bind its event
-         * listener(s).
-         */
-        _destroyColorPicker();
-
-        _colorPicker = parentEl;
-        _colorPicker.classList.add('color-list');
-        _colorPicker.innerHTML = this.colorNames.map(function(colorName) {
-            return [
-                '<label class="swatch">',
-                    '<input type="radio" name="color" value="', colorName, '" />',
-                    '<div data-color="', colorName, '"></div>',
-                '</label>',
-            ].join('')
-        }).join('');
-
-        /**
-         * Position the color picker
-         */
-        var colorPickerHeight = _colorPicker.getBoundingClientRect().height;
-
-        /**
-         * !TODO: Fix this. We need this correction look correct.
-         */
-        colorPickerHeight -= 120;
-
-        _colorPicker.style.position = 'absolute';
-        _colorPicker.style.top = ['calc(50% - ', colorPickerHeight / 2, 'px)'].join('');
-        _colorPicker.style.left = ['calc(50% - ', this.outerDimensions, 'px)'].join('');
-
-        /**
-         * Add event listener for change in DOM to be reflected in Cube's model
-         */
-        _colorPicker.addEventListener('change', __colorPickerChangeListener);
-
-        /**
-         * Sync DOM/Cube on build
-         */
-        this.penColor = this.penColor;
-    };
-
-    Object.defineProperty(this, 'colorPicker', {
-        enumerable: false,
-        get: function() {
-            return _colorPicker;
-        },
-        set: function(newColorPickerEl) {
-            /**
-             * If the new parent element is a valid container for a color picker,
-             * and if it's not the same as it is now, rebuild it. Otherwise, check
-             * if the caller intended to remove the color picker, in which case
-             * destory it. If neither is true, the caller likely misunderstood what
-             * it was passing in, so show an error.
-             */
-            if ((newColorPickerEl instanceof HTMLElement) &&
-                (newColorPickerEl !== _colorPicker))
-            {
-                _buildColorPicker.call(this, newColorPickerEl);
-            } else if ((newColorPickerEl === null) ||
-                (typeof newColorPickerEl === 'undefined'))
-            {
-                _destroyColorPicker();
-                _colorPicker = undefined;
-            } else
-            {
-                console.error('Invalid colorPicker: must be instance of HTMLElement');
-                throw 'Invalid colorPicker';
-            }
-        },
-    });
-
-
-        /**
-         * Shape Picker property and helpers
-         */
-
-    var __shapePickerClickListener = function(e) {
-        if (_playbackMode === 'real-time' ||
-            ((_playbackMode === 'playlist') && !_playlist.isPlaying))
-        {
-            if (e.target.dataset && e.target.dataset.shape)
-            {
-                cube.renderShape(e.target.dataset.shape);
-            }
-        }
-    };
-
-    var _destroyShapePicker = function _destroyShapePicker() {
-        /**
-         * Undo the actions of _buildShapePicker() so that the element is left
-         * in as close a state as possible to that it was before being called.
-         */
-        if (_shapePicker)
-        {
-            _shapePicker.classList.add('shape-list');
-            _shapePicker.innerHTML = '';
-            _shapePicker.style.position = null;
-            _shapePicker.style.top = null;
-            _shapePicker.style.right = null;
-            _shapePicker.removeEventListener('click', __shapePickerClickListener);
-        }
-    }
-
-    var _buildShapePicker = function _buildShapePicker(parentEl) {
-        /**
-         * Build the shape picker's components, position it, and bind its event
-         * listener(s).
-         */
-        _destroyShapePicker();
-
-        _shapePicker = parentEl;
-        _shapePicker.classList.add('shape-list');
-        _shapePicker.innerHTML = this.shapeNames.map(function(shapeName) {
-            var shapeRender = this.getPngDataOfSlice(this.shapes[shapeName]);
-            var styles = [
-                'background-image:url(\'' + shapeRender + '\')',
-                'background-size:cover',
-                'background-position:50% 50%',
-            ].join(';');
-
-            return [
-                '<div class="swatch" data-shape="', shapeName, '" ',
-                    'style="', styles, '"></div>'
-            ].join('')
-        }.bind(this)).join('');   // Use our "outside" this inside of the map
-
-        /**
-         * Position the shape picker
-         */
-        var shapePickerHeight = _shapePicker.getBoundingClientRect().height;
-        /**
-         * !TODO: Fix this. We need this correction look correct.
-         */
-        shapePickerHeight -= 120;
-
-        _shapePicker.style.position = 'absolute';
-        _shapePicker.style.top = [
-            'calc(50% - ', shapePickerHeight / 2, 'px)'
-        ].join('');
-        _shapePicker.style.right = [
-            'calc(50% - ', this.outerDimensions, 'px)'
-        ].join('');
-
-        /**
-         * Add event listener to parent, which will catch all events that bubble
-         * up from children (the swatches).
-         */
-        _shapePicker.addEventListener('click', __shapePickerClickListener);
-    };
-
-    Object.defineProperty(this, 'shapePicker', {
-        enumerable: false,
-        get: function() {
-            return _shapePicker;
-        },
-        set: function(newShapePickerEl) {
-            /**
-             * This property follows the same pattern as the colorPicker property.
-             */
-            if ((newShapePickerEl instanceof HTMLElement) &&
-                (newShapePickerEl !== _shapePicker))
-            {
-                _buildShapePicker.call(this, newShapePickerEl);
-            } else if ((newShapePickerEl === null) ||
-                (typeof newShapePickerEl === 'undefined'))
-            {
-                _destroyShapePicker();
-                _shapePicker = undefined;
-            } else
-            {
-                console.error('Invalid shapePicker: must be instance of HTMLElement');
-                throw 'Invalid shapePicker';
-            }
-        },
-    });
-
-
-        /**
-         * Playback Controls property and helpers
-         */
-
-    var __realtimeControlsChangeListener = function(e) {
-        if ((e.target.nodeName === 'INPUT') && (e.target.name === 'direction'))
-        {
-            cube.playbackOptions = {
-                direction: e.target.value,
-            };
-        }
-    };
-
-    var _destroyRealtimeControls = function _destroyRealtimeControls() {
-        /**
-         * Undo the actions of _buildRealtimeControls() so that the element is
-         * left in as close a state as possible to that it was before being
-         * called.
-         */
-
-        if (_realtimeControls)
-        {
-            _realtimeControls.removeEventListener('change', __realtimeControlsChangeListener);
-            _realtimeControls.classList.remove('playback-controls');
-            _realtimeControls.innerHTML = '';
-        }
-    };
-
-    var _buildRealtimeControls = function _buildRealtimeControls(parentEl) {
-        /**
-         * Build the color picker's components, position it, and bind its event
-         * listener(s).
-         */
-
-        _destroyRealtimeControls();
-
-        /**
-         * Compose an array of strings into HTML using a template and Array.map(),
-         * which converts each item in the array using the passed-in function.
-         */
-        var directions = ['back', 'left', 'up', 'down', 'right', 'forward'];
-        var optionsHtml = directions.map(function(direction) {
-            return [
-                '<input id="direction-radio-', direction, '" type="radio" name="direction" value="', direction, '" />',
-                '<label for="direction-radio-', direction, '" class="control-button radio-tab">', direction, '</label>',
-            ].join('')
-        }).join('');
-
-        _realtimeControls = parentEl;
-        _realtimeControls.classList.add('playback-controls');
-
-        _realtimeControls.innerHTML = [
-            '<div class="radio-tabs">', optionsHtml, '</div>'
-        ].join('');
-
-        _realtimeControls.addEventListener('change', __realtimeControlsChangeListener);
-
-        this.playbackOptions = {
-            direction: this.playbackOptions.direction,  // trigger sync of DOM with state
-        }
-    }
-
-    Object.defineProperty(this, 'realtimeControls', {
-        enumerable: false,
-        get: function() {
-            return _realtimeControls;
-        },
-        set: function(newRealtimeControlsEl) {
-            /**
-             * This property follows the same pattern as the colorPicker property.
-             */
-            if ((newRealtimeControlsEl instanceof HTMLElement) &&
-                (newRealtimeControlsEl !== _realtimeControls))
-            {
-                _buildRealtimeControls.call(this, newRealtimeControlsEl);
-                __updatePlaybackModeRelatedDOM();
-            } else if ((newRealtimeControlsEl === null) ||
-                (typeof newRealtimeControlsEl === 'undefined'))
-            {
-                _destroyRealtimeControls();
-                _realtimeControls = undefined;
-            } else
-            {
-                console.error('Invalid realtimeControls: must be instance of HTMLElement');
-                throw 'Invalid realtimeControls';
-            }
-        }
-    });
-
-        /**
-         * Cube Container property
-         */
-
-    Object.defineProperty(this, 'container', {
-        enumerable: false,
-        get: function() {
-            return _container;
-        },
-        set: function(newContainer) {
-            /**
-             * This property follows the same pattern as the colorPicker property.
-             */
-            if ((newContainer instanceof HTMLElement) &&
-                (newContainer !== _container))
-            {
-                _container = newContainer;
-                _container.appendChild(this.html);
-            } else if ((newContainer === null) ||
-                (typeof newContainer === 'undefined'))
-            {
-                _container.removeChild(this.html);
-                _container = undefined;
-            } else
-            {
-                console.error('Invalid container: must be instance of HTMLElement');
-                throw 'Invalid container';
-            }
-        }
-    });
-
-
-        /**
-         * Playback Mode Button property and listener
-         */
-
-    var __playbackModeButtonClickListener = function(event) {
-        var currModeIndex = __validPlaybackModes.indexOf(_playbackMode);
-        var numModes = __validPlaybackModes.length;
-        cube.playbackMode = __validPlaybackModes[(currModeIndex + 1) % numModes];
-    };
-
-    Object.defineProperty(this, 'playbackModeButton', {
-        enumerable: false,
-        get: function() {
-            return _playbackModeButton;
-        },
-        set: function(newPlaybackModeButton) {
-            /**
-             * This property follows the same pattern as the colorPicker property.
-             */
-            if ((newPlaybackModeButton instanceof HTMLElement) &&
-                (newPlaybackModeButton !== _playbackModeButton))
-            {
-                if (_playbackModeButton)
-                {   // unbind a click listener that may have been previously bound
-                    _playbackModeButton.removeEventListener('click', __playbackModeButtonClickListener);
+            _html.dispatchEvent(new CustomEvent('propertyChanged', {
+                detail: {
+                    setting: 'writeFace',
+                    newValue: _writeFace,
+                    oldValue: prevWriteFace,
                 }
-
-                // get the new button
-                _playbackModeButton = newPlaybackModeButton;
-
-                // bind the click listener to the new button
-                _playbackModeButton.addEventListener('click', __playbackModeButtonClickListener);
-
-                __updatePlaybackModeRelatedDOM();
-            } else if ((newPlaybackModeButton === null) ||
-                (typeof newPlaybackModeButton === 'undefined'))
-            {
-                _playbackModeButton.removeEventListener('click', __playbackModeButtonClickListener);
-                _playbackModeButton = undefined;
-            } else
-            {
-                console.error('Invalid playbackModeButton: must be instance of HTMLElement');
-            }
+            }));
         }
-    });
-
-
-        /**
-         * Prev Step Button property and listener
-         */
-
-    var __prevStepButtonClickListener = function(event) {
-        if (cube.isPlaying)
-        {
-            cube.pause();
-        }
-
-        cube.step(-1);
-    };
-
-    Object.defineProperty(this, 'prevStepButton', {
-        enumerable: false,
-        get: function() {
-            return _prevStepButton;
-        },
-        set: function(newPrevStepButton) {
-            /**
-             * This property follows the same pattern as the colorPicker property.
-             */
-            if ((newPrevStepButton instanceof HTMLElement) &&
-                (newPrevStepButton !== _prevStepButton))
-            {
-                if (_prevStepButton)
-                {   // unbind a click listener that may have been previously bound
-                    _prevStepButton.removeEventListener('click', __prevStepButtonClickListener);
-                }
-
-                // get the new button
-                _prevStepButton = newPrevStepButton;
-
-                // bind the click listener to the new button
-                _prevStepButton.addEventListener('click', __prevStepButtonClickListener);
-            } else if ((newPrevStepButton === null) ||
-                (typeof newPrevStepButton === 'undefined'))
-            {
-                _prevStepButton.removeEventListener('click', __prevStepButtonClickListener);
-                _prevStepButton = undefined;
-            } else
-            {
-                console.error('Invalid prevStepButton: must be instance of HTMLElement');
-            }
-        }
-    });
-
-
-        /**
-         * Next Step Button property and listener
-         */
-
-    var __nextStepButtonClickListener = function(event) {
-        cube.pause();
-        cube.step();
-    };
-
-    Object.defineProperty(this, 'nextStepButton', {
-        enumerable: false,
-        get: function() {
-            return _nextStepButton;
-        },
-        set: function(newNextStepButton) {
-            /**
-             * This property follows the same pattern as the colorPicker property.
-             */
-            if ((newNextStepButton instanceof HTMLElement) &&
-                (newNextStepButton !== _nextStepButton))
-            {
-                if (_nextStepButton)
-                {   // unbind a click listener that may have been previously bound
-                    _nextStepButton.removeEventListener('click', __nextStepButtonClickListener);
-                }
-
-                // get the new button
-                _nextStepButton = newNextStepButton;
-
-                // bind the click listener to the new button
-                _nextStepButton.addEventListener('click', __nextStepButtonClickListener);
-            } else if ((newNextStepButton === null) ||
-                (typeof newNextStepButton === 'undefined'))
-            {
-                _nextStepButton.removeEventListener('click', __nextStepButtonClickListener);
-                _nextStepButton = undefined;
-            } else
-            {
-                console.error('Invalid nextStepButton: must be instance of HTMLElement');
-            }
-        }
-    });
-
-
-        /**
-         * Play Button property and listener
-         */
-
-    var __playButtonClickListener = function(event) {
-        cube.togglePlaying();
-    };
-
-    Object.defineProperty(this, 'playButton', {
-        enumerable: false,
-        get: function() {
-            return _playButton;
-        },
-        set: function(newPlayButton) {
-            /**
-             * This property follows the same pattern as the colorPicker property.
-             */
-            if ((newPlayButton instanceof HTMLElement) &&
-                (newPlayButton !== _playButton))
-            {
-                if (_playButton)
-                {   // unbind a click listener that may have been previously bound
-                    _playButton.removeEventListener('click', __playButtonClickListener);
-                }
-
-                // get the new button
-                _playButton = newPlayButton;
-
-                // bind the click listener to the new button
-                _playButton.addEventListener('click', __playButtonClickListener);
-            } else if ((newPlayButton === null) ||
-                (typeof newPlayButton === 'undefined'))
-            {
-                _playButton.removeEventListener('click', __playButtonClickListener);
-                _playButton = undefined;
-            } else
-            {
-                console.error('Invalid playButton: must be instance of HTMLElement');
-            }
-        }
-    });
-
-
-        /**
-         * Clear Button property and listener
-         */
-
-    var __clearButtonClickListener = function(event) {
-        cube.clear();
-    };
-
-    Object.defineProperty(this, 'clearButton', {
-        enumerable: false,
-        get: function() {
-            return _clearButton;
-        },
-        set: function(newClearButton) {
-            /**
-             * This property follows the same pattern as the colorPicker property.
-             */
-            if ((newClearButton instanceof HTMLElement) &&
-                (newClearButton !== _clearButton))
-            {
-                if (_clearButton)
-                {   // unbind a click listener that may have been previously bound
-                    _clearButton.removeEventListener('click', __clearButtonClickListener);
-                }
-
-                // get the new button
-                _clearButton = newClearButton;
-
-                // bind the click listener to the new button
-                _clearButton.addEventListener('click', __clearButtonClickListener);
-            } else if ((newClearButton === null) ||
-                (typeof newClearButton === 'undefined'))
-            {
-                _clearButton.removeEventListener('click', __clearButtonClickListener);
-                _clearButton = undefined;
-            } else
-            {
-                console.error('Invalid clearButton: must be instance of HTMLElement');
-            }
-        }
-    });
-
-        /**
-         * Playlist Container property and helpers
-         */
-
-    Object.defineProperty(this, 'playlistContainer', {
-        enumerable: false,
-        get: function() {
-            return _playlist.container;
-        },
-        set: function(newPlaylistContainerEl) {
-            /**
-             * If the new parent element is a valid container for a playlist,
-             * and if it's not the same as it is now, rebuild it. Otherwise, check
-             * if the caller intended to remove the playlist container, in which case
-             * destory it. If neither is true, the caller likely misunderstood what
-             * it was passing in, so show an error.
-             */
-            if ((newPlaylistContainerEl instanceof HTMLElement) &&
-                (newPlaylistContainerEl !== _playlist.container))
-            {
-                _playlist.container = newPlaylistContainerEl;
-                __updatePlaybackModeRelatedDOM();
-            } else if ((newPlaylistContainerEl === null) ||
-                (typeof newPlaylistContainerEl === 'undefined'))
-            {
-                _playlist.container = null;
-            } else
-            {
-                console.error('Invalid playlistContainer: must be instance of HTMLElement');
-                throw 'Invalid playlistContainer';
-            }
-        },
     });
 
 
@@ -1508,7 +740,7 @@ var Cube = function(size, cellOpts) {
 
        if (!Object.keys(_fontMap).length)
        {   // if there aren't any more loaded fonts after unloading this one...
-           _activeFont = undefined;    // ... we can't have an active font
+           _activeFont = null;    // ... we can't have an active font
        } else if (handle === _activeFont)
        {   // if we unloaded our current font, but have another available...
            _activeFont = Object.keys(_fontMap)[0]; // ... use it
@@ -1523,7 +755,7 @@ var Cube = function(size, cellOpts) {
     this.size = size;
 
     (function buildCells() {
-        this.cells = [];
+        _cells = [];
         for (var depth = 0; depth < this.size; depth++) {
             // Iterate over each Z-plane
             for (var row = 0; row < this.size; row++) {
@@ -1541,13 +773,13 @@ var Cube = function(size, cellOpts) {
                         interactive: depth === 0,
                     });
 
-                    this.cells.push(cell);
+                    _cells.push(cell);
 
-                    this.htmlReady.then(function() {
-                        this.cells.forEach(function(cell) {
-                            this.html.appendChild(cell.html); // Actually render the cell
-                        }.bind(this));  // Use our "outside" this inside of the foreach
-                    }.bind(this));  // Use our "outside" this inside of the promise callback
+                    _htmlReady.then(function() {
+                        _cells.forEach(function(cell) {
+                            _html.appendChild(cell.html); // Actually render the cell
+                        });
+                    });
                 }
             }
         }
@@ -1555,19 +787,18 @@ var Cube = function(size, cellOpts) {
 
     (function buildHTML() {
         // The HTML display of the cube istelf
-        this.html = document.createElement('div');
-        this.html.id = 'cube';
+        _html.id = 'cube';
 
-        this.html.style.height = this.outerDimensions + 'px';
-        this.html.style.width = this.outerDimensions + 'px';
-        this.html.style.transformStyle = 'preserve-3d';
-        this.html.style.transformOrigin = [
-            ['calc(', this.outerDimensions, 'px/2)'].join(''),
-            ['calc(', this.outerDimensions, 'px/2)'].join(''),
-            ['calc(-1 * ', this.outerDimensions, 'px/2)'].join(''),
-        ].join(' ');
+        _html.style.height = this.outerDimensions + 'px';
+        _html.style.width = this.outerDimensions + 'px';
+        _html.style.transformStyle = 'preserve-3d';
+        _html.style.transformOrigin = (
+            'calc(' + this.outerDimensions + 'px/2) ' +
+            'calc(' + this.outerDimensions + 'px/2) ' +
+            'calc(-1 * ' + this.outerDimensions + 'px/2)'
+        );
 
-        htmlReadySuccessFn();
+        __htmlReadySuccessFn();
     }.bind(this)());  // Use our "outside" this inside of buildHTML
 
     return this;
@@ -1715,9 +946,10 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
 };
 
 Cube.prototype.dimensionOutOfBounds = function(dimValue) {
+    return (dimValue < 0) || (dimValue >= this.size);
 }
 
-Cell.prototype.invalidCoord = function(r, c, d) {
+Cube.prototype.invalidCoord = function(r, c, d) {
     return (
         this.dimensionOutOfBounds(r) ||
         this.dimensionOutOfBounds(c) ||
@@ -1760,9 +992,7 @@ Cube.prototype.setCellAt = function(row, column, depth, newCell) {
         throw 'Invalid coordinate';
     }
 
-    this.getCellAt(row, column, depth).setFromCell(newCell);
-
-    return matchedCell;
+    return this.getCellAt(row, column, depth).setFromCell(newCell);
 };
 
 Cube.prototype.applyCell = function(newCell) {
@@ -2432,83 +1662,4 @@ Cube.prototype.readYZCol = function(y, z) {
         strip.push(cube.getCellAt(r, c, d));
     });
     return strip;
-};
-
-Cube.prototype.getPngDataOfSlice = function(slice) {
-    /**
-     * Helper function to render icons that resemble 2d slices of the cube.
-     * Returns a data url.
-     *
-     * Helpful links:
-     * http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
-     * http://www.html5canvastutorials.com/advanced/html5-canvas-save-drawing-as-an-image/
-     */
-
-    var PNG_OUTPUT_WIDTH = 64;
-    var PNG_OUTPUT_HEIGHT = 64;
-
-    var PIXEL_MULTIPLIER_W = Math.floor(PNG_OUTPUT_WIDTH / this.size);
-    var PIXEL_MULTIPLIER_H = Math.floor(PNG_OUTPUT_HEIGHT / this.size);
-
-    var c;
-    var ctx;
-    var id;
-    var d;
-
-    this.sliceRenderer = {};
-
-    c = this.sliceRenderer.c = document.createElement('canvas');
-    c.width = PNG_OUTPUT_WIDTH;
-    c.height = PNG_OUTPUT_HEIGHT;
-
-    ctx = this.sliceRenderer.ctx = c.getContext('2d');
-
-    id = ctx.createImageData(1, 1);
-    d = id.data;
-
-    try
-    {   // handle different types of data input: JSON or raw object
-        slice = JSON.parse(slice);    // throws SyntaxError if not valid JSON string
-    } catch (err)
-    {   // pass
-    }
-
-    if (!(slice instanceof Array) || (slice.length !== Math.pow(this.size, 2)))
-    {
-        throw 'Malformed data';
-    }
-
-    slice.forEach(function drawCell(cell, idx) {
-        /**
-         * if we don't have row or column information, we need to populate it
-         * on each cell so that it can be drawn in the correct spot of the png.
-         */
-        cell.row = !isNaN(parseInt(cell.row, 10)) ? cell.row : Math.floor(idx % this.size);
-        cell.column = !isNaN(parseInt(cell.column, 10)) ? cell.column : Math.floor(idx / this.size);
-
-        /**
-         * Because we are scaling the image up, we are drawing multiple real
-         * pixels in the PNG for each big, fat cell in the slice.
-         */
-        var pixelOffsetX = cell.row * PIXEL_MULTIPLIER_W;
-        var pixelOffsetY = cell.column * PIXEL_MULTIPLIER_H;
-
-        for (var subpixelCol = 0; subpixelCol < PIXEL_MULTIPLIER_W; subpixelCol++)
-        {
-            for (var subpixelRow = 0; subpixelRow < PIXEL_MULTIPLIER_H; subpixelRow++)
-            {
-                d[0] = cell.color[0];
-                d[1] = cell.color[1];
-                d[2] = cell.color[2];
-                d[3] = cell.on ? 255 : 0;
-
-                var y = pixelOffsetX + subpixelRow; // the x/y are swapped in the slice serialization
-                var x = pixelOffsetY + subpixelCol;
-
-                ctx.putImageData(id, x, y);
-            }
-        }
-    }.bind(this));  // Use our "outside" this inside of the foreach
-
-    return c.toDataURL();
 };
