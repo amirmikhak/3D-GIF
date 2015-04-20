@@ -1709,6 +1709,18 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     return this;    // enables multiple calls on cube to be "chained"
 };
 
+Cell.prototype.dimensionOutOfBounds = function(dimValue) {
+    return (vimValue < 0) || (vimValue >= this.size);
+}
+
+Cell.prototype.invalidCoord = function(r, c, d) {
+    return (
+        this.dimensionOutOfBounds(r) ||
+        this.dimensionOutOfBounds(c) ||
+        this.dimensionOutOfBounds(d)
+    );
+};
+
 Cube.prototype.getCellAt = function(row, column, depth) {
     /**
      * Returns the cell for a given coordinate. If the coordinate is invalid,
@@ -1719,9 +1731,7 @@ Cube.prototype.getCellAt = function(row, column, depth) {
      * properties that are copied between cells.
      */
 
-    if ((row < 0) || (row > this.size - 1) ||
-        (column < 0) || (column > this.size - 1) ||
-        (depth < 0) ||  (depth > this.size - 1))
+    if (this.invalidCoord(row, column, depth))
     {
         return new Cell({
             on: false,
@@ -1740,18 +1750,13 @@ Cube.prototype.setCellAt = function(row, column, depth, newCell) {
      * Throws "Invalid coordinate" if the coordinate is impossible.
      */
 
-    if ((row < 0) || (row > this.size - 1) ||
-        (column < 0) || (column > this.size - 1) ||
-        (depth < 0) ||  (depth > this.size - 1))
+    if (this.invalidCoord(row, column, depth))
     {
         console.error('Invalid Coord', row, column, depth, newCell);
         throw 'Invalid coordinate';
     }
 
-    var cellIndex = (depth * this.size * this.size) + (row * this.size) + column;
-    var matchedCell = this.cells[cellIndex];
-
-    matchedCell.setFromCell(newCell);
+    this.getCellAt(row, column, depth).setFromCell(newCell);
 
     return matchedCell;
 };
@@ -2346,12 +2351,12 @@ Cube.prototype.affectCol = function(dims, dim1, dim2, cb) {
     {
         console.error('affectCol(): Bad dimensions. Valid dimensions: ' + validDims.join(', '), dims);
         return;
-    } else if ((dim1 < 0) || (dim1 >= this.size))
+    } else if (this.dimensionOutOfBounds(dim1))
     {
         var dimName = dims.charAt(0).toUpperCase();
         console.error('affectCol(): Bad ' + dimName, dim1);
         return;
-    } else if ((dim2 < 0) || (dim2 >= this.size))
+    } else if (this.dimensionOutOfBounds(dim2))
     {
         var dimName = dims.charAt(1).toUpperCase();
         console.error('affectCol(): Bad ' + dimName, dim2);
