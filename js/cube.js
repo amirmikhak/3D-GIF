@@ -1515,9 +1515,43 @@ var Cube = function(size, cellOpts) {
         }
      };
 
-    this.transitionTransforms = _transitionTransforms;
+    /**
+     * INIT CODE
+     */
 
-    this.size = size; // How many rows and columns do I have?
+    this.transitionTransforms = _transitionTransforms;
+    this.size = size;
+
+    (function buildCells() {
+        this.cells = [];
+        for (var depth = 0; depth < this.size; depth++) {
+            // Iterate over each Z-plane
+            for (var row = 0; row < this.size; row++) {
+                // Iterate over each row
+                for (var column = 0; column < this.size; column++) {
+                    // Iterate over each column
+
+                    // Create a cell
+                    var cell = new Cell({
+                        cube: this,
+                        size: _cellOptions.size,
+                        depth: depth,
+                        column: column,
+                        row: row,
+                        interactive: depth === 0,
+                    });
+
+                    this.cells.push(cell);
+
+                    this.htmlReady.then(function() {
+                        this.cells.forEach(function(cell) {
+                            this.html.appendChild(cell.html); // Actually render the cell
+                        }.bind(this));  // Use our "outside" this inside of the foreach
+                    }.bind(this));  // Use our "outside" this inside of the promise callback
+                }
+            }
+        }
+    }.bind(this)());  // Use our "outside" this inside of buildHTML
 
     (function buildHTML() {
         // The HTML display of the cube istelf
@@ -1535,35 +1569,6 @@ var Cube = function(size, cellOpts) {
 
         htmlReadySuccessFn();
     }.bind(this)());  // Use our "outside" this inside of buildHTML
-
-    this.cells = [];
-    for (var depth = 0; depth < this.size; depth++) {
-        // Iterate over each Z-plane
-        for (var row = 0; row < this.size; row++) {
-            // Iterate over each row
-            for (var column = 0; column < this.size; column++) {
-                // Iterate over each column
-
-                // Create a cell
-                var cell = new Cell({
-                    cube: this,
-                    size: _cellOptions.size,
-                    depth: depth,
-                    column: column,
-                    row: row,
-                    interactive: depth === 0,
-                });
-
-                this.cells.push(cell);
-
-                this.htmlReady.then(function() {
-                    this.cells.forEach(function(cell) {
-                        this.html.appendChild(cell.html); // Actually render the cell
-                    }.bind(this));  // Use our "outside" this inside of the foreach
-                }.bind(this));  // Use our "outside" this inside of the promise callback
-            }
-        }
-    }
 
     return this;
 };
