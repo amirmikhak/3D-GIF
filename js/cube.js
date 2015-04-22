@@ -1,15 +1,10 @@
-var Cube = function(size, cellOpts) {
-    // 'this' can point to many, different things, so we grab an easy reference to the object
-    // You can read more about 'this' at:
-    // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
-    // at http://www.quirksmode.org/js/this.html
-    // and in a more detailed tutorial: http://javascriptissexy.com/understand-javascripts-this-with-clarity-and-master-it/
+var Cube = function Cube(size) {
     var cube = this;
 
-    var NOOP = function() {};   // does nothing, but useful to pass as argument to things expecting functions
-
     // DEFINE SOME PROPERTIES
+    var _size = size;
     var _cells = [];
+    var _renderer = null;
 
     this.sliceValidator = function(dataToValidate) {
         /**
@@ -18,18 +13,16 @@ var Cube = function(size, cellOpts) {
         return (dataToValidate instanceof Array) && (dataToValidate.length === Math.pow(this.size, 2));
     };
 
-    Object.defineProperty(this, 'cells', {
-        enumerable: true,
-        set: NOOP,
-        get: function() { return _cells; },
+    Object.defineProperty(this, 'size', {
+        get: function() { return _size; },
     });
 
-    /**
-     * Colors-related properties
-     */
+    Object.defineProperty(this, 'cells', {
+        get: function() { return _cells.slice(); },
+    });
 
     Object.defineProperty(this, 'colors', {
-        enumerable: true,
+        enumerable: false,
         writable: false,
         value: {
             indigo: [75, 0, 130],
@@ -48,52 +41,56 @@ var Cube = function(size, cellOpts) {
 
     Object.defineProperty(this, 'colorNames', {
         enumerable: true,
-        set: NOOP,
-        get: function() {
-            return Object.keys(this.colors);
+        get: function() { return Object.keys(this.colors); },
+    });
+
+    Object.defineProperty(this, 'renderer', {
+        enumerable: true,
+        get: function() { return _renderer; },
+        set: function(newRenderer) {
+            if (!newRenderer.can('render'))
+            {
+                console.error('Invalid renderer: must implement render()');
+                throw 'Invalid renderer for Cube';
+            }
+
+            _renderer = newRenderer;
+            _renderer.cube = this;
         },
     });
 
-    Object.defineProperty(this, 'faceNames', {
-        enumerable: true,
-        set: NOOP,
-        get: function() {
-            return Object.keys(this.faceCubeViewingAngles);
-        },
-    });
 
     /**
      * INIT CODE
      */
 
-    this.size = size;
-
-    (function buildCells() {
-        _cells = [];
-        for (var depth = 0; depth < this.size; depth++) {
+    (function __buildCells() {
+        for (var depth = 0; depth < _size; depth++) {
             // Iterate over each Z-plane
-            for (var row = 0; row < this.size; row++) {
+            for (var row = 0; row < _size; row++) {
                 // Iterate over each row
-                for (var column = 0; column < this.size; column++) {
+                for (var column = 0; column < _size; column++) {
                     // Iterate over each column
-
-                    // Create a cell
-                    var cell = new Cell({
-                        cube: this,
-                        size: _cellOptions.size,
-                        depth: depth,
+                    _cells.push(new Cell({
+                        cube: cube,
                         column: column,
                         row: row,
-                        interactive: depth === 0,
-                    });
-
-                    _cells.push(cell);
+                        depth: depth,
+                        autoRender: false,
+                    }));
                 }
             }
         }
-    }.bind(this)());  // Use our "outside" this inside of buildHTML
+    }());
 
     return this;
+};
+
+Cube.prototype.render = function() {
+    if (this.renderer)
+    {
+        this.renderer.render();
+    }
 };
 
 Cube.prototype.toJSON = function() {

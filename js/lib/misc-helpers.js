@@ -1,3 +1,33 @@
+String.prototype.capitalizeFirstLetter = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
+Object.defineProperty(Object.prototype, 'can', {
+    enumerable: false,
+    value: function(method) {
+        return (typeof this[method] === 'function');
+    }
+});
+
+function applyOptions(newOpts) {
+    if (!(newOpts instanceof Object))
+    {
+        throw 'TypeError: Options must be object';
+    }
+
+    var opts = Object.keys(newOpts);
+    for (var i = 0, numOpts = opts.length; i < numOpts; i++)
+    {
+        var key = opts[i];
+        if (this.hasOwnProperty(key))
+        {
+            this[key] = newOpts[key];
+        } else
+        {
+            console.error('Invalid option for ' + this.constructor.name + ': ' + key);
+        }
+    }
+}
 
 function fetchJSONFile(path, successCb, failureCb) {
     /**
