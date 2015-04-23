@@ -13,10 +13,12 @@ var CubeTile = function CubeTile(cells, cellOpts) {
             on: originalCell.on,
             color: originalCell.color,
         };
-        for (var key in mergedCellOptions) {
-            mergedCellOptions[key] = addlCellOpts.hasOwnProperty(key) ?
-                addlCellOpts[key] :
-                mergedCellOptions[key];
+        var optionKeys = Object.keys(mergedCellOptions);
+        for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
+            if (addlCellOpts.hasOwnProperty(optionKeys[i]))
+            {
+                mergedCellOptions[optionKeys[i]] = addlCellOpts[optionKeys[i]];
+            }
         }
         return new Cell(mergedCellOptions);
     };

@@ -15,7 +15,14 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         penColor: 'blue',
     };
 
-    var _options = _.extend({}, __defaultOptions, opts);
+    var _opts = opts || {};
+    var _options = {};
+    var optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
+        _options[optionKeys[i]] = _opts.hasOwnProperty(optionKeys[i]) ?
+            _opts[optionKeys[i]] :
+            __defaultOptions[optionKeys[i]];
+    }
 
     var _mouseListeningCells = [];
 

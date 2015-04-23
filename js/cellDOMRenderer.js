@@ -6,7 +6,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
 
     var cellDOMRenderer = this;
 
-    var defaultOptions = {
+    var __defaultOptions = {
         size: 50,
         interactive: false,
         interactMode: 'drag',
@@ -18,7 +18,15 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     var TRANSITION_DURATION = '300ms';
     var TRANSITION_EASING = 'ease-in-out';
 
-    var _options = _.extend({}, defaultOptions, opts);
+    var _opts = opts || {};
+    var _options = {};
+    var optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
+        _options[optionKeys[i]] = _opts.hasOwnProperty(optionKeys[i]) ?
+            _opts[optionKeys[i]] :
+            __defaultOptions[optionKeys[i]];
+    }
+
     var _drawnOptions = {};
     var _dirtyOptions = {
         row: false,

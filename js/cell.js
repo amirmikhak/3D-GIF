@@ -3,7 +3,7 @@ var Cell = function Cell(opts) {
     var cell = this; // 'this' can point to many, different things, so we grab an easy reference to the object
     var _cube = cube;
 
-    var defaultOptions = {
+    var __defaultOptions = {
         cube: null,
         row: null,
         column: null,
@@ -14,7 +14,14 @@ var Cell = function Cell(opts) {
         autoRender: true,
     };
 
-    var _options = _.extend({}, defaultOptions, opts);
+    var _opts = opts || {};
+    var _options = {};
+    var optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
+        _options[optionKeys[i]] = _opts.hasOwnProperty(optionKeys[i]) ?
+            _opts[optionKeys[i]] :
+            __defaultOptions[optionKeys[i]];
+    }
 
     var __colorAsString = '0,0,255';
 
