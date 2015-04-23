@@ -422,8 +422,6 @@ Cube.prototype.writeSlice = function(data, face, offset) {
     /**
      * Write a saved slice (recorded in the formats output by cube.readSlice) to
      * "offset" slices in from "face".
-     *
-     * Note: Refer to note in cube.readSlice() on left/right, front/back, etc. origins.
      */
 
     offset = (typeof offset !== 'undefined') ?
