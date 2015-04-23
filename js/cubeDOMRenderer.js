@@ -100,10 +100,6 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         },
     });
 
-    Object.defineProperty(this, 'faceNames', {
-        get: function() { return Object.keys(this.faceCubeViewingAngles); },
-    });
-
     Object.defineProperty(this, 'html', {
         get: function() { return _html; },
     });

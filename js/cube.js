@@ -22,6 +22,11 @@ var Cube = function Cube(size) {
         get: function() { return _cells.slice(); },
     });
 
+    Object.defineProperty(this, 'faceNames', {
+        writable: false,
+        value: ['top', 'front', 'left', 'back', 'right', 'bottom'],
+    });
+
     Object.defineProperty(this, 'colors', {
         writable: false,
         value: {
@@ -380,7 +385,7 @@ Cube.prototype.readSlice = function(face, offset, output) {
         output :
         'json';
 
-    var cells = [];
+    var cellsRead = [];
 
     function captureCell(r, c, d) {
         /**
@@ -390,7 +395,7 @@ Cube.prototype.readSlice = function(face, offset, output) {
         var cell = (output === 'object-deep') ?
             _.cloneDeep(this.getCellAt(r, c, d)) :
             this.getCellAt(r, c, d);
-        cells.push(cell);
+        cellsRead.push(cell);
     }
 
     /**
@@ -412,10 +417,10 @@ Cube.prototype.readSlice = function(face, offset, output) {
 
     if (output === 'json')
     {
-        return JSON.stringify(cells);
+        return JSON.stringify(cellsRead);
     }
 
-    return cells;
+    return cellsRead;
 };
 
 Cube.prototype.writeSlice = function(data, face, offset) {
