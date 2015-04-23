@@ -10,6 +10,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         transitionTransforms: true,
         xAngle: 0,
         yAngle: 0,
+        listenForKeyEvents: true,
         cellConfig: {
             rotate: false,
             size: 50, // size of our cells in pixels
@@ -19,6 +20,47 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
     var _options = _.extend({}, __defaultOptions, opts || {});
 
     var _html = document.createElement('div');
+
+
+    /**
+     * KEYBOARD EVENTS
+     */
+
+    var KEY_LISTEN_RATE = 10;   // in milliseconds
+
+    var __keyDirectionMap = {
+        37: 'left',
+        38: 'up',
+        39: 'right',
+        40: 'down',
+    };
+
+    var __keydowned = _.throttle(function __keydowned(e) {
+        console.log('keydowned');
+        var direction = __keyDirectionMap[e.keyCode];
+        if (direction)
+        {
+            /**
+             * If the keyCode pressed has a binding for a direction in the map
+             * above, disable CSS transitions so that they don't interfere
+             * during our rapid changes to the cube's transform property.
+             */
+            cubeDOMRenderer.transitionTransforms = false;
+            cubeDOMRenderer.nudge(direction);  // actually rotate the cube
+        }
+    }, KEY_LISTEN_RATE, false);
+
+    var __keyupped = function __keyupped(e) {
+        if (__keyDirectionMap[e.keyCode])
+        {   // if we are done rotating the cube...
+            cubeDOMRenderer.transitionTransforms = true;    // ... restore the transitions
+        }
+    };
+
+
+    /**
+     * DOM HELPERS
+     */
 
     function __newElementCanReplace(newEl, currEl) {
         return newEl instanceof HTMLElement;
@@ -201,6 +243,20 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
 
             this.render();
         }
+    });
+
+    Object.defineProperty(this, 'listenForKeyEvents', {
+        get: function() { return _options.listenForKeyEvents; },
+        set: function(shouldListen) {
+            document.removeEventListener('keydown', __keydowned);
+            document.removeEventListener('keyup', __keyupped);
+            _options.listenForKeyEvents = !!shouldListen;
+            if (_options.listenForKeyEvents)
+            {
+                document.addEventListener('keydown', __keydowned);
+                document.addEventListener('keyup', __keyupped);
+            }
+        },
     });
 
 

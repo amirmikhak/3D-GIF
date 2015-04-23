@@ -7,6 +7,7 @@ window.addEventListener('load', function() { // When everything is loaded
     cube = new Cube(8);
     cube.renderer = new CubeDOMRenderer({
         container: document.getElementById('cube-wrapper'),
+        listenForKeyEvents: true,
         cellConfig: {
             size: 45,
             rotate: false,
