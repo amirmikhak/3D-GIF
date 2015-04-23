@@ -47,30 +47,54 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     }
 
     function __listenForKeystrokes() {
-        if (!cubeRealtimeUserController.listeningForKeystrokes)
+        var controller = cubeRealtimeUserController;
+        if (!controller.listeningForKeystrokes)
         {
             /**
-             * By checking that cubeRealtimeUserController.listeningForKeystrokes is not already set, we
+             * By checking that controller.listeningForKeystrokes is not already set, we
              * prevent double-binding of these listeners to single events.
              */
 
-            cubeRealtimeUserController.listeningForKeystrokes = true;
-            document.addEventListener('keydown', cubeRealtimeUserController.validKeyFilterFn);
-            document.addEventListener('keydown', cubeRealtimeUserController.actionKeyListenerFn);
-            document.addEventListener('keypress', cubeRealtimeUserController.keyListenerFn);
+            controller.listeningForKeystrokes = true;
+            document.addEventListener('keydown', controller.validKeyFilterFn);
+            document.addEventListener('keydown', controller.actionKeyListenerFn);
+            document.addEventListener('keypress', controller.keyListenerFn);
         }
     };
 
     function __stopListeningForKeystrokes() {
-        document.removeEventListener('keydown', cubeRealtimeUserController.validKeyFilterFn);
-        document.removeEventListener('keydown', cubeRealtimeUserController.actionKeyListenerFn);
-        document.removeEventListener('keypress', cubeRealtimeUserController.keyListenerFn);
-        cubeRealtimeUserController.listeningForKeystrokes = false;
+        var controller = cubeRealtimeUserController;
+        document.removeEventListener('keydown', controller.validKeyFilterFn);
+        document.removeEventListener('keydown', controller.actionKeyListenerFn);
+        document.removeEventListener('keypress', controller.keyListenerFn);
+        controller.listeningForKeystrokes = false;
     };
 
     Object.defineProperty(this, 'directions', {
         writable: false,
         value: ['back', 'right', 'down', 'up', 'left', 'forward'],
+    });
+
+    Object.defineProperty(this, 'animationCb', {
+        /**
+         * Read-only property for the correct animation callback to use for the
+         * current action and direction.
+         */
+        get: function() {
+            if (_options['action'] === 'slide')
+            {
+                return {
+                    up: function() { this.cube.shiftPlane('X', _options['stepSize'], _options['wrap']); },
+                    down: function() { this.cube.shiftPlane('X', -1 * _options['stepSize'], _options['wrap']); },
+                    left: function() { this.cube.shiftPlane('Y', _options['stepSize'], _options['wrap']); },
+                    right: function() { this.cube.shiftPlane('Y', -1 * _options['stepSize'], _options['wrap']); },
+                    forward: function() { this.cube.shiftPlane('Z', _options['stepSize'], _options['wrap']); },
+                    back: function() { this.cube.shiftPlane('Z', -1 * _options['stepSize'], _options['wrap']); },
+                }[_options['direction']];
+            }
+
+            return undefined;   // just being explicit about this
+        }
     });
 
     Object.defineProperty(this, 'validKeyFns', {
@@ -405,3 +429,43 @@ CubeRealtimeUserController.prototype.getUpdate = function() {
     console.log('"Real" getUpdate()');
 };
 
+CubeRealtimeUserController.prototype.step = function(numSteps) {
+    /**
+     * Performs a single step of the current animation. If the number of steps
+     * is negative, we take the number of steps in the "opposite" direction for
+     * the current animation settings.
+     */
+
+    var DEFAULT_NUM_STEPS = 1;
+    _numSteps = typeof numSteps !== 'undefined' ?
+        (parseInt(numSteps, 10) || DEFAULT_NUM_STEPS) :
+        DEFAULT_NUM_STEPS;
+
+    if (_numSteps < 0)
+    {   // step "backward"
+        var startDirection = this.direction;
+        var oppositeDirection = {
+            'up': 'down',
+            'down': 'up',
+            'left': 'right',
+            'right': 'left',
+            'forward': 'back',
+            'back': 'forward',
+        }[startDirection];  // get the opposite direction
+
+        this.direction = oppositeDirection; // apply the opposite direction for our next steps
+
+        this.step(Math.abs(_numSteps));  // call this very function, but with a positive number of steps
+
+        this.direction = startDirection;    // re-apply the old direction
+
+        return;
+    }
+
+    for (var i = 0; i < _numSteps; i++)
+    {
+        this.animationCb();
+    }
+
+    return this;
+};
