@@ -5,7 +5,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     var cubeRealtimeUserController = this;
 
     var __defaultOptions = {
-        delay: 100,
+        animationInterval: 10,
         action: 'slide',
         writeFace: 'front',
         direction: 'back',
@@ -196,17 +196,17 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
 
             if (e.keyCode === 13)  // enter
             {
-                cube.togglePlaying();
+                controller.togglePlaying();
             } else if (e.ctrlKey && (e.keyCode === 8)) // backspace
             {
-                cube.pause();
+                controller.stop();
                 cube.clear();   // clear whole cube
             } else if (e.ctrlKey && (e.keyCode === 189))    // ctrl+minus
             {   // prev step
-                cube.step(-1);
+                controller.step(-1);
             } else if (e.ctrlKey && (e.keyCode === 187))    // ctrl+equals
             {   // next step
-                cube.step();
+                controller.step();
             } else if (e.ctrlKey && keyIsDirectionalAction(e))
             {
                 var newDirection = keyDirectionMap[e.keyCode];
@@ -298,23 +298,23 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         get: function() { return this.cube.colors[_options['penColor']]; },
     });
 
-    Object.defineProperty(this, 'delay', {
-        get: function() { return _options['delay']; },
-        set: function(newDelay) {
-            var parsedValue = parseInt(newDelay, 10);
+    Object.defineProperty(this, 'animationInterval', {
+        get: function() { return _options['animationInterval']; },
+        set: function(newAnimationInterval) {
+            var parsedValue = parseInt(newAnimationInterval, 10);
             if (isNaN(parsedValue) || (parsedValue < 0))
             {
-                console.error('Invalid delay for cubeRealtimeUserController', newDelay);
-                throw 'Invalid delay';
+                console.error('Invalid animationInterval for cubeRealtimeUserController', newAnimationInterval);
+                throw 'Invalid animation interval';
             }
 
-            var prevDelay = _options['delay'];
-            _options['delay'] = parsedValue;
+            var prevAnimationInterval = _options['animationInterval'];
+            _options['animationInterval'] = parsedValue;
 
             this.emit('propertyChanged', {
-                setting: 'delay',
-                newValue: _options['delay'],
-                oldValue: prevDelay,
+                setting: 'animationInterval',
+                newValue: _options['animationInterval'],
+                oldValue: prevAnimationInterval,
             });
         },
     });
@@ -426,7 +426,12 @@ CubeRealtimeUserController.prototype = Object.create(CubeController.prototype);
 CubeRealtimeUserController.prototype.constructor = CubeRealtimeUserController;
 
 CubeRealtimeUserController.prototype.getUpdate = function() {
-    console.log('"Real" getUpdate()');
+    var timeSinceLastRender = (new Date()).getTime() - this.lastRenderedTime;
+    if (timeSinceLastRender >= this.animationInterval)
+    {
+        this.step();
+        this.markRenderTime();
+    }
 };
 
 CubeRealtimeUserController.prototype.step = function(numSteps) {

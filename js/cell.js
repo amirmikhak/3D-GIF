@@ -16,13 +16,17 @@ var Cell = function Cell(opts) {
 
     var _options = _.extend({}, defaultOptions, opts);
 
+    var __colorAsString = '0,0,255';
+
     function __invalidColor(colorArr) {
         return (
             !(colorArr instanceof Array) ||
             (colorArr.length !== 3) ||
-            colorArr.some(function(val) { return (val < 0) || (val > 255); })
+            (colorArr[0] < 0) || (colorArr[0] > 255) ||
+            (colorArr[1] < 0) || (colorArr[1] > 255) ||
+            (colorArr[2] < 0) || (colorArr[2] > 255)
         );
-    }
+    };
 
     Object.defineProperty(this, 'cube', {
         get: function() { return _options['cube']; },
@@ -82,13 +86,14 @@ var Cell = function Cell(opts) {
     });
 
     Object.defineProperty(this, 'color', {
-        get: function() { return _options['color']; },
+        get: function() { return _options['color'].slice(); },
         set: function(newColor) {
             if (__invalidColor(newColor)) {
                 console.error('Invalid color for Cell: ' + newColor);
                 throw 'Invalid color for Cell';
             }
             _options['color'] = newColor;
+            __colorAsString = (_options['color'][0] + ',' + _options['color'][1] + ',' + _options['color'][2]);
             if (_options['autoRender'])
             {
                 this.render();
@@ -98,7 +103,7 @@ var Cell = function Cell(opts) {
     });
 
     Object.defineProperty(this, 'colorAsString', {
-        get: function() { return _options['color'].join(','); },
+        get: function() { return __colorAsString; },
     });
 
     Object.defineProperty(this, 'renderer', {
@@ -122,11 +127,11 @@ var Cell = function Cell(opts) {
     Object.defineProperty(this, 'options', {
         get: function() {
             return {
-                'row': this.row,
-                'column': this.column,
-                'depth': this.depth,
-                'on': this.on,
-                'color': this.color,
+                'row': _options['row'],
+                'column': _options['column'],
+                'depth': _options['depth'],
+                'on': _options['on'],
+                'color': _options['color'],
             };
         },
     });

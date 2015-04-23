@@ -58,10 +58,13 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         // a function for comparing simple and more complex types such as arrays
         return (
               (a === null || b === null) ||
-              (typeof a === 'undefined' || typeof b === 'undefined')
+              (typeof a === 'undefined' || typeof b === 'undefined') ||
+              (!isNaN(a) && !isNaN(b))
           ) ?
             a === b :
-            a.toString() === b.toString();   // crappy but close enough for now
+            ((a instanceof Array) && (b instanceof Array) ?
+                a.equals(b) :
+                JSON.stringify(a) === JSON.stringify(b));   // crappy but close enough for now
     }
 
     function __calculateDirtyOptions() {
@@ -183,13 +186,14 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     function __mouseClickHandler(e) {
         e.preventDefault();
 
+        var _on = _cell['on'];
         applyOptions.call(_cell, {
-            on: !_cell['on'], // Toggle my on status when someone clicks the cell
+            on: !_on, // Toggle my on status when someone clicks the cell
             /**
              * IF we have a connection to the cube and it has an opinion about
              * what color we should be, let's honor it.
              */
-            color: _cell['on'] && _cell.cube && _cell.cube.controller ?
+            color: _on && _cell.cube && _cell.cube.controller ?
                 _cell.cube.controller.penColorRgb : _cell['color'],
         });
     }
@@ -201,13 +205,15 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
          * If start on an on cell the same color as we, clear next ones,
          * otherwise continue to draw in cube's penColor
          */
+        var _color = _cell['color'];
+
         var newDragSetOn = !_cell['on'] || ((_cell.cube && _cell.cube.controller) ?
-            !__colorsAreEqual(_cell.cube.controller.penColorRgb, _cell['color']) :
+            !__colorsAreEqual(_cell.cube.controller.penColorRgb, _color) :
             false);
 
         var newDragSetColor = _cell.cube && _cell.cube.controller ?
             _cell.cube.controller.penColorRgb :
-            _cell['color'];
+            _color;
 
         applyOptions.call(CellDraggingDelegate.get(), {
             isDragging: true,

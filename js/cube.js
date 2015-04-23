@@ -48,6 +48,15 @@ var Cube = function Cube(size) {
         get: function() { return Object.keys(this.colors); },
     });
 
+    Object.defineProperty(this, 'shiftedCoordsFns', {
+        writable: false,
+        value: {
+            X: function(cell, cubeSize, wrap, stepSize) { return [cube.getNewValueForShift(cell['row'], cubeSize, wrap, stepSize), cell['column'], cell['depth']]; },
+            Y: function(cell, cubeSize, wrap, stepSize) { return [cell['row'], cube.getNewValueForShift(cell['column'], cubeSize, wrap, stepSize), cell['depth']]; },
+            Z: function(cell, cubeSize, wrap, stepSize) { return [cell['row'], cell['column'], cube.getNewValueForShift(cell['depth'], cubeSize, wrap, stepSize)]; },
+        }
+    });
+
     Object.defineProperty(this, 'controller', {
         get: function() { return _controller; },
         set: function(newController) {
@@ -57,6 +66,9 @@ var Cube = function Cube(size) {
                 throw 'Invalid controller for Cube';
             }
 
+            if (_controller) {
+                _controller.cube = null;    // ensure that the previous cube isn't still mutating us
+            }
             _controller = newController;
             _controller.cube = this;
         },
@@ -152,6 +164,21 @@ Cube.prototype.toJSON = function() {
     };
 };
 
+Cube.prototype.getNewValueForShift = function(cellPos, cubeSize, wrap, stepSize) {
+    var cellPlusSize = cellPos + stepSize;
+
+    if ((cellPlusSize >= 0) && (cellPlusSize < cubeSize))
+    {   // your new coord originated from inside of bounds
+        return (cellPlusSize) % cubeSize;
+    } else if (wrap)    // your new coord originated from outside of bounds
+    {   // reach around the other side
+        return (cubeSize + cellPlusSize) % cubeSize;
+    }
+
+    // screw it, your new value is nothing
+    return -1;
+};
+
 Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     /**
      * Apply the state of any given cell to its n'th-away neighbor (stepSize)
@@ -159,65 +186,25 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
      * off" or wrap to the opposite face when shifting out of bounds.
      */
 
-    stepSize = typeof stepSize !== 'undefined' ? stepSize : -1;
-    wrap = typeof wrap !== 'undefined' ? !!wrap : true;
+    var _stepSize = typeof stepSize !== 'undefined' ? stepSize : -1;
+    var _wrap = typeof wrap !== 'undefined' ? !!wrap : true;
 
     var cube = this;
+    var _cubeSize = cube.size;
 
-    function getNewValueForShift(cell, axis) {
-        var cubeSize = cube['size'];
-        var cellPlusSize = cell[axis] + stepSize;
-
-        if ((cellPlusSize >= 0) && (cellPlusSize < cubeSize))
-        {   // your new coord originated from inside of bounds
-            return (cellPlusSize) % cubeSize;
-        } else if (wrap)    // your new coord originated from outside of bounds
-        {   // reach around the other side
-            return (cubeSize + cellPlusSize) % cubeSize;
-        }
-
-        // screw it, your new value is nothing
-        return -1;
-    };
-
-    function getNewRowForXShift(cell) {
-        return getNewValueForShift(cell, 'row');
-    }
-
-    function getNewColForYShift(cell) {
-        return getNewValueForShift(cell, 'column');
-    }
-
-    function getNewDepthForZShift(cell) {
-        return getNewValueForShift(cell, 'depth');
-    }
-
-    var nextState = cube.cells.map(function(cell) {
+    var nextState = [];
+    for (var i = 0, numCells = cube.cells.length; i < numCells; i++)
+    {
         // We want to calculate the coordinates of the 'previous' cell along various directions
-        var shiftedCoords = {
-            'X': [
-                getNewRowForXShift(cell),
-                cell.column,
-                cell.depth,
-            ],
-            'Y': [
-                cell.row,
-                getNewColForYShift(cell),
-                cell.depth,
-            ],
-            'Z': [
-                cell.row,
-                cell.column,
-                getNewDepthForZShift(cell),
-            ]
-        }[axis];
+        var shiftedCoords = cube.shiftedCoordsFns[axis](cube.cells[i], _cubeSize, _wrap, _stepSize);
+        var shiftedCell = cube.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]);
 
         // Once we have it, grab its on status and color and return it
-        return {
-            'on': cube.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]).on,
-            'color': cube.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]).color
-        };
-    });
+        nextState.push({
+            'on': shiftedCell.on,
+            'color': shiftedCell.color
+        });
+    }
 
     // Iterate over all the cells and change their on status and color to their 'previous' neighbor's
     for (var i = 0, numCells = cube.cells.length; i < numCells; i++)
@@ -228,7 +215,7 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
         });
     }
 
-    return this;    // enables multiple calls on cube to be "chained"
+    return this;
 };
 
 Cube.prototype.dimensionOutOfBounds = function(dimValue) {

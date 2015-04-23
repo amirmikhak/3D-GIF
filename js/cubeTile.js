@@ -5,18 +5,27 @@ var CubeTile = function CubeTile(cells, cellOpts) {
         return (dataToValidate instanceof Array) && (dataToValidate.length === 64);
     };
 
-    var __copyCell = function(originalCell) {
-        var mergedCellOptions = _.extend({
+    var __copyCell = function(originalCell, addlCellOpts) {
+        var mergedCellOptions = {
             row: originalCell.row,
             column: originalCell.column,
             depth: originalCell.depth,
             on: originalCell.on,
             color: originalCell.color,
-        }, _cellOpts);
+        };
+        for (var key in mergedCellOptions) {
+            mergedCellOptions[key] = addlCellOpts.hasOwnProperty(key) ?
+                addlCellOpts[key] :
+                mergedCellOptions[key];
+        }
         return new Cell(mergedCellOptions);
     };
 
-    var _cells = tryJSON(cells, __sliceValidator).map(__copyCell);
+    var _cells = tryJSON(cells, __sliceValidator);
+    for (var i = 0, numCells = cells.length; i < numCells; i++)
+    {
+        _cells[i] = __copyCell(_cells[i], _cellOpts);
+    }
 
     Object.defineProperty(this, 'cells', {
         get: function() { return _cells.slice(); },
