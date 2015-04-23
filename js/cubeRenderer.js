@@ -19,15 +19,15 @@ var CubeRenderer = function CubeRenderer(cube) {
             _numCells = _cube.cells.length;
 
             this.emit('cubeChanged');
-        }
+        },
     });
 
     Object.defineProperty(this, 'cells', {
-        get: function() { return _cells; }
+        get: function() { return _cells; },
     });
 
     Object.defineProperty(this, 'numCells', {
-        get: function() { return _numCells; }
+        get: function() { return _numCells; },
     });
 
     return this;

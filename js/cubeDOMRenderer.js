@@ -97,7 +97,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             back: [-20, -155],
             right: [-30, -60],
             bottom: [60, 30],
-        }
+        },
     });
 
     Object.defineProperty(this, 'faceNames', {
@@ -131,7 +131,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
     });
 
     Object.defineProperty(this, 'outerDimensions', {
-        get: function() { return this.cube.size * _options.cellConfig.size; }
+        get: function() { return this.cube.size * _options.cellConfig.size; },
     });
 
     Object.defineProperty(this, 'xAngle', {
@@ -143,7 +143,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
                 _options['xAngle'] = parsedAngle;
                 this.render();
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'yAngle', {
@@ -155,7 +155,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
                 _options['yAngle'] = parsedAngle;
                 this.render();
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'transitionTransforms', {
@@ -181,7 +181,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
                 _html.style.transitionDuration = null;
                 _html.style.transitionTimingFunction = null;
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'cellConfig', {
@@ -241,7 +241,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             }
 
             this.render();
-        }
+        },
     });
 
     Object.defineProperty(this, 'listenForKeyEvents', {

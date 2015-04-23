@@ -26,7 +26,7 @@ var Cell = function Cell(opts) {
 
     Object.defineProperty(this, 'cube', {
         get: function() { return _options['cube']; },
-        set: function(newCube) { return _options['cube'] = newCube; }
+        set: function(newCube) { return _options['cube'] = newCube; },
     });
 
     Object.defineProperty(this, 'row', {
@@ -38,7 +38,7 @@ var Cell = function Cell(opts) {
                 this.render();
             }
             return _options['row'];
-        }
+        },
     });
 
     Object.defineProperty(this, 'column', {
@@ -50,7 +50,7 @@ var Cell = function Cell(opts) {
                 this.render();
             }
             return _options['column'];
-        }
+        },
     });
 
     Object.defineProperty(this, 'depth', {
@@ -62,11 +62,11 @@ var Cell = function Cell(opts) {
                 this.render();
             }
             return _options['depth'];
-        }
+        },
     });
 
     Object.defineProperty(this, 'coordAsString', {
-        get: function() { return [this.column, this.row, this.depth].toString() }
+        get: function() { return [this.column, this.row, this.depth].join(',') },
     });
 
     Object.defineProperty(this, 'on', {
@@ -78,7 +78,7 @@ var Cell = function Cell(opts) {
                 this.render();
             }
             return _options['on'];
-        }
+        },
     });
 
     Object.defineProperty(this, 'color', {
@@ -94,7 +94,11 @@ var Cell = function Cell(opts) {
                 this.render();
             }
             return _options['color'].slice();
-        }
+        },
+    });
+
+    Object.defineProperty(this, 'colorAsString', {
+        get: function() { return _options['color'].join(','); },
     });
 
     Object.defineProperty(this, 'renderer', {

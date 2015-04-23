@@ -47,7 +47,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     }
 
     Object.defineProperty(this, 'mouseListeningCells', {
-        get: function() { return _mouseListeningCells; }
+        get: function() { return _mouseListeningCells; },
     });
 
     Object.defineProperty(this, 'writeFace', {
@@ -59,12 +59,12 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             {
                 this.cube.render();
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'penColor', {
         get: function() { return _options['penColor']; },
-        set: function(newPenColor) { _options['penColor'] = newPenColor; }
+        set: function(newPenColor) { _options['penColor'] = newPenColor; },
     });
     Object.defineProperty(this, 'penColorRgb', {
         get: function() { return this.cube.colors[_options['penColor']]; },
@@ -73,27 +73,27 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     // !TODO: fill in the real properties for the options
     Object.defineProperty(this, 'delay', {
         get: function() { return _options['delay']; },
-        set: function(newDelay) { _options['delay'] = newDelay; }
+        set: function(newDelay) { _options['delay'] = newDelay; },
     });
     Object.defineProperty(this, 'action', {
         get: function() { return _options['action']; },
-        set: function(newAction) { _options['action'] = newAction; }
+        set: function(newAction) { _options['action'] = newAction; },
     });
     Object.defineProperty(this, 'direction', {
         get: function() { return _options['direction']; },
-        set: function(newDirection) { _options['direction'] = newDirection; }
+        set: function(newDirection) { _options['direction'] = newDirection; },
     });
     Object.defineProperty(this, 'stepSize', {
         get: function() { return _options['stepSize']; },
-        set: function(newStepSize) { _options['stepSize'] = newStepSize; }
+        set: function(newStepSize) { _options['stepSize'] = newStepSize; },
     });
     Object.defineProperty(this, 'wrap', {
         get: function() { return _options['wrap']; },
-        set: function(newWrap) { _options['wrap'] = newWrap; }
+        set: function(newWrap) { _options['wrap'] = newWrap; },
     });
     Object.defineProperty(this, 'listenForKeys', {
         get: function() { return _options['listenForKeys']; },
-        set: function(newListenForKeys) { _options['listenForKeys'] = newListenForKeys; }
+        set: function(newListenForKeys) { _options['listenForKeys'] = newListenForKeys; },
     });
 
     applyOptions.call(this, _options);

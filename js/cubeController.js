@@ -6,7 +6,7 @@ var CubeController = function CubeController(cube) {
 
     Object.defineProperty(this, 'cube', {
         get: function() { return _cube; },
-        set: function(newCube) { _cube = newCube; }
+        set: function(newCube) { _cube = newCube; },
     });
 
     return this;

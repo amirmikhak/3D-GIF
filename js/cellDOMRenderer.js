@@ -89,9 +89,9 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     function __updateDOM() {
         __calculateDirtyOptions();
 
-        var _size = _options['size'];   // performance
-        var _on = _cell['on'];   // performance
-        var _colorRgbString = _cell['color'].join(',');
+        var _size = _options['size'];
+        var _on = _cell['on'];
+        var _colorRgbString = _cell['colorAsString'];
 
         if (_dirtyOptions['transitionTransforms'])
         {
@@ -174,7 +174,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
                    'rotateZ(' + rot[2] + 'deg) '
                );
            }
-           // assign the built string to the element
+
            _html.style.transform = xformPieces;
         }
         __updateDrawnOptions();
@@ -197,8 +197,10 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     function __mouseDownHandler(e) {
         e.preventDefault();
 
-        // if start on an on cell the same color as we, clear next ones,
-        // otherwise continue to draw in cube's penColor
+        /**
+         * If start on an on cell the same color as we, clear next ones,
+         * otherwise continue to draw in cube's penColor
+         */
         var newDragSetOn = !_cell['on'] || ((_cell.cube && _cell.cube.controller) ?
             !__colorsAreEqual(_cell.cube.controller.penColorRgb, _cell['color']) :
             false);
@@ -252,7 +254,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             {
                 this.render();   // call to ensure that the DOM is sync with model
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'rotate', {
@@ -264,7 +266,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             {
                 this.render();   // call to ensure that the DOM is sync with model
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'rotation', {
@@ -294,7 +296,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             {
                 this.render();   // call to ensure that the DOM is sync with model
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'transitionTransforms', {
@@ -308,7 +310,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             {
                 this.render();   // call to ensure that the DOM is sync with model
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'interactive', {
@@ -357,7 +359,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
                 _html.removeEventListener('mouseup', __mouseUpHandler);
                 _html.removeEventListener('mousemove', __mouseMoveHandler);
             }
-        }
+        },
     });
 
     Object.defineProperty(this, 'interactMode', {
@@ -373,14 +375,14 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
 
             _options['interactMode'] = newInteractMode;
             this.interactive = _options['interactive'];    // call to un/rebind handlers
-        }
+        },
     });
 
     (function buildHTML() {
         _led.classList.add('led');
         _html.classList.add('cell');
         _html.appendChild(_led);
-    }());  // Use our "outside" this inside of buildHTML
+    }());
 
     _cell.autoRender = false;
     applyOptions.call(this, _options);
