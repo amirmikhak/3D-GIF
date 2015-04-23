@@ -5,6 +5,7 @@ var Cube = function Cube(size) {
     var _size = size;
     var _cells = [];
     var _renderer = null;
+    var _controller = null;
 
     this.sliceValidator = function(dataToValidate) {
         /**
@@ -22,7 +23,6 @@ var Cube = function Cube(size) {
     });
 
     Object.defineProperty(this, 'colors', {
-        enumerable: false,
         writable: false,
         value: {
             indigo: [75, 0, 130],
@@ -40,12 +40,24 @@ var Cube = function Cube(size) {
     });
 
     Object.defineProperty(this, 'colorNames', {
-        enumerable: true,
         get: function() { return Object.keys(this.colors); },
     });
 
+    Object.defineProperty(this, 'controller', {
+        get: function() { return _controller; },
+        set: function(newController) {
+            if (!newController.can('getUpdate'))
+            {
+                console.error('Invalid controller: must implement getUpdate()');
+                throw 'Invalid controller for Cube';
+            }
+
+            _controller = newController;
+            _controller.cube = this;
+        },
+    });
+
     Object.defineProperty(this, 'renderer', {
-        enumerable: true,
         get: function() { return _renderer; },
         set: function(newRenderer) {
             if (!newRenderer.can('render'))
@@ -84,6 +96,13 @@ var Cube = function Cube(size) {
     }());
 
     return this;
+};
+
+Cube.prototype.update = function() {
+    if (this.controller)
+    {
+        this.controller.getUpdate();
+    }
 };
 
 Cube.prototype.render = function() {

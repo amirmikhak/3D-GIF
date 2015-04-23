@@ -65,6 +65,10 @@ var Cell = function Cell(opts) {
         }
     });
 
+    Object.defineProperty(this, 'coordAsString', {
+        get: function() { return [this.column, this.row, this.depth].toString() }
+    });
+
     Object.defineProperty(this, 'on', {
         get: function() { return _options['on']; },
         set: function(turnOn) {

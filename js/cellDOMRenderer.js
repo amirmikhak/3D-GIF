@@ -183,13 +183,14 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     function __mouseClickHandler(e) {
         e.preventDefault();
 
-        cellDOMRenderer.applyOptions({
-            on: !_options['on'], // Toggle my on status when someone clicks the cell
+        applyOptions.call(_cell, {
+            on: !_cell['on'], // Toggle my on status when someone clicks the cell
             /**
              * IF we have a connection to the cube and it has an opinion about
              * what color we should be, let's honor it.
              */
-            color: _options['on'] && _options['cube'] ? cell.cube.penColorRgb : _options['color'],
+            color: _cell['on'] && _cell.cube && _cell.cube.controller ?
+                _cell.cube.controller.penColorRgb : _cell['color'],
         });
     }
 
@@ -198,13 +199,13 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
 
         // if start on an on cell the same color as we, clear next ones,
         // otherwise continue to draw in cube's penColor
-        var newDragSetOn = !_options['on'] || (_options['cube'] ?
-            !__colorsAreEqual(_options['cube'].penColorRgb, _options['color']) :
+        var newDragSetOn = !_cell['on'] || ((_cell.cube && _cell.cube.controller) ?
+            !__colorsAreEqual(_cell.cube.controller.penColorRgb, _cell['color']) :
             false);
 
-        var newDragSetColor = _options['cube'] ?
-            _options['cube'].penColorRgb :
-            _options['color'];
+        var newDragSetColor = _cell.cube && _cell.cube.controller ?
+            _cell.cube.controller.penColorRgb :
+            _cell['color'];
 
         applyOptions.call(CellDraggingDelegate.get(), {
             isDragging: true,
@@ -229,7 +230,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         {
             _cell.applyOptions({
                 on: dragDelegate.dragSetOn,
-                color: dragDelegate.dragSetOn ? dragDelegate.dragSetColor : _options['color'],
+                color: dragDelegate.dragSetOn ? dragDelegate.dragSetColor : _cell['color'],
             });
         }
     }

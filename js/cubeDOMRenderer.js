@@ -206,7 +206,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             {
                 if (this.cells[i].renderer)
                 {
-                    applyOptions(this.cells[i].renderer, {
+                    applyOptions.call(this.cells[i].renderer, {
                         size: newCellSize,
                     });
                 }
@@ -234,7 +234,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
                  */
                 for (var i = 0; i < this.numCells; i++)
                 {
-                    this.cells[i].applyOptions({
+                    applyOptions.call(this.cells[i].renderer, {
                         rotation: [0, 0, 0],
                     });
                 }
@@ -263,12 +263,14 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
      * INIT
      */
 
-    applyOptions.call(this, _options);
-
-    this.on('cubeChanged', function() {
-        applyOptions.call(this, _options);
+    function init() {
         __buildHTML();
-    });
+        applyOptions.call(cubeDOMRenderer, _options);
+    }
+
+    this.on('cubeChanged', init);
+
+    init();
 
     return this;
 
@@ -283,19 +285,32 @@ CubeDOMRenderer.prototype.render = function() {
         'rotateY(' + this.yAngle + 'deg)'
     );
 
-    if (this.cellRotate)
+    var mouseListeningCells = this.cube.controller ?
+        this.cube.controller.mouseListeningCells :
+        [];
+
+    for (var i = 0; i < this.numCells; i++)
     {
-        /**
-         * Only apply rotations if we need to because iterating over the cells
-         * is very expensive and reduces performance significantly. See the
-         * rotateCells property on "this" for more information.
-         */
-        for (var i = 0; i < this.numCells; i++)
+        var wasAutoRendering = this.cells[i].autoRender;
+        this.cells[i].autoRender = false;
+
+        if (this.cellRotate)
         {
-            this.cells[i].renderer.applyOptions({
+            /**
+             * Only apply rotations if we need to because iterating over the cells
+             * is very expensive and reduces performance significantly. See the
+             * rotateCells property on "this" for more information.
+             */
+            applyOptions.call(this.cells[i].renderer, {
                 rotation: [-1 * this.xAngle, -1 * this.yAngle, 0],
             });
         }
+
+        applyOptions.call(this.cells[i].renderer, {
+            interactive: mouseListeningCells.indexOf(this.cells[i].coordAsString) !== -1,
+        });
+
+        this.cells[i].autoRender = wasAutoRendering;
     }
 };
 
