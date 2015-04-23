@@ -8,6 +8,8 @@ window.addEventListener('load', function() { // When everything is loaded
     cube.renderer = new CubeDOMRenderer({
         container: document.getElementById('cube-wrapper'),
         listenForKeyEvents: true,
+        xAngle: -30,
+        yAngle: 30,
         cellConfig: {
             size: 45,
             rotate: false,

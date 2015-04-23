@@ -36,7 +36,6 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
     };
 
     var __keydowned = _.throttle(function __keydowned(e) {
-        console.log('keydowned');
         var direction = __keyDirectionMap[e.keyCode];
         if (direction)
         {
