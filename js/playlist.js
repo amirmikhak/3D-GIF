@@ -29,7 +29,7 @@ var Playlist = function(opts) {
     var __tileThumbs = [];
     var __tileHtmls = [];
 
-    var __emptyTile = new EmptyTile();
+    var __emptyTile = new EmptyCubeTile();
 
     var __userCursorPosition = 0;
     var __userCursorEl = document.createElement('div');
@@ -543,7 +543,7 @@ var Playlist = function(opts) {
                 return;
             } else if (e.altKey && (keyMap[e.keyCode] === 'up'))
             {
-                playlist.insertTileAtAndMoveCursor(new Tile(cube.readSlice()));
+                playlist.insertTileAtAndMoveCursor(new CubeTile(cube.readSlice()));
                 return;
             }
 

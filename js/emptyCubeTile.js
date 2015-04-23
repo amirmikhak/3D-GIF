@@ -1,4 +1,4 @@
-var EmptyTile = function EmptyTile() {
+var EmptyCubeTile = function EmptyCubeTile() {
     var emptyCells = [];
     for (var i = 0; i < 64; i++)
     {
@@ -7,5 +7,5 @@ var EmptyTile = function EmptyTile() {
             color: [0,0,0],
         }));
     }
-    return new Tile(emptyCells);
+    return new CubeTile(emptyCells);
 };

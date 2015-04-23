@@ -433,9 +433,9 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         face :
         'front';
 
-    var dataToUse = tryJSON(data, this.sliceValidator.bind(this));
-
-    var dataTile = new Tile(dataToUse);
+    var dataTile = (data instanceof CubeTile) ?
+        data :
+        new CubeTile(tryJSON(data, this.sliceValidator.bind(this)));
 
     var facesToReflectX = ['back', 'right'];
     var facesToReflectY = ['bottom'];
@@ -450,10 +450,10 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         dataTile.reflectY();
     }
 
-    var cells = dataTile.getCells();
+    var cellsToWrite = dataTile.cells;
 
     function writeCellFromData(r, c, d) {
-        var cell = cells.shift();
+        var cell = cellsToWrite.shift();
         this.setCellAt(r, c, d, cell);
     };
 

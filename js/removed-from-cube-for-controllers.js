@@ -654,7 +654,7 @@ Cube.prototype.listenForKeystrokes = function(opts) {
         } else if ((cube.playbackMode === 'playlist') && (cube.playlist.focus))
         {
             var tileContents = cube.getCharacterRender(char);
-            cube.playlist.insertTileAtAndMoveCursor(new Tile(tileContents))
+            cube.playlist.insertTileAtAndMoveCursor(new CubeTile(tileContents))
         }
     };
 
