@@ -1,6 +1,10 @@
 var cube;
 var cubeRenderer;
 
+var CubeAssets = new CubeAssetsStore();
+CubeAssets.loadFont('printChar21', '/js/assets/cube8PrintChar21Font.json');
+CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json');
+
 window.addEventListener('load', function() { // When everything is loaded
 
     // Build a new Cube object

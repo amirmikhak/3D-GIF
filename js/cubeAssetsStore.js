@@ -1,6 +1,6 @@
-var CubeAssets = function CubeAssets(opts) {
+var CubeAssetsStore = function CubeAssetsStore() {
 
-    var cubeAssets = this;
+    var cubeAssetsStore = this;
 
     var _fontMap = {};
     var _activeFont = null;
@@ -38,7 +38,7 @@ var CubeAssets = function CubeAssets(opts) {
     Object.defineProperty(this, 'activeShapeSetShapes', {
         get: function() {
             return _shapeSetMap[_activeShapeSet] ?
-                Object.create(_shapeSetMap[_activeShapeSet]) :
+                _shapeSetMap[_activeShapeSet] :
                 null;
         },
     });
@@ -91,7 +91,7 @@ var CubeAssets = function CubeAssets(opts) {
            _fontMap[handle] = fontData;
            if (Object.keys(_fontMap).length === 1)
            {   // if this newly loaded font is the only one available...
-               cubeAssets.activeFont = handle;   // ... use it.
+               cubeAssetsStore.activeFont = handle;   // ... use it.
            }
        });
     };
@@ -123,7 +123,7 @@ var CubeAssets = function CubeAssets(opts) {
            _shapeSetMap[handle] = shapeSetData;
            if (Object.keys(_shapeSetMap).length === 1)
            {   // if this newly loaded shapeSet is the only one available...
-               cubeAssets.activeShapeSet = handle;   // ... use it.
+               cubeAssetsStore.activeShapeSet = handle;   // ... use it.
            }
        });
     };
@@ -148,7 +148,7 @@ var CubeAssets = function CubeAssets(opts) {
 
 };
 
-CubeAssets.prototype.getCharacterRender = function(char, desiredColor) {
+CubeAssetsStore.prototype.getCharacterRender = function(char, desiredColor) {
     /**
      * Return a slice containing a character (char, a single character) in a
      * color (desiredColor, a string) for rendering to the cube. This function
@@ -166,7 +166,7 @@ CubeAssets.prototype.getCharacterRender = function(char, desiredColor) {
         throw 'Invalid color';
     }
 
-    var charPixels = this.activeFontChars[char].slice();
+    var charPixels = this.activeFontChars[char] ? this.activeFontChars[char].slice() : null;
     if (!charPixels)
     {
         console.error('Character could not be rendered: ' + char);
@@ -182,10 +182,10 @@ CubeAssets.prototype.getCharacterRender = function(char, desiredColor) {
     });
 };
 
-CubeAssets.prototype.getShapeRender = function(shapeName) {
+CubeAssetsStore.prototype.getShapeRender = function(shapeName) {
     if (!this.activeShapeSetShapes[shapeName])
     {
-        console.error('Invalid shape for CubeAssetes.getShapeRender(). ' +
+        console.error('Invalid shape for CubeAssetsStore.getShapeRender(). ' +
             'Known shapes: ' + this.activeShapeSetShapes.join(', '));
         throw 'Invalid shape';
     }

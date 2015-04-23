@@ -46,6 +46,194 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         }
     }
 
+    function __listenForKeystrokes() {
+        if (!cubeRealtimeUserController.listeningForKeystrokes)
+        {
+            /**
+             * By checking that cubeRealtimeUserController.listeningForKeystrokes is not already set, we
+             * prevent double-binding of these listeners to single events.
+             */
+
+            cubeRealtimeUserController.listeningForKeystrokes = true;
+            document.addEventListener('keydown', cubeRealtimeUserController.validKeyFilterFn);
+            document.addEventListener('keydown', cubeRealtimeUserController.actionKeyListenerFn);
+            document.addEventListener('keypress', cubeRealtimeUserController.keyListenerFn);
+        }
+    };
+
+    function __stopListeningForKeystrokes() {
+        document.removeEventListener('keydown', cubeRealtimeUserController.validKeyFilterFn);
+        document.removeEventListener('keydown', cubeRealtimeUserController.actionKeyListenerFn);
+        document.removeEventListener('keypress', cubeRealtimeUserController.keyListenerFn);
+        cubeRealtimeUserController.listeningForKeystrokes = false;
+    };
+
+    Object.defineProperty(this, 'directions', {
+        writable: false,
+        value: ['back', 'right', 'down', 'up', 'left', 'forward'],
+    });
+
+    Object.defineProperty(this, 'validKeyFns', {
+        writable: false,
+        value: {
+            specials: function(e) {
+                return (
+                    (e.keyCode === 32) ||   // spacebar
+                    (e.keyCode === 8) ||    // backspace
+                    (e.keyCode === 13) ||   // enter
+                    (e.keyCode >= 37 && e.keyCode <= 40)    // arrow keys
+                );
+            },
+            alpha: function(e) {
+                return cubeRealtimeUserController.validKeyFns.specials(e) || (e.keyCode >= 65 && e.keyCode <= 90);
+            },
+            num: function(e) {
+                return (
+                    cubeRealtimeUserController.validKeyFns.specials(e) ||
+                    (e.keyCode >= 48 && e.keyCode <= 57) || // top row
+                    (e.keyCode >= 96 && e.keyCode <= 105)   // num pad
+                );
+            },
+            symbols: function(e) {
+                return (
+                    cubeRealtimeUserController.validKeyFns.specials(e) ||
+                    (e.keyCode >= 106 && e.keyCode <= 111) ||  // math operators
+                    (e.keyCode >= 186 && e.keyCode <= 222) ||  // punctuation
+                    (e.shiftKey && e.keyCode >= 48 && e.keyCode <= 57)    // "uppercase" numbers
+                );
+            },
+            alphanum: function(e) {
+                return cubeRealtimeUserController.validKeyFns.alpha(e) || cubeRealtimeUserController.validKeyFns.num(e);
+            },
+            all: function(e) {
+                return cubeRealtimeUserController.validKeyFns.alphanum(e) || cubeRealtimeUserController.validKeyFns.symbols(e);
+            },
+            none: function(e) {
+                return false;
+            },
+        },
+    });
+
+    Object.defineProperty(this, 'validListenForKeys', {
+        get: function() { return Object.keys(cubeRealtimeUserController.validKeyFns); },
+    });
+
+    Object.defineProperty(this, 'validKeyFilterFn', {
+        writable: false,
+        value: function validKeyFilterFn(e) {
+            /**
+             * Call the validator for the current set of desired keys, passing in the
+             * current event for evaluation. If the key is valid, allow the event to
+             * proceed, otherwise don't let other listeners see it.
+             */
+
+            if (cubeRealtimeUserController.validKeyFns[cubeRealtimeUserController.listenForKeys](e))
+            {
+                return true;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        },
+    });
+
+    Object.defineProperty(this, 'actionKeyListenerFn', {
+        writable: false,
+        value: function actionKeyListenerFn(e) {
+            var controller = cubeRealtimeUserController;
+            var cube = controller.cube;
+
+            /**
+             * Capture key events that are supposed to trigger an action on the cube.
+             * In the event that an action is typed, we don't want to let the event
+             * propagate up to this.keyListenerFn(). If it were to, the letters
+             * pressed to trigger actions would appear on the cube. For example,
+             * CTRL+B would both change the cube's animation direction and show a 'b'
+             * on the front face.
+             */
+
+            var keyDirectionMap = {
+                37: 'left',
+                38: 'up',
+                39: 'right',
+                40: 'down',
+                70: 'front',   // "Front:  CTRL+F"
+                66: 'back',    // "Back:   CTRL+B"
+                85: 'up',      // "Up:     CTRL+U"
+                68: 'down',    // "Down:   CTRL+D"
+                82: 'right',   // "Right:  CTRL+R"
+                76: 'left',    // "Left:   CTRL+L"
+            };
+
+            function keyIsDirectionalAction() {
+                return Object.keys(keyDirectionMap).indexOf(e.keyCode.toString()) !== -1;
+            }
+
+            if (e.keyCode === 13)  // enter
+            {
+                cube.togglePlaying();
+            } else if (e.ctrlKey && (e.keyCode === 8)) // backspace
+            {
+                cube.pause();
+                cube.clear();   // clear whole cube
+            } else if (e.ctrlKey && (e.keyCode === 189))    // ctrl+minus
+            {   // prev step
+                cube.step(-1);
+            } else if (e.ctrlKey && (e.keyCode === 187))    // ctrl+equals
+            {   // next step
+                cube.step();
+            } else if (e.ctrlKey && keyIsDirectionalAction(e))
+            {
+                var newDirection = keyDirectionMap[e.keyCode];
+                if (e.altKey)
+                {
+                    if (newDirection === 'up')
+                    {
+                        newDirection = 'back';
+                    } else if (newDirection === 'down')
+                    {
+                        newDirection = 'forward';
+                    }
+                }
+                controller.direction = newDirection;
+            } else if (e.ctrlKey && e.keyCode >= 48 && e.keyCode <= 57) // ctrl + num row
+            {
+                var shapeIndex = parseInt(String.fromCharCode(e.keyCode), 10) - 1;
+                var shapeNames = Object.keys(CubeAssets.activeShapeSetShapes);
+                var numShapes = shapeNames.length;
+                if ((shapeIndex >= 0) && (shapeIndex < numShapes))
+                {
+                    var shapeTile = CubeAssets.getShapeRender(shapeNames[shapeIndex]);
+                    cube.writeSlice(shapeTile, controller.writeFace);
+                }
+            } else
+            {
+                return;
+            }
+
+            // fall through to this if any of the above "ifs" are true
+            e.preventDefault();
+            e.stopPropagation();
+        },
+    });
+
+    Object.defineProperty(this, 'keyListenerFn', {
+        writable: false,
+        value: function keyListenerFn(e) {
+            /**
+             * Called for each keypress that is allowed to pass through the
+             * validation function.
+             */
+            var controller = cubeRealtimeUserController;
+
+            var char = String.fromCharCode(e.which);
+            var colorRgb = controller.cube.colors[controller.penColor];
+            var charTile = CubeAssets.getCharacterRender(char, colorRgb);
+            controller.cube.writeSlice(charTile, controller.writeFace);
+        },
+    });
+
     Object.defineProperty(this, 'mouseListeningCells', {
         get: function() { return _mouseListeningCells; },
     });
@@ -64,36 +252,144 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
 
     Object.defineProperty(this, 'penColor', {
         get: function() { return _options['penColor']; },
-        set: function(newPenColor) { _options['penColor'] = newPenColor; },
+        set: function(newPenColor) {
+            if (cube.colorNames.indexOf(newPenColor) === -1)
+            {
+                console.error('Invalid pen color for cubeRealtimeUserController', newPenColor);
+                throw 'Invalid pen color';
+            }
+
+            var prevPenColor = _options['penColor'];
+            _options['penColor'] = newPenColor;
+
+            this.emit('propertyChanged', {
+                setting: 'penColor',
+                newValue: _options['penColor'],
+                oldValue: prevPenColor,
+            });
+        },
     });
+
     Object.defineProperty(this, 'penColorRgb', {
         get: function() { return this.cube.colors[_options['penColor']]; },
     });
 
-    // !TODO: fill in the real properties for the options
     Object.defineProperty(this, 'delay', {
         get: function() { return _options['delay']; },
-        set: function(newDelay) { _options['delay'] = newDelay; },
+        set: function(newDelay) {
+            var parsedValue = parseInt(newDelay, 10);
+            if (isNaN(parsedValue) || (parsedValue < 0))
+            {
+                console.error('Invalid delay for cubeRealtimeUserController', newDelay);
+                throw 'Invalid delay';
+            }
+
+            var prevDelay = _options['delay'];
+            _options['delay'] = parsedValue;
+
+            this.emit('propertyChanged', {
+                setting: 'delay',
+                newValue: _options['delay'],
+                oldValue: prevDelay,
+            });
+        },
     });
+
     Object.defineProperty(this, 'action', {
         get: function() { return _options['action']; },
-        set: function(newAction) { _options['action'] = newAction; },
+        set: function(newAction) {
+            if (newAction !== 'slide')
+            {
+                console.error('Invalid action for cubeRealtimeUserController', newAction);
+                throw 'Invalid action';
+            }
+
+            var prevAction = _options['action'];
+            _options['action'] = newAction;
+
+            this.emit('propertyChanged', {
+                setting: 'action',
+                newValue: _options['action'],
+                oldValue: prevAction,
+            });
+        },
     });
+
     Object.defineProperty(this, 'direction', {
         get: function() { return _options['direction']; },
-        set: function(newDirection) { _options['direction'] = newDirection; },
+        set: function(newDirection) {
+            if (this.directions.indexOf(newDirection) === -1)
+            {
+                console.error('Invalid direction for cubeRealtimeUserController', newDirection);
+                throw 'Invalid direction';
+            }
+
+            var prevDirection = _options['direction'];
+            _options['direction'] = newDirection;
+
+            this.emit('propertyChanged', {
+                setting: 'direction',
+                newValue: _options['direction'],
+                oldValue: prevDirection,
+            });
+        },
     });
+
     Object.defineProperty(this, 'stepSize', {
         get: function() { return _options['stepSize']; },
-        set: function(newStepSize) { _options['stepSize'] = newStepSize; },
+        set: function(newStepSize) {
+            var parsedValue = parseInt(newStepSize, 10);
+            if (isNaN(parsedValue) || (parsedValue < 0))
+            {
+                console.error('Invalid step size for cubeRealtimeUserController', newStepSize);
+                throw 'Invalid step size';
+            }
+
+            var prevStepSize = _options['stepSize'];
+            _options['stepSize'] = newStepSize;
+
+            this.emit('propertyChanged', {
+                setting: 'stepSize',
+                newValue: _options['stepSize'],
+                oldValue: prevStepSize,
+            });
+        },
     });
+
     Object.defineProperty(this, 'wrap', {
         get: function() { return _options['wrap']; },
-        set: function(newWrap) { _options['wrap'] = newWrap; },
+        set: function(newWrap) {
+            var prevWrap = _options['wrap'];
+            _options['wrap'] = !!newWrap;
+
+            this.emit('propertyChanged', {
+                setting: 'wrapys',
+                newValue: _options['wrap'],
+                oldValue: prevWrap,
+            });
+        },
     });
+
     Object.defineProperty(this, 'listenForKeys', {
-        get: function() { return _options['listenForKeys']; },
-        set: function(newListenForKeys) { _options['listenForKeys'] = newListenForKeys; },
+        get: function() { return _options['listenForKeys'] },
+        set: function(newListenForKeys) {
+            if (this.validListenForKeys.indexOf(newListenForKeys) === -1)
+            {
+                console.error('Invalid listenForKeys. ' +
+                    'Valid options: ' + this.validListenForKeys.join(', '));
+                throw 'Invalid listenForKeys';
+            }
+
+            var prevListenForKeys = _options['listenForKeys'];
+            _options['listenForKeys'] = newListenForKeys;
+            __listenForKeystrokes();
+
+            this.emit('propertyChanged', {
+                setting: 'listenForKeys',
+                newValue: _options['listenForKeys'],
+                oldValue: prevListenForKeys,
+            });
+        },
     });
 
     applyOptions.call(this, _options);
