@@ -15,9 +15,6 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         transitionTransforms: false,
     };
 
-    var TRANSITION_DURATION = '300ms';
-    var TRANSITION_EASING = 'ease-in-out';
-
     var _opts = opts || {};
     var _options = {};
     var optionKeys = Object.keys(__defaultOptions);
@@ -97,62 +94,63 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         }
     }
 
-    function __updateDOM() {
-        __calculateDirtyOptions();
+    function __updateDOM(html, led, hasRotation, cell, domSpecificOptions, dirtyOptions) {
+        var TRANSITION_DURATION = '300ms';
+        var TRANSITION_EASING = 'ease-in-out';
 
-        var _size = _options['size'];
-        var _on = _cell['on'];
-        var _colorRgbString = _cell['colorAsString'];
+        var _size = domSpecificOptions['size'];
+        var _on = cell['on'];
+        var _colorRgbString = cell['colorAsString'];
 
-        if (_dirtyOptions['transitionTransforms'])
+        if (dirtyOptions['transitionTransforms'])
         {
-            if (_options['transitionTransforms'])
+            if (domSpecificOptions['transitionTransforms'])
             {
-                _html.style.transitionProperty = 'transform';
-                _html.style.transitionDuration = TRANSITION_DURATION;
-                _html.style.transitionTimingFunction = TRANSITION_EASING;
+                html.style.transitionProperty = 'transform';
+                html.style.transitionDuration = TRANSITION_DURATION;
+                html.style.transitionTimingFunction = TRANSITION_EASING;
             } else
             {
-                _html.style.transitionProperty = null;
-                _html.style.transitionDuration = null;
-                _html.style.transitionTimingFunction = null;
+                html.style.transitionProperty = null;
+                html.style.transitionDuration = null;
+                html.style.transitionTimingFunction = null;
             }
         }
 
-        if (_dirtyOptions.on || _dirtyOptions.color)
+        if (dirtyOptions.on || dirtyOptions.color)
         {
             // render the LED's on-ness
-            _led.classList.toggle('on', _on);
-            _html.style.opacity = _on ? 1 : null;
+            led.classList.toggle('on', _on);
+            html.style.opacity = _on ? 1 : null;
 
             // render the LED's color
-            _led.style.backgroundColor = _on ?
+            led.style.backgroundColor = _on ?
                 'rgba(' + _colorRgbString + ',1)' :
                 'rgba(0,0,0,1)';
-            _html.style.backgroundColor = _on ?
+            html.style.backgroundColor = _on ?
                 'rgba(' + _colorRgbString + ',0.125)' :
                 null;
         }
 
         // apply cell data attributes
-        if (_dirtyOptions.row)
+        if (dirtyOptions.row)
         {
-            _html.dataset.row = _cell['row'];
+            html.dataset.row = cell['row'];
         }
-        if (_dirtyOptions.column)
+        if (dirtyOptions.column)
         {
-            _html.dataset.column = _cell['column'];
+            html.dataset.column = cell['column'];
         }
-        if (_dirtyOptions.depth)
+        if (dirtyOptions.depth)
         {
-            _html.dataset.depth = _cell['depth'];
+            html.dataset.depth = cell['depth'];
         }
 
         // set the size of the cell
-        if (_dirtyOptions.size)
+        if (dirtyOptions.size)
         {
-            _html.style.width = _size + 'px';
-            _html.style.height = _size + 'px';
+            html.style.width = _size + 'px';
+            html.style.height = _size + 'px';
         }
 
         /**
@@ -164,21 +162,21 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
          *  "transform: A B C;" browsers will first perform transform C,
          *  then B, then A.
          */
-        if (_dirtyOptions.size ||
-           _dirtyOptions.row ||
-           _dirtyOptions.column ||
-           _dirtyOptions.depth ||
-           _dirtyOptions.rotation)
+        if (dirtyOptions.size ||
+           dirtyOptions.row ||
+           dirtyOptions.column ||
+           dirtyOptions.depth ||
+           dirtyOptions.rotation)
         {
            var xformPieces = (
-               'translateX(' + (_size * _cell['column']) + 'px) ' +
-               'translateY(' + (_size * _cell['row']) + 'px) ' +
-               'translateZ(' + (-1 * _size * _cell['depth']) + 'px) '
+               'translateX(' + (_size * cell['column']) + 'px) ' +
+               'translateY(' + (_size * cell['row']) + 'px) ' +
+               'translateZ(' + (-1 * _size * cell['depth']) + 'px) '
            );
-           if (_hasRotation)
+           if (hasRotation)
            {   // if we need to rotate the cell...
                // ... add the rotation transform rules to the array
-               var rot = _options['rotation'];
+               var rot = domSpecificOptions['rotation'];
                xformPieces += (
                    'rotateX(' + rot[0] + 'deg) ' +
                    'rotateY(' + rot[1] + 'deg) ' +
@@ -186,9 +184,8 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
                );
            }
 
-           _html.style.transform = xformPieces;
+           html.style.transform = xformPieces;
         }
-        __updateDrawnOptions();
     }
 
     function __mouseClickHandler(e) {
@@ -253,7 +250,11 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
 
     Object.defineProperty(this, 'updateDOM', {
         writable: false,
-        value: __updateDOM,
+        value: function updateDOM() {
+            __calculateDirtyOptions();
+            __updateDOM(_html, _led, _hasRotation, _cell, _options, _dirtyOptions);
+            __updateDrawnOptions();
+        },
     });
 
     Object.defineProperty(this, 'html', {
