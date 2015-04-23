@@ -229,7 +229,9 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
                 if ((shapeIndex >= 0) && (shapeIndex < numShapes))
                 {
                     var shapeTile = CubeAssets.getShapeRender(shapeNames[shapeIndex]);
-                    cube.writeSlice(shapeTile, controller.writeFace);
+                    window.requestAnimationFrame(function() {
+                        cube.writeSlice(shapeTile, controller.writeFace);
+                    });
                 }
             } else
             {
@@ -254,7 +256,9 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             var char = String.fromCharCode(e.which);
             var colorRgb = controller.cube.colors[controller.penColor];
             var charTile = CubeAssets.getCharacterRender(char, colorRgb);
-            controller.cube.writeSlice(charTile, controller.writeFace);
+            window.requestAnimationFrame(function() {
+                controller.cube.writeSlice(charTile, controller.writeFace);
+            });
         },
     });
 
