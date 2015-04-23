@@ -22,64 +22,64 @@ var CubeTile = function CubeTile(cells, cellOpts) {
         get: function() { return _cells.slice(); },
     });
 
-    return this;
-};
-
-CubeTile.prototype.getAsStrips = function() {
-    var strips = [[],[],[],[],[],[],[],[]];
-    for (var i = 0; i < 8; i++)
-    {
-        for (var j = 0; j < 8; j++)
+    this.getAsStrips = function() {
+        var strips = [[],[],[],[],[],[],[],[]];
+        for (var i = 0; i < 8; i++)
         {
-            strips[i][j] = _cells[Math.floor(i * 8) + j];
+            for (var j = 0; j < 8; j++)
+            {
+                strips[i][j] = _cells[Math.floor(i * 8) + j];
+            }
         }
-    }
-    return strips;
-};
-
-CubeTile.prototype.setFromStrips = function(strips) {
-    var __stripIsInvalid = function(strip) {
-        return !(strip instanceof Array) || (strip.length !== 8);
+        return strips;
     };
 
-    if (!(strips instanceof Array) ||
-        (strips.length !== 8) ||
-        strips.some(__stripIsInvalid))
-    {
-        console.error('Invalid strips provided. Cannot compose.');
-        return;
-    }
+    this.setFromStrips = function(strips) {
+        var __stripIsInvalid = function(strip) {
+            return !(strip instanceof Array) || (strip.length !== 8);
+        };
 
-    for (var i = 0; i < 8; i++)
-    {
-        for (var j = 0; j < 8; j++)
+        if (!(strips instanceof Array) ||
+            (strips.length !== 8) ||
+            strips.some(__stripIsInvalid))
         {
-            _cells[Math.floor(i * 8) + j] = strips[i][j];
+            console.error('Invalid strips provided. Cannot compose.');
+            return;
         }
-    }
+
+        for (var i = 0; i < 8; i++)
+        {
+            for (var j = 0; j < 8; j++)
+            {
+                _cells[Math.floor(i * 8) + j] = strips[i][j];
+            }
+        }
+
+        return this;
+    };
+
+    this.reflectX = function() {
+        return this.setFromStrips(this.getAsStrips().reverse());
+    };
+
+    this.reflectY = function() {
+        var _reflectedCells = [];
+
+        for (var col = 0; col < 8; col++)
+        {
+            var reflectedRow = [];
+            for (var row = 0; row < 8; row++)
+            {
+                reflectedRow.unshift(_cells[(col * 8) + row]);
+            }
+
+            _reflectedCells = _reflectedCells.concat(reflectedRow);
+        }
+
+        _cells = _reflectedCells;
+    };
 
     return this;
-};
-
-CubeTile.prototype.reflectX = function() {
-    return this.setFromStrips(this.getAsStrips().reverse());
-};
-
-CubeTile.prototype.reflectY = function() {
-    var _reflectedCells = [];
-
-    for (var col = 0; col < 8; col++)
-    {
-        var reflectedRow = [];
-        for (var row = 0; row < 8; row++)
-        {
-            reflectedRow.unshift(_cells[(col * 8) + row]);
-        }
-
-        _reflectedCells = _reflectedCells.concat(reflectedRow);
-    }
-
-    _cells = _reflectedCells;
 };
 
 CubeTile.prototype.getPngData = function() {
@@ -98,9 +98,9 @@ CubeTile.prototype.getPngData = function() {
     var id = ctx.createImageData(1, 1);
     var d = id.data;
 
-    for (var idx = 0, numCells = _cells.length; idx < numCells; idx++)
+    for (var idx = 0, numCells = this.cells.length; idx < numCells; idx++)
     {
-        var cell = _cells[idx];
+        var cell = this.cells[idx];
         cell.row = !isNaN(parseInt(cell.row, 10)) ? cell.row : Math.floor(idx % 8);
         cell.column = !isNaN(parseInt(cell.column, 10)) ? cell.column : Math.floor(idx / 8);
 
