@@ -3,8 +3,8 @@ var CubeRenderer = function CubeRenderer(cube) {
     Emitter(this);
 
     var _cube = cube;
-    var _cells = _cube ? _cube.cells : [];
-    var _numCells = _cells ? _cells.length : 0;
+    var _cells = (_cube && _cube.cells) ? _cube.cells.slice() : [];
+    var _numCells = _cells.length;
 
     Object.defineProperty(this, 'cube', {
         get: function() { return _cube; },
@@ -35,5 +35,4 @@ var CubeRenderer = function CubeRenderer(cube) {
 };
 
 CubeRenderer.prototype.render = function() {
-    // to be overwritten by "subclasses"
 };

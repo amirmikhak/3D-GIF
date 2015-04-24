@@ -10,8 +10,8 @@ var Cell = function Cell(opts) {
         depth: null,
         color: [0, 0, 255],    // We'll store colors internally as an RGB array
         on: false,
-        renderer: new CellRenderer(),
-        autoRender: true,
+        renderer: null,
+        autoRender: false,
     };
 
     var _opts = opts || {};
@@ -24,6 +24,7 @@ var Cell = function Cell(opts) {
     }
 
     var __colorAsString = '0,0,255';
+    var __coordAsString = 'null,null,null';
 
     function __invalidColor(colorArr) {
         return (
@@ -44,6 +45,7 @@ var Cell = function Cell(opts) {
         get: function() { return _options['row']; },
         set: function(newRow) {
             _options['row'] = newRow;
+            __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
             if (_options['autoRender'])
             {
                 this.render();
@@ -56,6 +58,7 @@ var Cell = function Cell(opts) {
         get: function() { return _options['column']; },
         set: function(newColumn) {
             _options['column'] = newColumn;
+            __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
             if (_options['autoRender'])
             {
                 this.render();
@@ -68,6 +71,7 @@ var Cell = function Cell(opts) {
         get: function() { return _options['depth']; },
         set: function(newDepth) {
             _options['depth'] = newDepth;
+            __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
             if (_options['autoRender'])
             {
                 this.render();
@@ -77,7 +81,7 @@ var Cell = function Cell(opts) {
     });
 
     Object.defineProperty(this, 'coordAsString', {
-        get: function() { return [this.column, this.row, this.depth].join(',') },
+        get: function() { return __coordAsString; },
     });
 
     Object.defineProperty(this, 'on', {
@@ -93,7 +97,7 @@ var Cell = function Cell(opts) {
     });
 
     Object.defineProperty(this, 'color', {
-        get: function() { return _options['color'].slice(); },
+        get: function() { return _options['color']; },
         set: function(newColor) {
             if (__invalidColor(newColor)) {
                 console.error('Invalid color for Cell: ' + newColor);
@@ -105,7 +109,7 @@ var Cell = function Cell(opts) {
             {
                 this.render();
             }
-            return _options['color'].slice();
+            return _options['color'];
         },
     });
 
@@ -116,7 +120,7 @@ var Cell = function Cell(opts) {
     Object.defineProperty(this, 'renderer', {
         get: function() { return _options['renderer']; },
         set: function(newRenderer) {
-            if (!newRenderer || !newRenderer.can('render'))
+            if (newRenderer && !newRenderer.can('render'))
             {
                 console.error('Invalid renderer: must implement render()');
                 throw 'Invalid renderer for Cell';
@@ -143,6 +147,16 @@ var Cell = function Cell(opts) {
         },
     });
 
+    Object.defineProperty(this, 'simpleOptions', {
+        get: function() {
+            return {
+                'on': _options['on'],
+                'color': __colorAsString,
+                'coord': __coordAsString,
+            };
+        },
+    });
+
     this.applyOptions(_options);
 
     return this;
@@ -154,11 +168,14 @@ Cell.prototype.applyOptions = function(newOpts) {
      * change, so we temporarily disable auto-rendering, manually render,
      * and re-enable for other non-applyOptions() calls.
      */
+    var prevAutoRender = this.autoRender;
     this.autoRender = false;
     applyOptions.call(this, newOpts);
-
-    this.render();          // manually render all changes
-    this.autoRender = true;    // re-enable auto-rendering
+    if (prevAutoRender)
+    {
+        this.render();
+        this.autoRender = prevAutoRender;
+    }
 
     return this;
 };

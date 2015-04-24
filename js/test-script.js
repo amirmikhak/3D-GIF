@@ -9,7 +9,8 @@ window.addEventListener('load', function() { // When everything is loaded
 
     // Build a new Cube object
     cube = new Cube(8);
-    cube.controller = new CubeRealtimeUserController();
+    // cube.controller = new CubeRealtimeUserController();
+    cube.controller = new CubePlaylistController();
     cube.renderer = new CubeDOMRenderer({
         container: document.getElementById('cube-wrapper'),
         listenForKeyEvents: true,
@@ -20,5 +21,4 @@ window.addEventListener('load', function() { // When everything is loaded
             rotate: false,
         },
     });
-
 });

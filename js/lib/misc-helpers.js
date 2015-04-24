@@ -27,6 +27,22 @@ function applyOptions(newOpts) {
             console.error('Invalid option for ' + this.constructor.name + ': ' + key);
         }
     }
+
+    return this;
+}
+
+function sloppyOptionsAreEqual(a, b) {
+    // a function for comparing simple and more complex types such as arrays
+    return (
+          ((a === null) || (b === null)) ||
+          ((typeof a === 'undefined') || (typeof b === 'undefined')) ||
+          ((typeof a === 'string') && (typeof b === 'string')) ||
+          (!isNaN(a) && !isNaN(b))
+      ) ?
+        a === b :
+        ((a instanceof Array) && (b instanceof Array) ?
+            a.equals(b) :
+            JSON.stringify(a) === JSON.stringify(b));   // we must be comparing objects or something...
 }
 
 function fetchJSONFile(path, successCb, failureCb) {
@@ -60,11 +76,15 @@ function fetchJSONFile(path, successCb, failureCb) {
 function tryJSON(data, validator) {
 
     var retData = data;
-    try
-    {   // handle different types of data input: JSON or raw object
-        retData = JSON.parse(retData);    // throws SyntaxError if not valid JSON string
-    } catch (err)
-    {   // pass
+
+    if (typeof retData === 'string')
+    {
+        try
+        {   // handle different types of data input: JSON or raw object
+            retData = JSON.parse(retData);    // throws SyntaxError if not valid JSON string
+        } catch (err)
+        {   // pass
+        }
     }
 
     if (!validator(retData))

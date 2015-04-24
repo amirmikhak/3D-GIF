@@ -3,6 +3,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     CellRenderer.apply(this, arguments);
 
     var _cell = cell;
+    var _cellSimpleOptionsKeys = Object.keys(_cell.simpleOptions);
 
     var cellDOMRenderer = this;
 
@@ -17,18 +18,18 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
 
     var _opts = opts || {};
     var _options = {};
-    var optionKeys = Object.keys(__defaultOptions);
-    for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
-        _options[optionKeys[i]] = _opts.hasOwnProperty(optionKeys[i]) ?
-            _opts[optionKeys[i]] :
-            __defaultOptions[optionKeys[i]];
+    var _optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
+        _options[_optionKeys[i]] = _opts.hasOwnProperty(_optionKeys[i]) ?
+            _opts[_optionKeys[i]] :
+            __defaultOptions[_optionKeys[i]];
     }
+
+    var __rotationAsString = '0,0,0';
 
     var _drawnOptions = {};
     var _dirtyOptions = {
-        row: false,
-        column: false,
-        depth: false,
+        coord: false,
         color: false,
         on: false,
         size: false,
@@ -41,6 +42,26 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
 
     var _html = document.createElement('div');
     var _led = document.createElement('div');
+
+    function __bindClickHandler() {
+        _html.addEventListener('click', __mouseClickHandler);
+    }
+
+    function __bindDragHandlers() {
+        _html.addEventListener('mousedown', __mouseDownHandler);
+        _html.addEventListener('mouseup', __mouseUpHandler);
+        _html.addEventListener('mousemove', __mouseMoveHandler);
+    }
+
+    function __unbindClickHandler() {
+        _html.removeEventListener('click', __mouseClickHandler);
+    }
+
+    function __unbindDragHandlers() {
+        _html.removeEventListener('mousedown', __mouseDownHandler);
+        _html.removeEventListener('mouseup', __mouseUpHandler);
+        _html.removeEventListener('mousemove', __mouseMoveHandler);
+    }
 
     function __colorsAreEqual(c1, c2) {
         if ((c1.length !== 3) || (c2.length !== 3))
@@ -59,38 +80,40 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         return true;
     }
 
-    function __sloppyOptionsAreEqual(a, b) {
-        // a function for comparing simple and more complex types such as arrays
-        return (
-              (a === null || b === null) ||
-              (typeof a === 'undefined' || typeof b === 'undefined') ||
-              (!isNaN(a) && !isNaN(b))
-          ) ?
-            a === b :
-            ((a instanceof Array) && (b instanceof Array) ?
-                a.equals(b) :
-                JSON.stringify(a) === JSON.stringify(b));   // crappy but close enough for now
+    function __hasDirtyOptions() {
+        var dirtyKeys = Object.keys(_dirtyOptions);
+        for (var i = 0, numKeys = dirtyKeys.length; i < numKeys; i++)
+        {
+            if (_dirtyOptions[dirtyKeys[i]])
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     function __calculateDirtyOptions() {
-        for (var key in _options)
+        for (var i = 0, numKeys = _optionKeys.length; i < numKeys; i++)
         {
-            _dirtyOptions[key] = !__sloppyOptionsAreEqual(_options[key], _drawnOptions[key]);
+            _dirtyOptions[_optionKeys[i]] = _options[_optionKeys[i]] !== _drawnOptions[_optionKeys[i]];
         }
-        for (var key in _cell.options)
+
+        for (var i = 0, numKeys = _cellSimpleOptionsKeys.length; i < numKeys; i++)
         {
-            _dirtyOptions[key] = !__sloppyOptionsAreEqual(_cell.options[key], _drawnOptions[key]);
+            _dirtyOptions[_cellSimpleOptionsKeys[i]] = _cell.simpleOptions[_cellSimpleOptionsKeys[i]] !== _drawnOptions[_cellSimpleOptionsKeys[i]];
+
         }
     }
 
     function __updateDrawnOptions() {
-        for (var key in _options)
+        for (var i = 0, numKeys = _optionKeys.length; i < numKeys; i++)
         {
-            _drawnOptions[key] = _options[key];
+            _drawnOptions[_optionKeys[i]] = _options[_optionKeys[i]];
         }
-        for (var key in _cell.options)
+
+        for (var i = 0, numKeys = _cellSimpleOptionsKeys.length; i < numKeys; i++)
         {
-            _drawnOptions[key] = _cell.options[key];
+            _drawnOptions[_cellSimpleOptionsKeys[i]] = _cell.simpleOptions[_cellSimpleOptionsKeys[i]];
         }
     }
 
@@ -133,17 +156,20 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         }
 
         // apply cell data attributes
-        if (dirtyOptions.row)
+        if (dirtyOptions['coord'])
         {
-            html.dataset.row = cell['row'];
-        }
-        if (dirtyOptions.column)
-        {
-            html.dataset.column = cell['column'];
-        }
-        if (dirtyOptions.depth)
-        {
-            html.dataset.depth = cell['depth'];
+            if (html.dataset.row !== cell['row'])
+            {
+                html.dataset.row = cell['row'];
+            }
+            if (html.dataset.column)
+            {
+                html.dataset.column = cell['column'];
+            }
+            if (html.dataset.depth)
+            {
+                html.dataset.depth = cell['depth'];
+            }
         }
 
         // set the size of the cell
@@ -162,11 +188,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
          *  "transform: A B C;" browsers will first perform transform C,
          *  then B, then A.
          */
-        if (dirtyOptions.size ||
-           dirtyOptions.row ||
-           dirtyOptions.column ||
-           dirtyOptions.depth ||
-           dirtyOptions.rotation)
+        if (dirtyOptions['size'] || dirtyOptions['coord'] || dirtyOptions['rotation'])
         {
            var xformPieces = (
                'translateX(' + (_size * cell['column']) + 'px) ' +
@@ -252,8 +274,18 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         writable: false,
         value: function updateDOM() {
             __calculateDirtyOptions();
-            __updateDOM(_html, _led, _hasRotation, _cell, _options, _dirtyOptions);
-            __updateDrawnOptions();
+            if (__hasDirtyOptions())
+            {
+                __updateDOM(_html, _led, _hasRotation, _cell, _options, _dirtyOptions);
+                __updateDrawnOptions();
+            }
+        },
+    });
+
+    Object.defineProperty(this, 'dirty', {
+        get: function() {
+            __calculateDirtyOptions();
+            return __hasDirtyOptions();
         },
     });
 
@@ -303,6 +335,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             }
 
             _options['rotation'] = newRotation;
+            __rotationAsString = (newRotation[0] + ',' + newRotation[1] + ',' + newRotation[2]);
 
             // cache whether we have a rotation for performance
             _hasRotation = _options['rotate'] && (
@@ -335,6 +368,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
          */
         get: function() { return _options['interactive']; },
         set: function(newInteractive) {
+            var prevInteractive = _options['interactive'];
             _options['interactive'] = newInteractive;
             /**
              * The binding of even listeners is not put into the render() function
@@ -347,32 +381,26 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
              * were called 20 times, there would be 20 listeners that will have
              * been added to capture a single click causing 20 callbacks to occur.
              */
-            if (newInteractive)
+            if (prevInteractive && !newInteractive)
+            {
+                __unbindClickHandler();
+                if (_options['interactMode'] === 'drag')
+                {
+                    __unbindDragHandlers();
+                }
+            }
+
+            if (!prevInteractive && newInteractive)
             {
                 if (_options['interactMode'] === 'click' ||
                     _options['interactMode'] === 'drag')
                 {
-                    _html.removeEventListener('click', __mouseClickHandler);
-                    _html.removeEventListener('mousedown', __mouseDownHandler);
-                    _html.removeEventListener('mouseup', __mouseUpHandler);
-                    _html.removeEventListener('mousemove', __mouseMoveHandler);
-
-                    _html.addEventListener('click', __mouseClickHandler);
-
+                    __bindClickHandler();
                     if (_options['interactMode'] === 'drag')
                     {
-                        _html.addEventListener('mousedown', __mouseDownHandler);
-                        _html.addEventListener('mouseup', __mouseUpHandler);
-                        _html.addEventListener('mousemove', __mouseMoveHandler);
+                        __bindDragHandlers();
                     }
                 }
-                _options['interactive'] = newInteractive;
-            } else
-            {
-                _html.removeEventListener('click', __mouseClickHandler);
-                _html.removeEventListener('mousedown', __mouseDownHandler);
-                _html.removeEventListener('mouseup', __mouseUpHandler);
-                _html.removeEventListener('mousemove', __mouseMoveHandler);
             }
         },
     });
@@ -388,8 +416,21 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
                 return;
             }
 
+            var prevInteractMode = _options['interactMode'];
             _options['interactMode'] = newInteractMode;
-            this.interactive = _options['interactive'];    // call to un/rebind handlers
+
+            if (!_options['interactive'])
+            {
+                return;
+            }
+
+            if ((prevInteractMode === 'drag') && (newInteractMode === 'click'))
+            {
+                __unbindDragHandlers();
+            } else if ((prevInteractMode === 'click') && newInteractMode === 'drag')
+            {
+                __bindDragHandlers();
+            }
         },
     });
 
@@ -399,10 +440,14 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         _html.appendChild(_led);
     }());
 
+    var prevAutoRender = _cell.autoRender;
     _cell.autoRender = false;
     applyOptions.call(this, _options);
-    this.render();
-    _cell.autoRender = true;
+    if (prevAutoRender)
+    {
+        this.render();
+        _cell.autoRender = prevAutoRender;
+    }
 
     return this;
 

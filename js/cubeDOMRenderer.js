@@ -5,7 +5,6 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
     var cubeDOMRenderer = this;
 
     var __defaultOptions = {
-        cube: null,
         container: null,
         transitionTransforms: true,
         xAngle: 0,
@@ -17,7 +16,18 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         },
     };
 
-    var _options = _.extend({}, __defaultOptions, opts || {});
+    var _opts = opts || {};
+    var _options = {};
+    var _optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
+        _options[_optionKeys[i]] = _opts.hasOwnProperty(_optionKeys[i]) ?
+            _opts[_optionKeys[i]] :
+            __defaultOptions[_optionKeys[i]];
+    }
+
+    var __drawnOptions = {};
+    var __dirtyOptions = {};
+    var __dirtyViewAngle = false;
 
     var _html = document.createElement('div');
 
@@ -35,7 +45,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         40: 'down',
     };
 
-    var __keydowned = _.throttle(function __keydowned(e) {
+    var __keydowned = function __keydowned(e) {
         var direction = __keyDirectionMap[e.keyCode];
         if (direction)
         {
@@ -47,7 +57,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             cubeDOMRenderer.transitionTransforms = false;
             cubeDOMRenderer.nudge(direction);  // actually rotate the cube
         }
-    }, KEY_LISTEN_RATE, false);
+    };
 
     var __keyupped = function __keyupped(e) {
         if (__keyDirectionMap[e.keyCode])
@@ -88,6 +98,98 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         }
     }
 
+    function __hasDirtyCells() {
+        for (var i = 0; i < cubeDOMRenderer.numCells; i++)
+        {
+            if (cubeDOMRenderer.cells[i].renderer.dirty)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function __hasDirtyOptions() {
+        var dirtyKeys = Object.keys(__dirtyOptions);
+        for (var i = 0, numKeys = dirtyKeys.length; i < numKeys; i++)
+        {
+            if (__dirtyOptions[dirtyKeys[i]])
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function __calculateDirtyOptions() {
+        for (var i = 0, numKeys = _optionKeys.length; i < numKeys; i++)
+        {
+            var key = _optionKeys[i];
+            __dirtyOptions[key] = !sloppyOptionsAreEqual(_options[key], __drawnOptions[key]);
+        }
+        __dirtyViewAngle = (__dirtyOptions['xAngle'] || __dirtyOptions['yAngle']);
+    }
+
+    function __updateDrawnOptions() {
+        for (var i = 0, numKeys = _optionKeys.length; i < numKeys; i++)
+        {
+            var key = _optionKeys[i];
+            __dirtyOptions[key] = _options[key];
+        }
+        __dirtyViewAngle = false;
+    }
+
+    function __updateDOM() {
+        if (__dirtyViewAngle)
+        {
+            _html.style.transform = (
+                'rotateX(' + _options['xAngle'] + 'deg) ' +
+                'rotateY(' + _options['yAngle'] + 'deg)'
+            );
+        }
+    }
+
+    function __updateCellsDOM() {
+        var mouseListeningCells = cubeDOMRenderer.cube.controller ?
+            cubeDOMRenderer.cube.controller.mouseListeningCells :
+            [];
+
+        for (var i = 0; i < cubeDOMRenderer.numCells; i++)
+        {
+            var cell = cubeDOMRenderer.cells[i];
+            var newCellRendererOptions = {
+                interactive: mouseListeningCells.indexOf(cell.coordAsString) !== -1,
+            };
+
+            if (__dirtyViewAngle && _options['cellConfig']['rotate'])
+            {
+                newCellRendererOptions['rotation'] = [-1 * _options['xAngle'], -1 * _options['yAngle'], 0];
+            }
+
+            var prevAutoRendering = cell.autoRender;
+            cell.autoRender = false;
+            applyOptions.call(cell.renderer, newCellRendererOptions);
+            cell.autoRender = prevAutoRendering;
+            cell.render();
+        }
+    }
+
+    Object.defineProperty(this, 'updateDOM', {
+        value: function updateDOM() {
+            __calculateDirtyOptions();
+            if (__hasDirtyOptions())
+            {
+                __updateDOM();
+                __updateDrawnOptions();
+            }
+            if (__hasDirtyCells())
+            {
+                __updateCellsDOM();
+            }
+        },
+    });
+
     Object.defineProperty(this, 'faceCubeViewingAngles', {
         writable: false,
         value: {   // face: [cube.xAngle, cube.yAngle]
@@ -111,7 +213,10 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             {
                 _options['container'] = newEl;
                 _options['container'].appendChild(_html);
-                this.render();
+                if (this.cube && this.cube.autoRender)
+                {
+                    this.render();
+                }
             } else if (__shouldDestroyExistingEl(newEl))
             {
                 if (_options['container']) {
@@ -137,7 +242,10 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             if (!isNaN(parsedAngle))
             {
                 _options['xAngle'] = parsedAngle;
-                this.render();
+                if (this.cube && this.cube.autoRender)
+                {
+                    this.render();
+                }
             }
         },
     });
@@ -149,7 +257,10 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             if (!isNaN(parsedAngle))
             {
                 _options['yAngle'] = parsedAngle;
-                this.render();
+                if (this.cube && this.cube.autoRender)
+                {
+                    this.render();
+                }
             }
         },
     });
@@ -236,7 +347,10 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
                 }
             }
 
-            this.render();
+            if (this.cube && this.cube.autoRender)
+            {
+                this.render();
+            }
         },
     });
 
@@ -276,38 +390,7 @@ CubeDOMRenderer.prototype = Object.create(CubeRenderer.prototype);
 CubeDOMRenderer.prototype.constructor = CubeDOMRenderer;
 
 CubeDOMRenderer.prototype.render = function() {
-    this.html.style.transform = (
-        'rotateX(' + this.xAngle + 'deg) ' +
-        'rotateY(' + this.yAngle + 'deg)'
-    );
-
-    var mouseListeningCells = this.cube.controller ?
-        this.cube.controller.mouseListeningCells :
-        [];
-
-    for (var i = 0; i < this.numCells; i++)
-    {
-        var wasAutoRendering = this.cells[i].autoRender;
-        this.cells[i].autoRender = false;
-
-        if (this.cellRotate)
-        {
-            /**
-             * Only apply rotations if we need to because iterating over the cells
-             * is very expensive and reduces performance significantly. See the
-             * rotateCells property on "this" for more information.
-             */
-            applyOptions.call(this.cells[i].renderer, {
-                rotation: [-1 * this.xAngle, -1 * this.yAngle, 0],
-            });
-        }
-
-        applyOptions.call(this.cells[i].renderer, {
-            interactive: mouseListeningCells.indexOf(this.cells[i].coordAsString) !== -1,
-        });
-
-        this.cells[i].autoRender = wasAutoRendering;
-    }
+    requestAnimationFrame(this.updateDOM);
 };
 
 CubeDOMRenderer.prototype.nudge = function(direction, amount) {

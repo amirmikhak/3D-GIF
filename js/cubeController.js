@@ -7,13 +7,15 @@ var CubeController = function CubeController(cube) {
     var _cube = cube;
     var _playing = false;
     var _animationStartTime = (new Date()).getTime();
+    var _renderStartTime = _animationStartTime;
     var _lastAnimFrameTime = _animationStartTime;
     var _lastRenderedTime = _animationStartTime;
 
     var __animationFrameRef = 0;
     var __step = function __step() {
+        _renderStartTime = (new Date()).getTime();
         controller.getUpdate();
-        _lastAnimFrameTime = (new Date()).getTime();
+        _lastAnimFrameTime = _renderStartTime;
         __animationFrameRef = requestAnimationFrame(__step);
     };
 
@@ -55,6 +57,10 @@ var CubeController = function CubeController(cube) {
         get: function() { return _lastAnimFrameTime; },
     });
 
+    Object.defineProperty(this, 'renderStartTime', {
+        get: function() { return _renderStartTime; },
+    });
+
     Object.defineProperty(this, 'lastRenderedTime', {
         get: function() { return _lastRenderedTime; },
     });
@@ -69,7 +75,7 @@ var CubeController = function CubeController(cube) {
     Object.defineProperty(this, 'resetAnimationTimes', {
         writable: false,
         value: function() {
-            _lastRenderedTime = _lastAnimFrameTime = _animationStartTime = (new Date()).getTime();
+            _lastRenderedTime = _renderStartTime = _lastAnimFrameTime = _animationStartTime = (new Date()).getTime();
         },
     });
 
@@ -93,6 +99,7 @@ CubeController.prototype.pause = function() {
     this.playing = false;
 };
 
-CubeController.prototype.play = function() {
+CubeController.prototype.play = function(resetTimers) {
+    this.stop();
     this.playing = true;
 };

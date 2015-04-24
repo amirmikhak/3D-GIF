@@ -6,6 +6,12 @@ var Cube = function Cube(size) {
     var _cells = [];
     var _renderer = null;
     var _controller = null;
+    var _autoRender = true;
+
+    var __offCell = new Cell({
+        on: false,
+        color: [0, 0, 0],
+    });
 
     this.sliceValidator = function(dataToValidate) {
         /**
@@ -19,7 +25,12 @@ var Cube = function Cube(size) {
     });
 
     Object.defineProperty(this, 'cells', {
-        get: function() { return _cells.slice(); },
+        get: function() { return _cells; },
+    });
+
+    Object.defineProperty(this, 'getOffCell', {
+        writable: false,
+        value: function() { return __offCell; },
     });
 
     Object.defineProperty(this, 'faceNames', {
@@ -55,6 +66,11 @@ var Cube = function Cube(size) {
             Y: function(cell, cubeSize, wrap, stepSize) { return [cell['row'], cube.getNewValueForShift(cell['column'], cubeSize, wrap, stepSize), cell['depth']]; },
             Z: function(cell, cubeSize, wrap, stepSize) { return [cell['row'], cell['column'], cube.getNewValueForShift(cell['depth'], cubeSize, wrap, stepSize)]; },
         }
+    });
+
+    Object.defineProperty(this, 'autoRender', {
+        get: function() { return _autoRender; },
+        set: function(newAutoRender) { return _autoRender = !!newAutoRender; },
     });
 
     Object.defineProperty(this, 'controller', {
@@ -201,8 +217,8 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
 
         // Once we have it, grab its on status and color and return it
         nextState.push({
-            'on': shiftedCell.on,
-            'color': shiftedCell.color
+            on: shiftedCell.on,
+            color: shiftedCell.color
         });
     }
 
@@ -242,10 +258,7 @@ Cube.prototype.getCellAt = function(row, column, depth) {
 
     if (this.invalidCoord(row, column, depth))
     {
-        return new Cell({
-            on: false,
-            color: [0, 0, 0],
-        });
+        return this.getOffCell();
     }
 
     var cellIndex = (depth * this.size * this.size) + (row * this.size) + column;
@@ -283,11 +296,12 @@ Cube.prototype.clear = function() {
      * Clear the contents of the cube.
      */
 
-    this.cells.forEach(function(cell) {
-        cell.on = false;
-    });
+    for (var i = 0, numCells = this.cells.length; i < numCells; i++)
+    {
+        this.cells[i].on = false;
+    }
 
-    return this;    // enables multiple calls on cube to be "chained"
+    return this;
 };
 
 
@@ -308,7 +322,7 @@ Cube.prototype.affectXSlice = function(column, fn) {
         }
     }
 
-    return this;    // enables multiple calls on cube to be "chained"
+    return this;
 };
 
 Cube.prototype.affectYSlice = function(row, fn) {
@@ -324,7 +338,7 @@ Cube.prototype.affectYSlice = function(row, fn) {
         }
     }
 
-    return this;    // enables multiple calls on cube to be "chained"
+    return this;
 };
 
 Cube.prototype.affectZSlice = function(depth, fn) {
@@ -340,7 +354,7 @@ Cube.prototype.affectZSlice = function(depth, fn) {
         }
     }
 
-    return this;    // enables multiple calls on cube to be "chained"
+    return this;
 };
 
 Cube.prototype.readSlice = function(face, offset, output) {
@@ -461,7 +475,7 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         this.affectXSlice(column, writeCellFromData);
     }
 
-    return this;    // enables multiple calls on cube to be "chained"
+    return this;
 };
 
 Cube.prototype.affectCol = function(dims, dim1, dim2, cb) {

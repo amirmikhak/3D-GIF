@@ -82,28 +82,6 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         value: ['back', 'right', 'down', 'up', 'left', 'forward'],
     });
 
-    Object.defineProperty(this, 'animationCb', {
-        /**
-         * Read-only property for the correct animation callback to use for the
-         * current action and direction.
-         */
-        get: function() {
-            if (_options['action'] === 'slide')
-            {
-                return {
-                    up: function() { this.cube.shiftPlane('X', _options['stepSize'], _options['wrap']); },
-                    down: function() { this.cube.shiftPlane('X', -1 * _options['stepSize'], _options['wrap']); },
-                    left: function() { this.cube.shiftPlane('Y', _options['stepSize'], _options['wrap']); },
-                    right: function() { this.cube.shiftPlane('Y', -1 * _options['stepSize'], _options['wrap']); },
-                    forward: function() { this.cube.shiftPlane('Z', _options['stepSize'], _options['wrap']); },
-                    back: function() { this.cube.shiftPlane('Z', -1 * _options['stepSize'], _options['wrap']); },
-                }[_options['direction']];
-            }
-
-            return undefined;   // just being explicit about this
-        }
-    });
-
     Object.defineProperty(this, 'validKeyFns', {
         writable: false,
         value: {
@@ -259,12 +237,13 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
              * validation function.
              */
             var controller = cubeRealtimeUserController;
+            var cube = controller.cube;
 
             var char = String.fromCharCode(e.which);
-            var colorRgb = controller.cube.colors[controller.penColor];
+            var colorRgb = cube.colors[controller.penColor];
             var charTile = CubeAssets.getCharacterRender(char, colorRgb);
             window.requestAnimationFrame(function() {
-                controller.cube.writeSlice(charTile, controller.writeFace);
+                cube.writeSlice(charTile, controller.writeFace);
             });
         },
     });
@@ -441,6 +420,7 @@ CubeRealtimeUserController.prototype.getUpdate = function() {
     if (timeSinceLastRender >= this.animationInterval)
     {
         this.step();
+        this.cube.render();
         this.markRenderTime();
     }
 };
@@ -480,8 +460,23 @@ CubeRealtimeUserController.prototype.step = function(numSteps) {
 
     for (var i = 0; i < _numSteps; i++)
     {
-        this.animationCb();
+        this.getAnimationCb();
     }
 
     return this;
+};
+
+CubeRealtimeUserController.prototype.getAnimationCb = function getAnimationCb() {
+    var that = this;
+    if (this.action === 'slide')
+    {
+        return {
+            up: function() { that.cube.shiftPlane('X', that.stepSize, that.wrap); },
+            down: function() { that.cube.shiftPlane('X', -1 * that.stepSize, that.wrap); },
+            left: function() { that.cube.shiftPlane('Y', that.stepSize, that.wrap); },
+            right: function() { that.cube.shiftPlane('Y', -1 * that.stepSize, that.wrap); },
+            forward: function() { that.cube.shiftPlane('Z', that.stepSize, that.wrap); },
+            back: function() { that.cube.shiftPlane('Z', -1 * that.stepSize, that.wrap); },
+        }[this.direction];
+    }
 };

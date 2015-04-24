@@ -1,11 +1,13 @@
-var CubeTile = function CubeTile(cells, cellOpts) {
+var CubeTile = function CubeTile(cells, cellOpts, shallow) {
     var _cellOpts = cellOpts || {};
+
+    var _shallow = !!shallow;
 
     var __sliceValidator = function(dataToValidate) {
         return (dataToValidate instanceof Array) && (dataToValidate.length === 64);
     };
 
-    var __copyCell = function(originalCell, addlCellOpts) {
+    var __copyCell = function(originalCell, addlCellOpts, __shallow) {
         var mergedCellOptions = {
             row: originalCell.row,
             column: originalCell.column,
@@ -20,13 +22,17 @@ var CubeTile = function CubeTile(cells, cellOpts) {
                 mergedCellOptions[optionKeys[i]] = addlCellOpts[optionKeys[i]];
             }
         }
+        if (__shallow)
+        {
+            return applyOptions.call(originalCell, mergedCellOptions);
+        }
         return new Cell(mergedCellOptions);
     };
 
     var _cells = tryJSON(cells, __sliceValidator);
     for (var i = 0, numCells = cells.length; i < numCells; i++)
     {
-        _cells[i] = __copyCell(_cells[i], _cellOpts);
+        _cells[i] = __copyCell(_cells[i], _cellOpts, _shallow);
     }
 
     Object.defineProperty(this, 'cells', {
