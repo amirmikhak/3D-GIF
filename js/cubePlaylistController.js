@@ -9,7 +9,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         writeFace: 'front',
         wrapDirection: 'cw',
         loops: true,
-        animationInterval: 1,   // ms between each "tick"
+        animationInterval: 50,   // ms between each "tick"
         spacing: 2,       // number of ticks between tile rendering before next appears
     };
 
@@ -226,18 +226,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
          * PLAYBACK HELPERS
          */
 
-    function __getTileAtMs(ms) {
-        var localTime = _options['loops'] ? (ms % _duration) : ms;
-        var tick = Math.floor(localTime / _options['animationInterval']);
-        var tile = tick >= (__tilesWithSpacing.length - 1) ?
-            __emptyTile :
-            __tilesWithSpacing[tick];
-        return {
-            idx: tick,
-            tile: tile,
-        };
-    }
-
     function __getSelfTickingTile() {
         var numTiles = __tilesWithSpacing.length;
         var tileIndexToReturn = __prevTileIdx + 1;
@@ -258,16 +246,24 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         return retValue;
     }
 
-    function __getTileStripCursorAtMs(ms) {
-        var localTime = (_options['loops'] ? (ms % _duration) : ms);
-        var tick = Math.floor(localTime / _options['animationInterval']);
-        var strip = tick > (__tileStrip.length - 1) ?
-            __emptyStrip.slice() :
-            __tileStrip[tick];
-        return {
-            idx: __tileStrip.indexOf(strip), // is actually same as tick, I think?
-            strip: strip,
+    function __getSelfTickingTileStripCursor() {
+        var numTileStrips = __tileStrip.length;
+        var tileStripIndexToReturn = __prevStripIdx + 1;
+        if (cubePlaylistController.loops) {
+            tileStripIndexToReturn = tileStripIndexToReturn % (numTileStrips - 1);
+        } else
+        {
+            tileStripIndexToReturn = Math.min(tileStripIndexToReturn, numTileStrips - 1);
+        }
+
+        var retValue = {
+            prevIndex: __prevStripIdx,
+            idx: tileStripIndexToReturn,
+            strip: __tileStrip[tileStripIndexToReturn],
         };
+
+        __prevStripIdx = tileStripIndexToReturn;
+        return retValue;
     }
 
     function __getCursorColumn() {
@@ -385,17 +381,11 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     }
 
     function __animatorPropigateColumns(numColumns) {
-        var strip = __getTileStripCursorAtMs(this.renderStartTime - this.animationStartTime);
+        var strip = __getSelfTickingTileStripCursor();
         var stripIdx = strip.idx;
         var stripData = strip.strip;
-
-        if ((stripIdx !== __prevStripIdx) && (stripIdx !== -1))
-        {
-            __propigateColumns(numColumns);
-            this.cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
-            __prevStripIdx = stripIdx;
-        }
-
+        __propigateColumns(numColumns);
+        this.cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
         __stopIfShould();
     }
 
@@ -528,6 +518,16 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         value: ['through', 'across', 'around'],
     });
 
+    Object.defineProperty(this, 'directions', {
+        writable: false,
+        value: ['back', 'right', 'down', 'up', 'left', 'forward'],
+    });
+
+    Object.defineProperty(this, 'wrapDirections', {
+        writable: false,
+        value: ['ccw', 'cw'],   // ccw: to the right, cw: to the left
+    });
+
     Object.defineProperty(this, 'supportedFaces', {
         writable: false,
         value: {
@@ -539,11 +539,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     Object.defineProperty(this, 'currentSupportedFaces', {
         get: function() { return this.supportedFaces[_options['mode']]; }
-    });
-
-    Object.defineProperty(this, 'wrapDirections', {
-        writable: false,
-        value: ['ccw', 'cw'],   // ccw: to the right, cw: to the left
     });
 
     Object.defineProperty(this, 'faces', {
