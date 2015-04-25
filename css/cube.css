@@ -258,23 +258,6 @@ body {
     top: 50%;
 }
 
-.cell[data-row="7"]:before  {
-    /*
-     * This style is an effort to make show a "base" for the cube, but it doesn't work.
-     * Instead, the rotateX(90deg) makes the element invisible from the front face, but
-     * is also not visible from the side or bottom. I'm not sure why elements seem not
-     * to have any depth...
-     */
-    transform: translateY(50%) rotateX(90deg);
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgba(50, 50, 50, 0.5);
-}
-
 .led {
     position: relative;
     width: 15%;
