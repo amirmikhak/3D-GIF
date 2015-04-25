@@ -1,11 +1,24 @@
-var CubeController = function CubeController(cube) {
+var CubeController = function CubeController(opts) {
 
     Emitter(this);
 
     var controller = this;
 
-    var _cube = cube;
-    var _playing = false;
+    var __defaultOptions = {
+        cube: null,
+        playing: false,
+        penColor: 'blue',
+    };
+
+    var _opts = opts || {};
+    var _options = {};
+    var optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
+        _options[optionKeys[i]] = _opts.hasOwnProperty(optionKeys[i]) ?
+            _opts[optionKeys[i]] :
+            __defaultOptions[optionKeys[i]];
+    }
+
     var _animationStartTime = (new Date()).getTime();
     var _renderStartTime = _animationStartTime;
     var _lastAnimFrameTime = _animationStartTime;
@@ -19,8 +32,20 @@ var CubeController = function CubeController(cube) {
         __animationFrameRef = requestAnimationFrame(__step);
     };
 
+    Object.defineProperty(this, 'directions', {
+        configurable: true,
+        writable: false,
+        value: ['back', 'right', 'down', 'up', 'left', 'forward'],
+    });
+
+    Object.defineProperty(this, 'currentSupportedFaces', {
+        configurable: true,
+        writable: false,
+        value: ['front', 'left', 'back', 'right', 'top', 'bottom'],
+    });
+
     Object.defineProperty(this, 'cube', {
-        get: function() { return _cube; },
+        get: function() { return _options['cube']; },
         set: function(newCube) {
             if (!(newCube instanceof Cube) && (newCube !== null))
             {
@@ -28,21 +53,21 @@ var CubeController = function CubeController(cube) {
                 throw 'Invalid cube';
             }
 
-            _cube = newCube;
+            return _options['cube'] = newCube;
         },
     });
 
     Object.defineProperty(this, 'playing', {
-        get: function() { return _playing; },
+        get: function() { return _options['playing']; },
         set: function(newPlaying) {
-            var prevPlaying = _playing;
-            _playing = !!newPlaying;
+            var prevPlaying = _options['playing'];
+            _options['playing'] = !!newPlaying;
 
-            if (_playing && !prevPlaying)
+            if (_options['playing'] && !prevPlaying)
             {
                 cancelAnimationFrame(__animationFrameRef);
                 __animationFrameRef = requestAnimationFrame(__step);
-            } else if (!_playing && prevPlaying)
+            } else if (!_options['playing'] && prevPlaying)
             {
                 cancelAnimationFrame(__animationFrameRef);
             }
@@ -79,12 +104,43 @@ var CubeController = function CubeController(cube) {
         },
     });
 
+    Object.defineProperty(this, 'penColor', {
+        get: function() { return _options['penColor']; },
+        set: function(newPenColor) {
+            if (!_options['cube'])
+            {
+                console.log('No cube defined for CubeController when setting color', newPenColor);
+                return null;
+            } else if (_options['cube'].colorNames.indexOf(newPenColor) === -1)
+            {
+                console.error('Invalid pen color for CubeController', newPenColor);
+                throw 'Invalid pen color';
+            }
+
+            var prevPenColor = _options['penColor'];
+            _options['penColor'] = newPenColor;
+
+            this.emit('propertyChanged', {
+                setting: 'penColor',
+                newValue: _options['penColor'],
+                oldValue: prevPenColor,
+            });
+        },
+    });
+
+    Object.defineProperty(this, 'penColorRgb', {
+        get: function() { return _options['cube'].colors[_options['penColor']]; },
+    });
+
+    applyOptions.call(this, _options);
+
     return this;
 
 };
 
-CubeController.prototype.getUpdate = function() {
-};
+
+CubeController.prototype.step = function() {};
+CubeController.prototype.getUpdate = function() {};
 
 CubeController.prototype.togglePlaying = function() {
     this.playing = !this.playing;

@@ -518,11 +518,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         value: ['through', 'across', 'around'],
     });
 
-    Object.defineProperty(this, 'directions', {
-        writable: false,
-        value: ['back', 'right', 'down', 'up', 'left', 'forward'],
-    });
-
     Object.defineProperty(this, 'wrapDirections', {
         writable: false,
         value: ['ccw', 'cw'],   // ccw: to the right, cw: to the left
@@ -675,30 +670,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     Object.defineProperty(this, 'mouseListeningCells', {
         get: function() { return _mouseListeningCells; },
-    });
-
-    Object.defineProperty(this, 'penColor', {
-        get: function() { return _options['penColor']; },
-        set: function(newPenColor) {
-            if (cube.colorNames.indexOf(newPenColor) === -1)
-            {
-                console.error('Invalid pen color for CubePlaylistController', newPenColor);
-                throw 'Invalid pen color';
-            }
-
-            var prevPenColor = _options['penColor'];
-            _options['penColor'] = newPenColor;
-
-            this.emit('propertyChanged', {
-                setting: 'penColor',
-                newValue: _options['penColor'],
-                oldValue: prevPenColor,
-            });
-        },
-    });
-
-    Object.defineProperty(this, 'penColorRgb', {
-        get: function() { return this.cube.colors[_options['penColor']]; },
     });
 
     Object.defineProperty(this, 'animationInterval', {

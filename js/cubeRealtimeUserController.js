@@ -12,7 +12,6 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         stepSize: 1,
         wrap: false,
         listenForKeys: 'all',
-        penColor: 'blue',
     };
 
     var _opts = opts || {};
@@ -76,11 +75,6 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         document.removeEventListener('keypress', controller.keyListenerFn);
         controller.listeningForKeystrokes = false;
     };
-
-    Object.defineProperty(this, 'directions', {
-        writable: false,
-        value: ['back', 'right', 'down', 'up', 'left', 'forward'],
-    });
 
     Object.defineProperty(this, 'validKeyFns', {
         writable: false,
@@ -262,30 +256,6 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
                 this.cube.render();
             }
         },
-    });
-
-    Object.defineProperty(this, 'penColor', {
-        get: function() { return _options['penColor']; },
-        set: function(newPenColor) {
-            if (cube.colorNames.indexOf(newPenColor) === -1)
-            {
-                console.error('Invalid pen color for cubeRealtimeUserController', newPenColor);
-                throw 'Invalid pen color';
-            }
-
-            var prevPenColor = _options['penColor'];
-            _options['penColor'] = newPenColor;
-
-            this.emit('propertyChanged', {
-                setting: 'penColor',
-                newValue: _options['penColor'],
-                oldValue: prevPenColor,
-            });
-        },
-    });
-
-    Object.defineProperty(this, 'penColorRgb', {
-        get: function() { return this.cube.colors[_options['penColor']]; },
     });
 
     Object.defineProperty(this, 'animationInterval', {
