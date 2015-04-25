@@ -162,11 +162,11 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             {
                 html.dataset.row = cell['row'];
             }
-            if (html.dataset.column)
+            if (html.dataset.column !== cell['column'])
             {
                 html.dataset.column = cell['column'];
             }
-            if (html.dataset.depth)
+            if (html.dataset.depth !== cell['depth'])
             {
                 html.dataset.depth = cell['depth'];
             }
