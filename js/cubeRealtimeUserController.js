@@ -460,7 +460,7 @@ CubeRealtimeUserController.prototype.step = function(numSteps) {
 
     for (var i = 0; i < _numSteps; i++)
     {
-        this.getAnimationCb();
+        (this.getAnimationCb())();
     }
 
     return this;
