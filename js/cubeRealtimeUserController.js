@@ -1,3 +1,5 @@
+// !TODO: fix options merging to traverse up the prototype chain for properties defined on parents
+
 var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
 
     CubeController.apply(this, arguments);
@@ -14,13 +16,19 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         listenForKeys: 'all',
     };
 
+    var __parentDefaultOptions = this.getDefaultOptions();
+    var _parentOptionKeys = Object.keys(__parentDefaultOptions);
+    for (var i = 0, numOpts = _parentOptionKeys.length; i < numOpts; i++) {
+        __defaultOptions[_parentOptionKeys[i]] = __parentDefaultOptions[_parentOptionKeys[i]];
+    }
+
     var _opts = opts || {};
     var _options = {};
-    var optionKeys = Object.keys(__defaultOptions);
-    for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
-        _options[optionKeys[i]] = _opts.hasOwnProperty(optionKeys[i]) ?
-            _opts[optionKeys[i]] :
-            __defaultOptions[optionKeys[i]];
+    var _optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
+        _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
+            _opts[_optionKeys[i]] :
+            __defaultOptions[_optionKeys[i]];
     }
 
     var _mouseListeningCells = [];
@@ -375,6 +383,10 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             });
         },
     });
+
+    this.getDefaultOptions = function() {
+        return __defaultOptions;
+    };
 
     applyOptions.call(this, _options);
 

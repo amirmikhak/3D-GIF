@@ -16,11 +16,17 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         transitionTransforms: false,
     };
 
+    var __parentDefaultOptions = this.getDefaultOptions();
+    var _parentOptionKeys = Object.keys(__parentDefaultOptions);
+    for (var i = 0, numOpts = _parentOptionKeys.length; i < numOpts; i++) {
+        __defaultOptions[_parentOptionKeys[i]] = __parentDefaultOptions[_parentOptionKeys[i]];
+    }
+
     var _opts = opts || {};
     var _options = {};
     var _optionKeys = Object.keys(__defaultOptions);
     for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
-        _options[_optionKeys[i]] = _opts.hasOwnProperty(_optionKeys[i]) ?
+        _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
             _opts[_optionKeys[i]] :
             __defaultOptions[_optionKeys[i]];
     }
@@ -433,6 +439,10 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             }
         },
     });
+
+    this.getDefaultOptions = function() {
+        return __defaultOptions;
+    };
 
     (function buildHTML() {
         _led.classList.add('led');

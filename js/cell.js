@@ -16,11 +16,11 @@ var Cell = function Cell(opts) {
 
     var _opts = opts || {};
     var _options = {};
-    var optionKeys = Object.keys(__defaultOptions);
-    for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
-        _options[optionKeys[i]] = _opts.hasOwnProperty(optionKeys[i]) ?
-            _opts[optionKeys[i]] :
-            __defaultOptions[optionKeys[i]];
+    var _optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
+        _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
+            _opts[_optionKeys[i]] :
+            __defaultOptions[_optionKeys[i]];
     }
 
     var __colorAsString = '0,0,255';

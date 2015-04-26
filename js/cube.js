@@ -1,12 +1,23 @@
-var Cube = function Cube(size) {
+var Cube = function Cube(size, opts) {
     var cube = this;
 
     // DEFINE SOME PROPERTIES
     var _size = size;
     var _cells = [];
-    var _renderer = null;
-    var _controller = null;
-    var _autoRender = true;
+    var __defaultOptions = {
+        renderer: null,
+        controller: null,
+        autoRender: true,
+    };
+
+    var _opts = opts || {};
+    var _options = {};
+    var _optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
+        _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
+            _opts[_optionKeys[i]] :
+            __defaultOptions[_optionKeys[i]];
+    }
 
     var __offCell = new Cell({
         on: false,
@@ -74,35 +85,61 @@ var Cube = function Cube(size) {
     });
 
     Object.defineProperty(this, 'controller', {
-        get: function() { return _controller; },
+        get: function() { return _options['controller']; },
         set: function(newController) {
+            if ((newController === null))
+            {
+                if (_options['controller'])
+                {
+                    _options['controller'].cube = null;
+                }
+                return _options['controller'] = null;
+            }
+
             if (!newController.can('getUpdate'))
             {
                 console.error('Invalid controller: must implement getUpdate()');
                 throw 'Invalid controller for Cube';
             }
 
-            if (_controller) {
-                _controller.cube = null;    // ensure that the previous cube isn't still mutating us
+            if (_options['controller']) {
+                _options['controller'].cube = null;    // ensure that the previous cube isn't still mutating us
             }
-            _controller = newController;
-            _controller.cube = this;
+            _options['controller'] = newController;
+            _options['controller'].cube = this;
         },
     });
 
     Object.defineProperty(this, 'renderer', {
-        get: function() { return _renderer; },
+        get: function() { return _options['renderer']; },
         set: function(newRenderer) {
+            if ((newRenderer === null))
+            {
+                if (_options['renderer'])
+                {
+                    _options['renderer'].cube = null;
+                }
+                return _options['renderer'] = null;
+            }
+
             if (!newRenderer.can('render'))
             {
                 console.error('Invalid renderer: must implement render()');
                 throw 'Invalid renderer for Cube';
             }
 
-            _renderer = newRenderer;
-            _renderer.cube = this;
+            if (_options['renderer'])
+            {
+                _options['renderer'].cube = null;
+            }
+            _options['renderer'] = newRenderer;
+            _options['renderer'].cube = this;
         },
     });
+
+    this.getDefaultOptions = function() {
+        return __defaultOptions;
+    };
 
 
     /**
@@ -127,6 +164,8 @@ var Cube = function Cube(size) {
             }
         }
     }());
+
+    applyOptions.call(this, _options);
 
     return this;
 };

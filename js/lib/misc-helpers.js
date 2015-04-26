@@ -19,7 +19,7 @@ function applyOptions(newOpts) {
     for (var i = 0, numOpts = opts.length; i < numOpts; i++)
     {
         var key = opts[i];
-        if (this.hasOwnProperty(key))
+        if (key in this)
         {
             this[key] = newOpts[key];
         } else

@@ -17,7 +17,7 @@ var CubeTile = function CubeTile(cells, cellOpts, shallow) {
         };
         var optionKeys = Object.keys(mergedCellOptions);
         for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
-            if (addlCellOpts.hasOwnProperty(optionKeys[i]))
+            if (optionKeys[i] in addlCellOpts)
             {
                 mergedCellOptions[optionKeys[i]] = addlCellOpts[optionKeys[i]];
             }

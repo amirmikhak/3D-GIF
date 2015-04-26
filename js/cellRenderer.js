@@ -6,10 +6,12 @@ var CellRenderer = function CellRenderer(cell, opts) {
         get: function() { return _cell; }
     });
 
+    this.getDefaultOptions = function() {
+        return {};
+    };
+
     return this;
 
 };
 
-CellRenderer.prototype.render = function() {
-    // to be overwritten by "subclasses"
-};
+CellRenderer.prototype.render = function() {};

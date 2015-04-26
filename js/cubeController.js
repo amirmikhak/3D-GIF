@@ -12,11 +12,11 @@ var CubeController = function CubeController(opts) {
 
     var _opts = opts || {};
     var _options = {};
-    var optionKeys = Object.keys(__defaultOptions);
-    for (var i = 0, numOpts = optionKeys.length; i < numOpts; i++) {
-        _options[optionKeys[i]] = _opts.hasOwnProperty(optionKeys[i]) ?
-            _opts[optionKeys[i]] :
-            __defaultOptions[optionKeys[i]];
+    var _optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
+        _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
+            _opts[_optionKeys[i]] :
+            __defaultOptions[_optionKeys[i]];
     }
 
     var _animationStartTime = (new Date()).getTime();
@@ -132,12 +132,15 @@ var CubeController = function CubeController(opts) {
         get: function() { return _options['cube'].colors[_options['penColor']]; },
     });
 
+    this.getDefaultOptions = function() {
+        return __defaultOptions;
+    };
+
     applyOptions.call(this, _options);
 
     return this;
 
 };
-
 
 CubeController.prototype.step = function() {};
 CubeController.prototype.getUpdate = function() {};

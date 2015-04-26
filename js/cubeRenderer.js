@@ -1,24 +1,49 @@
-var CubeRenderer = function CubeRenderer(cube) {
+var CubeRenderer = function CubeRenderer(opts) {
 
     Emitter(this);
 
-    var _cube = cube;
-    var _cells = (_cube && _cube.cells) ? _cube.cells.slice() : [];
-    var _numCells = _cells.length;
+    var __defaultOptions = {
+        cube: null,
+    };
+
+    var _opts = opts || {};
+    var _options = {};
+    var _optionKeys = Object.keys(__defaultOptions);
+    for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
+        _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
+            _opts[_optionKeys[i]] :
+            __defaultOptions[_optionKeys[i]];
+    }
+
+    var _cells = [];
+    var _numCells = 0;
 
     Object.defineProperty(this, 'cube', {
-        get: function() { return _cube; },
+        get: function() { return _options['cube']; },
         set: function(newCube) {
-            if (!newCube || (_cube === newCube))
+            var prevCube = _options['cube'];
+            if (newCube === null)
             {
-                return;
+                _options['cube'].renderer = null;
+                _options['cube'] = null;
+                _cells = [];
+                _numCells = 0;
             }
 
-            _cube = newCube;
-            _cells = _cube.cells;
-            _numCells = _cube.cells.length;
+            if (!(newCube instanceof Cube))
+            {
+                console.error('Invalid Cube for CubeRenderer: must be Cube', newCube);
+                throw 'Invalid Cube for CubeRenderer';
+            }
 
-            this.emit('cubeChanged');
+            _options['cube'] = newCube;
+            _cells = _options['cube'].cells;
+            _numCells = _options['cube'].cells.length;
+
+            if (prevCube !== newCube)
+            {
+                this.emit('cubeChanged');
+            }
         },
     });
 
@@ -30,9 +55,14 @@ var CubeRenderer = function CubeRenderer(cube) {
         get: function() { return _numCells; },
     });
 
+    this.getDefaultOptions = function() {
+        return __defaultOptions;
+    };
+
+    applyOptions.call(this, _options);
+
     return this;
 
 };
 
-CubeRenderer.prototype.render = function() {
-};
+CubeRenderer.prototype.render = function() {};
