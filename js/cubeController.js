@@ -4,11 +4,15 @@ var CubeController = function CubeController(opts) {
 
     var controller = this;
 
+    var __emptyCube = new Cube(8);
+
     var __defaultOptions = {
         cube: null,
         renderer: null,
         playing: false,
+        animationInterval: 1,
         penColor: 'blue',
+        frameCacheSize: 0,
     };
 
     var _opts = opts || {};
@@ -20,17 +24,28 @@ var CubeController = function CubeController(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
-    var _animationStartTime = (new Date()).getTime();
-    var _renderStartTime = _animationStartTime;
-    var _lastAnimFrameTime = _animationStartTime;
-    var _lastRenderedTime = _animationStartTime;
+    var _animationFrames = [];
+    var __animationInterval = 0;
+    var __frameIndex = 0;
+    var __frameValidStart = 0;
+    var __frameValidEnd = 0;
+    var __animationLoopInterval = 0;
 
-    var __animationFrameRef = 0;
-    var __step = function __step() {
-        _renderStartTime = (new Date()).getTime();
-        controller.getUpdate();
-        _lastAnimFrameTime = _renderStartTime;
-        __animationFrameRef = requestAnimationFrame(__step);
+    var __startAnimationLoop = function() {
+        __stopAnimationLoop();
+        __animationInterval = _options['animationInterval'];
+        __frameIndex = 0;
+        __frameValidStart = 0;
+        __frameValidEnd = 0;
+        __animationLoopInterval = setInterval(function animationLoopCb() {
+            __frameValidStart = ++__frameIndex * __animationInterval;
+            __frameValidEnd = __frameValidStart + __animationInterval;
+            controller.update(__frameValidStart, __frameValidEnd);
+        }, __animationInterval);
+    };
+
+    var __stopAnimationLoop = function() {
+        clearInterval(__animationLoopInterval);
     };
 
     Object.defineProperty(this, 'directions', {
@@ -43,6 +58,11 @@ var CubeController = function CubeController(opts) {
         configurable: true,
         writable: false,
         value: ['front', 'left', 'back', 'right', 'top', 'bottom'],
+    });
+
+    Object.defineProperty(this, 'getEmptyCube', {
+        writable: false,
+        value: function() { return __emptyCube; }
     });
 
     Object.defineProperty(this, 'cube', {
@@ -105,43 +125,29 @@ var CubeController = function CubeController(opts) {
 
             if (_options['playing'] && !prevPlaying)
             {
-                cancelAnimationFrame(__animationFrameRef);
-                __animationFrameRef = requestAnimationFrame(__step);
+                __startAnimationLoop();
+                if (_options['renderer'])
+                {
+                    _options['renderer'].startRenderLoop(this.getRenderFrame);
+                }
             } else if (!_options['playing'] && prevPlaying)
             {
-                cancelAnimationFrame(__animationFrameRef);
+                __stopAnimationLoop();
+                if (_options['renderer'])
+                {
+                    _options['renderer'].stopRenderLoop();
+                }
             }
         },
     });
 
-    Object.defineProperty(this, 'animationStartTime', {
-        get: function() { return _animationStartTime; },
+    Object.defineProperty(this, 'animationFrames', {
+        get: function() { return _animationFrames.slice(); }
     });
 
-    Object.defineProperty(this, 'lastAnimationFrameTime', {
-        get: function() { return _lastAnimFrameTime; },
-    });
-
-    Object.defineProperty(this, 'renderStartTime', {
-        get: function() { return _renderStartTime; },
-    });
-
-    Object.defineProperty(this, 'lastRenderedTime', {
-        get: function() { return _lastRenderedTime; },
-    });
-
-    Object.defineProperty(this, 'markRenderTime', {
-        writable: false,
-        value: function() {
-            _lastRenderedTime = (new Date()).getTime();
-        },
-    });
-
-    Object.defineProperty(this, 'resetAnimationTimes', {
-        writable: false,
-        value: function() {
-            _lastRenderedTime = _renderStartTime = _lastAnimFrameTime = _animationStartTime = (new Date()).getTime();
-        },
+    Object.defineProperty(this, 'getRenderFrame', {
+        configurable: true,
+        value: function(renderTime) { console.log('CubeController.getRenderFrame()'); },
     });
 
     Object.defineProperty(this, 'penColor', {
@@ -149,7 +155,6 @@ var CubeController = function CubeController(opts) {
         set: function(newPenColor) {
             if (!_options['cube'])
             {
-                console.log('No cube defined for CubeController when setting color', newPenColor);
                 return null;
             } else if (_options['cube'].colorNames.indexOf(newPenColor) === -1)
             {
@@ -172,6 +177,85 @@ var CubeController = function CubeController(opts) {
         get: function() { return _options['cube'].colors[_options['penColor']]; },
     });
 
+    Object.defineProperty(this, 'frameCacheSize', {
+        get: function() { return _options['frameCacheSize']; },
+        set: function(newFrameCacheSize) {
+            var parsedValue = parseInt(newFrameCacheSize, 10);
+            if (isNaN(parsedValue) || parsedValue < 0)
+            {
+                console.error('Invalid frame cache size: must be integer >= 0.', newFrameCacheSize);
+                throw 'Invalid frameCacheSize';
+            }
+
+            return _options['frameCacheSize'] = parsedValue;
+        },
+    });
+
+    Object.defineProperty(this, 'animationInterval', {
+        get: function() { return _options['animationInterval']; },
+        set: function(newAnimationInterval) {
+            var parsedValue = parseInt(newAnimationInterval, 10);
+            if (isNaN(parsedValue) || (parsedValue < 0))
+            {
+                console.error('Invalid animationInterval for cubeRealtimeUserController', newAnimationInterval);
+                throw 'Invalid animation interval';
+            }
+
+            var prevAnimationInterval = _options['animationInterval'];
+            _options['animationInterval'] = parsedValue;
+
+            this.emit('propertyChanged', {
+                setting: 'animationInterval',
+                newValue: _options['animationInterval'],
+                oldValue: prevAnimationInterval,
+            });
+        },
+    });
+
+    Object.defineProperty(this, 'addAnimationFrame', {
+        writable: false,
+        value: function(cubeData, startTime, endTime) {
+            if (arguments.length !== 3)
+            {
+                console.error('Invalid arguments for CubeController.addAnimationFrame()');
+                throw 'Invalid arguments';
+            } else if (!(cubeData instanceof Cube))
+            {
+                console.error('Invalid cubeData for CubeController.addAnimationFrame()');
+                throw 'Invalid Cube data';
+            } else if (isNaN(parseInt(startTime, 10)))
+            {
+                console.error('Invalid start time for CubeController.addAnimationFrame()');
+                throw 'Invalid startTime';
+            } else if (isNaN(parseInt(endTime, 10)))
+            {
+                console.error('Invalid end time for CubeController.addAnimationFrame()');
+                throw 'Invalid endTime';
+            }
+
+            if (this.frameCacheSize && (_animationFrames.length > this.frameCacheSize))
+            {
+                _animationFrames = [];
+            }
+
+            var newFrame = {
+                data: cubeData,
+                start: parseInt(startTime, 10),
+                end: parseInt(endTime, 10),
+            };
+            _animationFrames.push(newFrame);
+        },
+    });
+
+    Object.defineProperty(this, 'popCurrentAnimationFrame', {
+        writable: false,
+        value: function() { return _animationFrames.length ? _animationFrames.shift() : null; },
+    });
+
+    Object.defineProperty(this, 'currentAnimationFrame', {
+        get: function() { return _animationFrames.length ? _animationFrames[0] : null; },
+    });
+
     this.getDefaultOptions = function() {
         return __defaultOptions;
     };
@@ -182,19 +266,11 @@ var CubeController = function CubeController(opts) {
 
 };
 
-CubeController.prototype.step = function() {};
-CubeController.prototype.getUpdate = function() {};
-
 CubeController.prototype.togglePlaying = function() {
     this.playing = !this.playing;
 };
 
 CubeController.prototype.stop = function() {
-    this.playing = false;
-    this.resetAnimationTimes();
-};
-
-CubeController.prototype.pause = function() {
     this.playing = false;
 };
 
@@ -202,3 +278,6 @@ CubeController.prototype.play = function(resetTimers) {
     this.stop();
     this.playing = true;
 };
+
+CubeController.prototype.step = function() {};
+CubeController.prototype.update = function(frameValidStart, frameValidEnd) {};

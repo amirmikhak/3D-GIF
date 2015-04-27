@@ -4,8 +4,7 @@ var Cube = function Cube(size, opts) {
     // DEFINE SOME PROPERTIES
     var _size = size;
     var _cells = [];
-    var __defaultOptions = {
-    };
+    var __defaultOptions = {};
 
     var _opts = opts || {};
     var _options = {};
@@ -113,6 +112,17 @@ Cube.prototype.toJSON = function() {
         size: this.size,
         cells: this.cells,
     };
+};
+
+Cube.prototype.getForAnimationFrame = function() {
+    var thisCells = this.cells;
+    var retCube = new Cube(this.size);
+    var retCells = retCube.cells;
+    for (var i = 0, numCells = thisCells.length; i < numCells; i++)
+    {
+        retCells[i].setFromCell(thisCells[i]);
+    }
+    return retCube;
 };
 
 Cube.prototype.getNewValueForShift = function(cellPos, cubeSize, wrap, stepSize) {

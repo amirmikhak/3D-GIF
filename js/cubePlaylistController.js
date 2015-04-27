@@ -4,28 +4,33 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     var cubePlaylistController = this;
 
-    var __defaultOptions = {
+    var __combinedDefaultOptions = {};
+    var __parentDefaultOptions = this.getDefaultOptions();
+    var __parentOptionKeys = Object.keys(__parentDefaultOptions);
+    for (var i = 0, numOpts = __parentOptionKeys.length; i < numOpts; i++) {
+        __combinedDefaultOptions[__parentOptionKeys[i]] = __parentDefaultOptions[__parentOptionKeys[i]];
+    }
+
+    var __myDefaultOptions = {
         mode: 'through',
         writeFace: 'front',
         wrapDirection: 'cw',
         loops: true,
-        animationInterval: 50,   // ms between each "tick"
         spacing: 2,       // number of ticks between tile rendering before next appears
+        frameCacheSize: 0,
     };
-
-    var __parentDefaultOptions = this.getDefaultOptions();
-    var _parentOptionKeys = Object.keys(__parentDefaultOptions);
-    for (var i = 0, numOpts = _parentOptionKeys.length; i < numOpts; i++) {
-        __defaultOptions[_parentOptionKeys[i]] = __parentDefaultOptions[_parentOptionKeys[i]];
+    var __myOptionKeys = Object.keys(__myDefaultOptions);
+    for (var i = 0, numOpts = __myOptionKeys.length; i < numOpts; i++) {
+        __combinedDefaultOptions[__myOptionKeys[i]] = __myDefaultOptions[__myOptionKeys[i]];
     }
 
     var _opts = opts || {};
     var _options = {};
-    var _optionKeys = Object.keys(__defaultOptions);
-    for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
-        _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
-            _opts[_optionKeys[i]] :
-            __defaultOptions[_optionKeys[i]];
+    var __optionKeys = Object.keys(__combinedDefaultOptions);
+    for (var i = 0, numOpts = __optionKeys.length; i < numOpts; i++) {
+        _options[__optionKeys[i]] = (__optionKeys[i] in _opts) ?
+            _opts[__optionKeys[i]] :
+            __combinedDefaultOptions[__optionKeys[i]];
     }
 
     var _mouseListeningCells = [];
@@ -50,6 +55,8 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     var __columnReader = '';
     var __columnWriter = '';
     var _animator = function() {};
+
+    var _generatedAnimationFrames = [];
 
     var PLAYLIST_SETTINGS_CHANGE_NAME = 'playlistSettingsChange';
 
@@ -148,8 +155,8 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     function __updateDuration() {
         _duration = _options['mode'] === 'through' ?
-            __tilesWithSpacing.length * _options['animationInterval'] :
-            __tileStrip.length * _options['animationInterval']; // update duration, used for _options['loops']
+            __tilesWithSpacing.length * cubePlaylistController.animationInterval :
+            __tileStrip.length * cubePlaylistController.animationInterval // update duration, used for _options['loops']
     }
 
     function __updateAnimator() {
@@ -221,8 +228,27 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         __updateTilesWithSpacing();
         __updateTileStrip();
         __updateTileThumbs();
+        __generateAnimationFrames();
     }
 
+    function __generateAnimationFrames() {
+        var numFramesToGenerate = {
+            'across': __tileStrip.length,
+            'around': __tileStrip.length,
+            'through': __tilesWithSpacing.length,
+        }[_options['mode']];
+
+        var ctrl = cubePlaylistController;
+        for (var i = 0; i < numFramesToGenerate; i++)
+        {
+            ctrl.animator();
+            _generatedAnimationFrames.push({
+                cube: ctrl.cube.getForAnimationFrame(),
+                start: i * ctrl.animationInterval,
+                end: (i * ctrl.animationInterval) + ctrl.animationInterval,
+            });
+        }
+    }
 
     /**
      * ANIMATION METHODS
@@ -392,7 +418,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         var stripData = strip.strip;
         __propigateColumns(numColumns);
         this.cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
-        __stopIfShould();
     }
 
     function __animatorAcross() {
@@ -417,7 +442,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         })();
         // write the newest tile
         this.cube.writeSlice(tileData, _options['writeFace'], 0);
-        __stopIfShould();
     }
 
 
@@ -511,6 +535,10 @@ var CubePlaylistController = function CubePlaylistController(opts) {
      * CONTROLLER PROPERTIES
      */
 
+    Object.defineProperty(this, 'generatedAnimationFrames', {
+        get: function() { return _generatedAnimationFrames.slice(); },
+    });
+
     Object.defineProperty(this, 'duration', {
         get: function() { return _duration; }
     });
@@ -582,6 +610,35 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         }
     });
 
+    Object.defineProperty(this, 'getRenderFrame', {
+        writable: false,
+        value: function getRenderFrame(renderTime) {
+            var localRenderTime = _options['loops'] ? (renderTime % _duration) : renderTime;
+            var currFrame = cubePlaylistController.currentAnimationFrame;
+            if (!currFrame)
+            {
+                console.log('emptyCube');
+                return cubePlaylistController.getEmptyCube();
+            } else if (localRenderTime < currFrame.start)
+            {
+                // console.log('before valid frame', localRenderTime, currFrame.start);
+                return cubePlaylistController.getEmptyCube();
+            } else if ((localRenderTime >= currFrame.start) && (localRenderTime <= currFrame.end))
+            {
+                console.log('ret popped frame');
+                return cubePlaylistController.popCurrentAnimationFrame().data;
+            } else if (localRenderTime > currFrame.end)
+            {
+                // console.log('recurse', localRenderTime, currFrame.end);
+                cubePlaylistController.popCurrentAnimationFrame();
+                return cubePlaylistController.getRenderFrame(localRenderTime);
+            } else
+            {
+                console.log('else', localRenderTime, currFrame.start, currFrame.end, currFrame);
+            }
+        },
+    });
+
     Object.defineProperty(this, 'writeFace', {
         get: function() { return _options['writeFace']; },
         set: function(newWriteFace) {
@@ -602,11 +659,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
                 newValue: _options['writeFace'],
                 oldValue: prevFace,
             });
-
-            if (this.renderer)
-            {
-                this.renderer.render();
-            }
         }
     });
 
@@ -678,29 +730,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         get: function() { return _mouseListeningCells; },
     });
 
-    Object.defineProperty(this, 'animationInterval', {
-        get: function() { return _options['animationInterval']; },
-        set: function(newAnimationInterval) {
-            var parsedValue = parseInt(newAnimationInterval, 10);
-            if (isNaN(parsedValue) || (parsedValue < 0))
-            {
-                console.error('Invalid animationInterval for CubePlaylistController', newAnimationInterval);
-                throw 'Invalid animation interval';
-            }
-
-            var prevAnimationInterval = _options['animationInterval'];
-            _options['animationInterval'] = parsedValue;
-
-            __updateDuration();
-
-            this.emit('propertyChanged', {
-                setting: 'animationInterval',
-                newValue: _options['animationInterval'],
-                oldValue: prevAnimationInterval,
-            });
-        },
-    });
-
     Object.defineProperty(this, 'direction', {
         get: function() { return _options['direction']; },
         set: function(newDirection) {
@@ -722,8 +751,15 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     });
 
     this.getDefaultOptions = function() {
-        return __defaultOptions;
+        return __combinedDefaultOptions;
     };
+
+    this.on('propertyChanged', function(changeData) {
+        if (changeData.setting === 'animationInterval')
+        {
+            __updateDuration();
+        }
+    });
 
     applyOptions.call(this, _options);
 
@@ -733,17 +769,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
 CubePlaylistController.prototype = Object.create(CubeController.prototype);
 CubePlaylistController.prototype.constructor = CubePlaylistController;
-
-CubePlaylistController.prototype.getUpdate = function() {
-    var timeSinceLastFinishedRender = this.renderStartTime - this.lastRenderedTime;
-    var numStepsNotRendered = Math.floor(timeSinceLastFinishedRender / this.animationInterval);
-    if (numStepsNotRendered)
-    {
-        this.step(numStepsNotRendered);
-        this.renderer.render();
-        this.markRenderTime();
-    }
-};
 
 CubePlaylistController.prototype.step = function(numSteps) {
     /**
@@ -762,5 +787,25 @@ CubePlaylistController.prototype.step = function(numSteps) {
         this.animator();
     }
 
+    return this;
+};
+
+CubePlaylistController.prototype.update = function(frameValidStart, frameValidEnd) {
+    // console.log('CubePlaylistController.update()');
+    if (!this.currentAnimationFrame)
+    {
+        var numFrames = this.generatedAnimationFrames.length;
+        if (numFrames === 0)
+        {
+            this.addAnimationFrame(this.getEmptyCube(), 0, this.animationInterval);
+        } else
+        {
+            for (var i = 0; i < numFrames; i++)
+            {
+                var frame = this.generatedAnimationFrames[i];
+                this.addAnimationFrame(frame.cube, frame.start, frame.end);
+            }
+        }
+    }
     return this;
 };

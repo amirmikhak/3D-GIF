@@ -31,7 +31,21 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
-    var __cellRenderers = [];
+    var _animationStartTime = (new Date()).getTime();
+    var _renderStartTime = _animationStartTime;
+    var _lastRendererTime = _animationStartTime;
+    var __animationFrameRef = 0;
+    var __getRenderFrameCb = function() { console.log('default __getRenderFrameCb()'); };
+
+    var __renderStep = function __renderStep() {
+        _renderStartTime = (new Date()).getTime();
+        var renderFrame = __getRenderFrameCb(_renderStartTime - _animationStartTime);
+        cubeDOMRenderer.render(renderFrame);
+        _lastRendererTime = _renderStartTime;
+        __animationFrameRef = requestAnimationFrame(__renderStep);
+    };
+
+    var _cellRenderers = [];
 
     var __drawnOptions = {};
     var __dirtyOptions = {};
@@ -95,20 +109,20 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         {
             var cell = cubeDOMRenderer.cells[i];
             var cellRenderer = new CellDOMRenderer(cell, _options.cellConfig);
-            __cellRenderers.push(cellRenderer);
+            _cellRenderers.push(cellRenderer);
             _html.appendChild(cellRenderer.html);
         }
     }
 
     function __hasDirtyCells() {
+        return true;
         for (var i = 0; i < cubeDOMRenderer.numCells; i++)
         {
-            if (__cellRenderers[i].dirty)
+            if (_cellRenderers[i].dirty)
             {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -172,7 +186,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
 
         for (var i = 0; i < cubeDOMRenderer.numCells; i++)
         {
-            var cellRenderer = __cellRenderers[i];
+            var cellRenderer = _cellRenderers[i];
             var cell = cellRenderer.cell;
 
             var newCellRendererOptions = {
@@ -188,6 +202,48 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             cellRenderer.render();
         }
     }
+
+    Object.defineProperty(this, 'startRenderLoop', {
+        writable: false,
+        value: function(getRenderFrame) {
+            if (typeof getRenderFrame !== 'function')
+            {
+                console.error('Invalid render callback for startRenderLoop: ' +
+                    'must be a function', getRenderFrame);
+                throw 'Invalid getRenderFrame';
+            }
+            cubeDOMRenderer.resetAnimationTimes();
+            __getRenderFrameCb = getRenderFrame;
+            __animationFrameRef = requestAnimationFrame(__renderStep);
+        },
+    });
+
+    Object.defineProperty(this, 'stopRenderLoop', {
+        writable: false,
+        value: function() {
+            cancelAnimationFrame(__animationFrameRef);
+            cubeDOMRenderer.resetAnimationTimes();
+        },
+    });
+
+    Object.defineProperty(this, 'animationStartTime', {
+        get: function() { return _animationStartTime; },
+    });
+
+    Object.defineProperty(this, 'lastRenderedTime', {
+        get: function() { return _lastRenderedTime; },
+    });
+
+    Object.defineProperty(this, 'renderStartTime', {
+        get: function() { return _renderStartTime; },
+    });
+
+    Object.defineProperty(this, 'resetAnimationTimes', {
+        writable: false,
+        value: function() {
+            _lastRenderedTime = _renderStartTime = _animationStartTime = (new Date()).getTime();
+        },
+    });
 
     Object.defineProperty(this, 'updateDOM', {
         value: function updateDOM() {
@@ -218,6 +274,10 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
 
     Object.defineProperty(this, 'html', {
         get: function() { return _html; },
+    });
+
+    Object.defineProperty(this, 'cellRenderers', {
+        get: function() { return _cellRenderers.slice(); },
     });
 
     Object.defineProperty(this, 'container', {
@@ -378,8 +438,13 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         applyOptions.call(cubeDOMRenderer, _options);
     }
 
-    this.on('cubeChanged', function() {
-        __buildHTML();
+    this.on('cubeChanged', function(changeData) {
+        if (!changeData.prev || !changeData.curr ||
+            (changeData.prev.size !== changeData.curr.size))
+        {
+            __buildHTML();
+        }
+
         cubeDOMRenderer.updateDOM();
     });
 
@@ -392,7 +457,19 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
 CubeDOMRenderer.prototype = Object.create(CubeRenderer.prototype);
 CubeDOMRenderer.prototype.constructor = CubeDOMRenderer;
 
-CubeDOMRenderer.prototype.render = function() {
+CubeDOMRenderer.prototype.render = function(cubeData) {
+    if ((this.cube === cubeData) && (this.prevCube !== cubeData))
+    {
+        return;
+    }
+    this.prevCube = this.cube;
+
+    this.cube = cubeData;
+    for (var i = 0, numCells = cubeData.length; i < numCells; i++)
+    {
+        console.log('copying cell');
+        _cellRenderers[i].cell = cubeData[i];
+    }
     this.updateDOM();
 };
 

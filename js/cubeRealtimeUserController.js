@@ -4,29 +4,34 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
 
     var cubeRealtimeUserController = this;
 
-    var __defaultOptions = {
-        animationInterval: 1,
+    var __combinedDefaultOptions = {};
+    var __parentDefaultOptions = this.getDefaultOptions();
+    var __parentOptionKeys = Object.keys(__parentDefaultOptions);
+    for (var i = 0, numOpts = __parentOptionKeys.length; i < numOpts; i++) {
+        __combinedDefaultOptions[__parentOptionKeys[i]] = __parentDefaultOptions[__parentOptionKeys[i]];
+    }
+
+    var __myDefaultOptions = {
         action: 'slide',
         writeFace: 'front',
         direction: 'back',
         stepSize: 1,
         wrap: false,
         listenForKeys: 'all',
+        frameCacheSize: 100,
     };
-
-    var __parentDefaultOptions = this.getDefaultOptions();
-    var _parentOptionKeys = Object.keys(__parentDefaultOptions);
-    for (var i = 0, numOpts = _parentOptionKeys.length; i < numOpts; i++) {
-        __defaultOptions[_parentOptionKeys[i]] = __parentDefaultOptions[_parentOptionKeys[i]];
+    var __myOptionKeys = Object.keys(__myDefaultOptions);
+    for (var i = 0, numOpts = __myOptionKeys.length; i < numOpts; i++) {
+        __combinedDefaultOptions[__myOptionKeys[i]] = __myDefaultOptions[__myOptionKeys[i]];
     }
 
     var _opts = opts || {};
     var _options = {};
-    var _optionKeys = Object.keys(__defaultOptions);
+    var _optionKeys = Object.keys(__combinedDefaultOptions);
     for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
         _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
             _opts[_optionKeys[i]] :
-            __defaultOptions[_optionKeys[i]];
+            __combinedDefaultOptions[_optionKeys[i]];
     }
 
     var _mouseListeningCells = [];
@@ -215,7 +220,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
                 {
                     var shapeTile = CubeAssets.getShapeRender(shapeNames[shapeIndex]);
                     cube.writeSlice(shapeTile, controller.writeFace);
-                    controller.renderer.render();
+                    controller.addAnimationFrame(controller.cube.getForAnimationFrame(), (new Date).getTime(), (new Date).getTime() + controller.animationInterval);
                 }
             } else
             {
@@ -242,7 +247,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             var colorRgb = cube.colors[controller.penColor];
             var charTile = CubeAssets.getCharacterRender(char, colorRgb);
             cube.writeSlice(charTile, controller.writeFace);
-            controller.renderer.render();
+            controller.addAnimationFrame(controller.cube.getForAnimationFrame(), (new Date).getTime(), (new Date).getTime() + controller.animationInterval);
         },
     });
 
@@ -250,32 +255,24 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         get: function() { return _mouseListeningCells; },
     });
 
+    Object.defineProperty(this, 'getRenderFrame', {
+        writable: false,
+        value: function getRenderFrame(renderTime) {
+            var currFrame = cubeRealtimeUserController.currentAnimationFrame;
+            if (!currFrame)
+            {
+                return cubeRealtimeUserController.getEmptyCube();
+            }
+
+            return cubeRealtimeUserController.popCurrentAnimationFrame().data;
+        },
+    });
+
     Object.defineProperty(this, 'writeFace', {
         get: function() { return _options['writeFace']; },
         set: function(newWriteFace) {
             _options['writeFace'] = newWriteFace;
             __updateMouseListeningCells();
-        },
-    });
-
-    Object.defineProperty(this, 'animationInterval', {
-        get: function() { return _options['animationInterval']; },
-        set: function(newAnimationInterval) {
-            var parsedValue = parseInt(newAnimationInterval, 10);
-            if (isNaN(parsedValue) || (parsedValue < 0))
-            {
-                console.error('Invalid animationInterval for cubeRealtimeUserController', newAnimationInterval);
-                throw 'Invalid animation interval';
-            }
-
-            var prevAnimationInterval = _options['animationInterval'];
-            _options['animationInterval'] = parsedValue;
-
-            this.emit('propertyChanged', {
-                setting: 'animationInterval',
-                newValue: _options['animationInterval'],
-                oldValue: prevAnimationInterval,
-            });
         },
     });
 
@@ -377,7 +374,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     });
 
     this.getDefaultOptions = function() {
-        return __defaultOptions;
+        return __combinedDefaultOptions;
     };
 
     applyOptions.call(this, _options);
@@ -389,13 +386,18 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
 CubeRealtimeUserController.prototype = Object.create(CubeController.prototype);
 CubeRealtimeUserController.prototype.constructor = CubeRealtimeUserController;
 
-CubeRealtimeUserController.prototype.getUpdate = function() {
-    var timeSinceLastRender = (new Date()).getTime() - this.lastRenderedTime;
-    if (timeSinceLastRender >= this.animationInterval)
+CubeRealtimeUserController.prototype.getAnimationCb = function getAnimationCb() {
+    var that = this;
+    if (this.action === 'slide')
     {
-        this.step();
-        this.renderer.render();
-        this.markRenderTime();
+        return {
+            up: function() { that.cube.shiftPlane('X', that.stepSize, that.wrap); },
+            down: function() { that.cube.shiftPlane('X', -1 * that.stepSize, that.wrap); },
+            left: function() { that.cube.shiftPlane('Y', that.stepSize, that.wrap); },
+            right: function() { that.cube.shiftPlane('Y', -1 * that.stepSize, that.wrap); },
+            forward: function() { that.cube.shiftPlane('Z', that.stepSize, that.wrap); },
+            back: function() { that.cube.shiftPlane('Z', -1 * that.stepSize, that.wrap); },
+        }[this.direction];
     }
 };
 
@@ -440,17 +442,8 @@ CubeRealtimeUserController.prototype.step = function(numSteps) {
     return this;
 };
 
-CubeRealtimeUserController.prototype.getAnimationCb = function getAnimationCb() {
-    var that = this;
-    if (this.action === 'slide')
-    {
-        return {
-            up: function() { that.cube.shiftPlane('X', that.stepSize, that.wrap); },
-            down: function() { that.cube.shiftPlane('X', -1 * that.stepSize, that.wrap); },
-            left: function() { that.cube.shiftPlane('Y', that.stepSize, that.wrap); },
-            right: function() { that.cube.shiftPlane('Y', -1 * that.stepSize, that.wrap); },
-            forward: function() { that.cube.shiftPlane('Z', that.stepSize, that.wrap); },
-            back: function() { that.cube.shiftPlane('Z', -1 * that.stepSize, that.wrap); },
-        }[this.direction];
-    }
+CubeRealtimeUserController.prototype.update = function(frameValidStart, frameValidEnd) {
+    this.step();
+    this.addAnimationFrame(this.cube.getForAnimationFrame(), frameValidStart, frameValidEnd);
+    return this;
 };

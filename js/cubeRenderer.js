@@ -18,34 +18,35 @@ var CubeRenderer = function CubeRenderer(opts) {
     var _cells = [];
     var _numCells = 0;
 
+    Object.defineProperty(this, 'startRenderLoop', {
+        configurable: true,
+        value: function() { console.log('CubeRenderer.startRenderLoop()'); },
+    });
+
+    Object.defineProperty(this, 'stopRenderLoop', {
+        configurable: true,
+        value: function() { console.log('CubeRenderer.stopRenderLoop()'); },
+    });
+
     Object.defineProperty(this, 'cube', {
         get: function() { return _options['cube']; },
         set: function(newCube) {
             var prevCube = _options['cube'];
-            if (newCube === null)
-            {
-                _options['cube'] = null;
-                _cells = [];
-                _numCells = 0;
-                if (prevCube !== newCube)
-                {
-                    this.emit('cubeChanged');
-                }
-                return;
-            }
-
-            if (!(newCube instanceof Cube))
+            if ((newCube !== null) && !(newCube instanceof Cube))
             {
                 console.error('Invalid Cube for CubeRenderer: must be Cube', newCube);
                 throw 'Invalid Cube for CubeRenderer';
             }
 
             _options['cube'] = newCube;
-            _cells = _options['cube'].cells;
-            _numCells = _options['cube'].cells.length;
+            _cells = newCube === null ? [] : _options['cube'].cells;
+            _numCells = newCube === null ? 0 : _options['cube'].cells.length;
             if (prevCube !== newCube)
             {
-                this.emit('cubeChanged');
+                this.emit('cubeChanged', {
+                    prev: prevCube,
+                    curr: newCube,
+                });
             }
         },
     });
@@ -68,4 +69,4 @@ var CubeRenderer = function CubeRenderer(opts) {
 
 };
 
-CubeRenderer.prototype.render = function() { console.log('cubeRenderer.render()'); };
+CubeRenderer.prototype.render = function(cubeData) { console.log('cubeRenderer.render()'); };

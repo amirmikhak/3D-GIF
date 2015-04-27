@@ -293,6 +293,14 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             __calculateDirtyOptions();
             return __hasDirtyOptions();
         },
+        set: function(newDirty) {
+            var newDirtyBool = !!newDirty;
+            for (var i = 0, numKeys = _optionKeys.length; i < numKeys; i++)
+            {
+                _dirtyOptions[_optionKeys[i]] = newDirtyBool;
+            }
+            return newDirtyBool;
+        },
     });
 
     Object.defineProperty(this, 'html', {
@@ -434,8 +442,8 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         _html.appendChild(_led);
     }());
 
-
     applyOptions.call(this, _options);
+
     return this;
 
 };
@@ -445,5 +453,4 @@ CellDOMRenderer.prototype.constructor = CellDOMRenderer;
 
 CellDOMRenderer.prototype.render = function render() {
     this.updateDOM();
-    return this.html;
 };

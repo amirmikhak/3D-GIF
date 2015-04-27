@@ -22,14 +22,11 @@ var plController = new CubePlaylistController({
     cube: cube,
     penColor: 'red',
     renderer: domRenderer,
+    animationInterval: 300,
 });
 
 var rtController = new CubeRealtimeUserController({
     cube: cube,
     penColor: 'blue',
     renderer: domRenderer,
-});
-
-window.addEventListener('load', function() { // When everything is loaded
-    // rtController.renderer.render();
 });
