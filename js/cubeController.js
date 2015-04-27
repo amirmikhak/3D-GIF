@@ -6,6 +6,7 @@ var CubeController = function CubeController(opts) {
 
     var __defaultOptions = {
         cube: null,
+        renderer: null,
         playing: false,
         penColor: 'blue',
     };
@@ -53,7 +54,46 @@ var CubeController = function CubeController(opts) {
                 throw 'Invalid cube';
             }
 
-            return _options['cube'] = newCube;
+            if (_options['cube'] !== newCube)
+            {
+                _options['cube'] = newCube;
+                if (_options['renderer'])
+                {
+                    _options['renderer'].cube = _options['cube'];
+                }
+            }
+            return _options['cube'];
+        },
+    });
+
+    Object.defineProperty(this, 'renderer', {
+        get: function() { return _options['renderer']; },
+        set: function(newRenderer) {
+            if ((newRenderer === null))
+            {
+                if (_options['renderer'])
+                {
+                    _options['renderer'].cube = null;
+                }
+                return _options['renderer'] = null;
+            }
+
+            if (!newRenderer.can('render'))
+            {
+                console.error('Invalid renderer: must implement render()');
+                throw 'Invalid renderer for CubeController';
+            }
+
+            var prevRenderer = _options['renderer'];
+            if (prevRenderer !== newRenderer)
+            {
+                prevRenderer.cube = null;
+            }
+            _options['renderer'] = newRenderer;
+            if (_options['renderer'].cube !== this.cube)
+            {
+                _options['renderer'].cube = this.cube;
+            }
         },
     });
 

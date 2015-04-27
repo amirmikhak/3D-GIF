@@ -269,7 +269,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         var dragDelegate = CellDraggingDelegate.get();
         if (dragDelegate.isDragging)
         {
-            _cell.applyOptions({
+            applyOptions.call(_cell, {
                 on: dragDelegate.dragSetOn,
                 color: dragDelegate.dragSetOn ? dragDelegate.dragSetColor : _cell['color'],
             });
@@ -303,10 +303,6 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         get: function() { return _options['size']; },
         set: function(newSize) {
             _options['size'] = newSize;
-            if (_cell.autoRender)
-            {
-                this.render();   // call to ensure that the DOM is sync with model
-            }
         },
     });
 
@@ -315,10 +311,6 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         set: function(newShouldRotate) {
             _options['rotate'] = !!newShouldRotate;
             _hasRotation = false;
-            if (_cell.autoRender)
-            {
-                this.render();   // call to ensure that the DOM is sync with model
-            }
         },
     });
 
@@ -346,10 +338,6 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             // cache whether we have a rotation for performance
             _hasRotation = _options['rotate'] && (
                 newRotation.reduce(function(prev, curr) { return prev + curr; }));
-            if (_cell.autoRender)
-            {
-                this.render();   // call to ensure that the DOM is sync with model
-            }
         },
     });
 
@@ -360,10 +348,6 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         get: function() { return _options['transitionTransforms']; },
         set: function(shouldTransition) {
             _options['transitionTransforms'] = shouldTransition;
-            if (_cell.autoRender)
-            {
-                this.render();   // call to ensure that the DOM is sync with model
-            }
         },
     });
 
@@ -450,15 +434,8 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         _html.appendChild(_led);
     }());
 
-    var prevAutoRender = _cell.autoRender;
-    _cell.autoRender = false;
-    applyOptions.call(this, _options);
-    if (prevAutoRender)
-    {
-        this.render();
-        _cell.autoRender = prevAutoRender;
-    }
 
+    applyOptions.call(this, _options);
     return this;
 
 };

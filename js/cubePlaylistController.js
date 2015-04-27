@@ -603,9 +603,9 @@ var CubePlaylistController = function CubePlaylistController(opts) {
                 oldValue: prevFace,
             });
 
-            if (this.cube)
+            if (this.renderer)
             {
-                this.cube.render();
+                this.renderer.render();
             }
         }
     });
@@ -740,7 +740,7 @@ CubePlaylistController.prototype.getUpdate = function() {
     if (numStepsNotRendered)
     {
         this.step(numStepsNotRendered);
-        this.cube.render();
+        this.renderer.render();
         this.markRenderTime();
     }
 };

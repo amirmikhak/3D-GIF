@@ -1,5 +1,3 @@
-// !TODO: fix options merging to traverse up the prototype chain for properties defined on parents
-
 var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
 
     CubeController.apply(this, arguments);
@@ -7,7 +5,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     var cubeRealtimeUserController = this;
 
     var __defaultOptions = {
-        animationInterval: 10,
+        animationInterval: 1,
         action: 'slide',
         writeFace: 'front',
         direction: 'back',
@@ -216,9 +214,8 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
                 if ((shapeIndex >= 0) && (shapeIndex < numShapes))
                 {
                     var shapeTile = CubeAssets.getShapeRender(shapeNames[shapeIndex]);
-                    window.requestAnimationFrame(function() {
-                        cube.writeSlice(shapeTile, controller.writeFace);
-                    });
+                    cube.writeSlice(shapeTile, controller.writeFace);
+                    controller.renderer.render();
                 }
             } else
             {
@@ -244,9 +241,8 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             var char = String.fromCharCode(e.which);
             var colorRgb = cube.colors[controller.penColor];
             var charTile = CubeAssets.getCharacterRender(char, colorRgb);
-            window.requestAnimationFrame(function() {
-                cube.writeSlice(charTile, controller.writeFace);
-            });
+            cube.writeSlice(charTile, controller.writeFace);
+            controller.renderer.render();
         },
     });
 
@@ -259,10 +255,6 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         set: function(newWriteFace) {
             _options['writeFace'] = newWriteFace;
             __updateMouseListeningCells();
-            if (this.cube)
-            {
-                this.cube.render();
-            }
         },
     });
 
@@ -402,7 +394,7 @@ CubeRealtimeUserController.prototype.getUpdate = function() {
     if (timeSinceLastRender >= this.animationInterval)
     {
         this.step();
-        this.cube.render();
+        this.renderer.render();
         this.markRenderTime();
     }
 };

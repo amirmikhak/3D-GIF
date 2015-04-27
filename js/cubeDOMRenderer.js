@@ -31,9 +31,12 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
+    var __cellRenderers = [];
+
     var __drawnOptions = {};
     var __dirtyOptions = {};
     var __dirtyViewAngle = false;
+    var __dirtyDimensions = false;
 
     var _html = document.createElement('div');
 
@@ -87,27 +90,20 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
 
     function __buildHTML() {
         _html.id = 'cube';
-        _html.style.height = cubeDOMRenderer.outerDimensions + 'px';
-        _html.style.width = cubeDOMRenderer.outerDimensions + 'px';
-        _html.style.transformStyle = 'preserve-3d';
-        _html.style.transformOrigin = (
-            'calc(' + cubeDOMRenderer.outerDimensions + 'px/2) ' +
-            'calc(' + cubeDOMRenderer.outerDimensions + 'px/2) ' +
-            'calc(-1 * ' + cubeDOMRenderer.outerDimensions + 'px/2)'
-        );
-
         _html.innerHTML = '';
         for (var i = 0; i < cubeDOMRenderer.numCells; i++)
         {
-            cubeDOMRenderer.cells[i].renderer = new CellDOMRenderer(cubeDOMRenderer.cells[i], _options.cellConfig);
-            _html.appendChild(cubeDOMRenderer.cells[i].render());
+            var cell = cubeDOMRenderer.cells[i];
+            var cellRenderer = new CellDOMRenderer(cell, _options.cellConfig);
+            __cellRenderers.push(cellRenderer);
+            _html.appendChild(cellRenderer.html);
         }
     }
 
     function __hasDirtyCells() {
         for (var i = 0; i < cubeDOMRenderer.numCells; i++)
         {
-            if (cubeDOMRenderer.cells[i].renderer.dirty)
+            if (__cellRenderers[i].dirty)
             {
                 return true;
             }
@@ -135,6 +131,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             __dirtyOptions[key] = !sloppyOptionsAreEqual(_options[key], __drawnOptions[key]);
         }
         __dirtyViewAngle = (__dirtyOptions['xAngle'] || __dirtyOptions['yAngle']);
+        __dirtyDimensions = (__dirtyOptions['size'] || __dirtyOptions['cellConfig']);
     }
 
     function __updateDrawnOptions() {
@@ -144,9 +141,21 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             __dirtyOptions[key] = _options[key];
         }
         __dirtyViewAngle = false;
+        __dirtyDimensions = false;
     }
 
     function __updateDOM() {
+        if (__dirtyDimensions)
+        {
+            _html.style.height = cubeDOMRenderer.outerDimensions + 'px';
+            _html.style.width = cubeDOMRenderer.outerDimensions + 'px';
+            _html.style.transformStyle = 'preserve-3d';
+            _html.style.transformOrigin = (
+                (cubeDOMRenderer.outerDimensions / 2) + 'px ' +
+                (cubeDOMRenderer.outerDimensions / 2) + 'px ' +
+                ((cubeDOMRenderer.outerDimensions / 2) * -1) + 'px'
+            );
+        }
         if (__dirtyViewAngle)
         {
             _html.style.transform = (
@@ -163,7 +172,9 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
 
         for (var i = 0; i < cubeDOMRenderer.numCells; i++)
         {
-            var cell = cubeDOMRenderer.cells[i];
+            var cellRenderer = __cellRenderers[i];
+            var cell = cellRenderer.cell;
+
             var newCellRendererOptions = {
                 interactive: mouseListeningCells.indexOf(cell.coordAsString) !== -1,
             };
@@ -173,11 +184,8 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
                 newCellRendererOptions['rotation'] = [-1 * _options['xAngle'], -1 * _options['yAngle'], 0];
             }
 
-            var prevAutoRendering = cell.autoRender;
-            cell.autoRender = false;
-            applyOptions.call(cell.renderer, newCellRendererOptions);
-            cell.autoRender = prevAutoRendering;
-            cell.render();
+            applyOptions.call(cellRenderer, newCellRendererOptions);
+            cellRenderer.render();
         }
     }
 
@@ -219,10 +227,6 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             {
                 _options['container'] = newEl;
                 _options['container'].appendChild(_html);
-                if (this.cube && this.cube.autoRender)
-                {
-                    this.render();
-                }
             } else if (__shouldDestroyExistingEl(newEl))
             {
                 if (_options['container']) {
@@ -248,10 +252,6 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             if (!isNaN(parsedAngle))
             {
                 _options['xAngle'] = parsedAngle;
-                if (this.cube && this.cube.autoRender)
-                {
-                    this.render();
-                }
             }
         },
     });
@@ -263,10 +263,6 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             if (!isNaN(parsedAngle))
             {
                 _options['yAngle'] = parsedAngle;
-                if (this.cube && this.cube.autoRender)
-                {
-                    this.render();
-                }
             }
         },
     });
@@ -352,11 +348,6 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
                     });
                 }
             }
-
-            if (this.cube && this.cube.autoRender)
-            {
-                this.render();
-            }
         },
     });
 
@@ -387,7 +378,10 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         applyOptions.call(cubeDOMRenderer, _options);
     }
 
-    this.on('cubeChanged', init);
+    this.on('cubeChanged', function() {
+        __buildHTML();
+        cubeDOMRenderer.updateDOM();
+    });
 
     init();
 
@@ -399,7 +393,7 @@ CubeDOMRenderer.prototype = Object.create(CubeRenderer.prototype);
 CubeDOMRenderer.prototype.constructor = CubeDOMRenderer;
 
 CubeDOMRenderer.prototype.render = function() {
-    requestAnimationFrame(this.updateDOM);
+    this.updateDOM();
 };
 
 CubeDOMRenderer.prototype.nudge = function(direction, amount) {

@@ -24,10 +24,14 @@ var CubeRenderer = function CubeRenderer(opts) {
             var prevCube = _options['cube'];
             if (newCube === null)
             {
-                _options['cube'].renderer = null;
                 _options['cube'] = null;
                 _cells = [];
                 _numCells = 0;
+                if (prevCube !== newCube)
+                {
+                    this.emit('cubeChanged');
+                }
+                return;
             }
 
             if (!(newCube instanceof Cube))
@@ -39,7 +43,6 @@ var CubeRenderer = function CubeRenderer(opts) {
             _options['cube'] = newCube;
             _cells = _options['cube'].cells;
             _numCells = _options['cube'].cells.length;
-
             if (prevCube !== newCube)
             {
                 this.emit('cubeChanged');
@@ -65,4 +68,4 @@ var CubeRenderer = function CubeRenderer(opts) {
 
 };
 
-CubeRenderer.prototype.render = function() {};
+CubeRenderer.prototype.render = function() { console.log('cubeRenderer.render()'); };

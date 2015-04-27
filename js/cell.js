@@ -11,7 +11,6 @@ var Cell = function Cell(opts) {
         color: [0, 0, 255],    // We'll store colors internally as an RGB array
         on: false,
         renderer: null,
-        autoRender: false,
     };
 
     var _opts = opts || {};
@@ -46,10 +45,6 @@ var Cell = function Cell(opts) {
         set: function(newRow) {
             _options['row'] = newRow;
             __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
-            if (_options['autoRender'])
-            {
-                this.render();
-            }
             return _options['row'];
         },
     });
@@ -59,10 +54,6 @@ var Cell = function Cell(opts) {
         set: function(newColumn) {
             _options['column'] = newColumn;
             __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
-            if (_options['autoRender'])
-            {
-                this.render();
-            }
             return _options['column'];
         },
     });
@@ -72,10 +63,6 @@ var Cell = function Cell(opts) {
         set: function(newDepth) {
             _options['depth'] = newDepth;
             __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
-            if (_options['autoRender'])
-            {
-                this.render();
-            }
             return _options['depth'];
         },
     });
@@ -88,10 +75,6 @@ var Cell = function Cell(opts) {
         get: function() { return _options['on']; },
         set: function(turnOn) {
             _options['on'] = !!turnOn;
-            if (_options['autoRender'])
-            {
-                this.render();
-            }
             return _options['on'];
         },
     });
@@ -105,10 +88,6 @@ var Cell = function Cell(opts) {
             }
             _options['color'] = newColor;
             __colorAsString = (_options['color'][0] + ',' + _options['color'][1] + ',' + _options['color'][2]);
-            if (_options['autoRender'])
-            {
-                this.render();
-            }
             return _options['color'];
         },
     });
@@ -128,11 +107,6 @@ var Cell = function Cell(opts) {
 
             return _options['renderer'] = newRenderer;
         },
-    });
-
-    Object.defineProperty(this, 'autoRender', {
-        get: function() { return _options['autoRender']; },
-        set: function(shouldAutoRender) { return _options['autoRender'] = !!shouldAutoRender; }
     });
 
     Object.defineProperty(this, 'options', {
@@ -157,34 +131,9 @@ var Cell = function Cell(opts) {
         },
     });
 
-    this.applyOptions(_options);
+    applyOptions.call(this, _options);
 
     return this;
-};
-
-Cell.prototype.applyOptions = function(newOpts) {
-    /**
-     * We may be setting many opts and don't want to rerender for each
-     * change, so we temporarily disable auto-rendering, manually render,
-     * and re-enable for other non-applyOptions() calls.
-     */
-    var prevAutoRender = this.autoRender;
-    this.autoRender = false;
-    applyOptions.call(this, newOpts);
-    if (prevAutoRender)
-    {
-        this.render();
-        this.autoRender = prevAutoRender;
-    }
-
-    return this;
-};
-
-Cell.prototype.render = function() {
-    if (this.renderer)
-    {
-        return this.renderer.render();
-    }
 };
 
 Cell.prototype.toJSON = function() {
@@ -195,7 +144,7 @@ Cell.prototype.setFromCell = function(otherCell) {
     /**
      * Copy visual properties from another cell into self.
      */
-    return this.applyOptions({
+    return applyOptions.call(this, {
         color: otherCell.color,
         on: otherCell.on,
     });

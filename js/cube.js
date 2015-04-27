@@ -5,9 +5,6 @@ var Cube = function Cube(size, opts) {
     var _size = size;
     var _cells = [];
     var __defaultOptions = {
-        renderer: null,
-        controller: null,
-        autoRender: true,
     };
 
     var _opts = opts || {};
@@ -79,64 +76,6 @@ var Cube = function Cube(size, opts) {
         }
     });
 
-    Object.defineProperty(this, 'autoRender', {
-        get: function() { return _autoRender; },
-        set: function(newAutoRender) { return _autoRender = !!newAutoRender; },
-    });
-
-    Object.defineProperty(this, 'controller', {
-        get: function() { return _options['controller']; },
-        set: function(newController) {
-            if ((newController === null))
-            {
-                if (_options['controller'])
-                {
-                    _options['controller'].cube = null;
-                }
-                return _options['controller'] = null;
-            }
-
-            if (!newController.can('getUpdate'))
-            {
-                console.error('Invalid controller: must implement getUpdate()');
-                throw 'Invalid controller for Cube';
-            }
-
-            if (_options['controller']) {
-                _options['controller'].cube = null;    // ensure that the previous cube isn't still mutating us
-            }
-            _options['controller'] = newController;
-            _options['controller'].cube = this;
-        },
-    });
-
-    Object.defineProperty(this, 'renderer', {
-        get: function() { return _options['renderer']; },
-        set: function(newRenderer) {
-            if ((newRenderer === null))
-            {
-                if (_options['renderer'])
-                {
-                    _options['renderer'].cube = null;
-                }
-                return _options['renderer'] = null;
-            }
-
-            if (!newRenderer.can('render'))
-            {
-                console.error('Invalid renderer: must implement render()');
-                throw 'Invalid renderer for Cube';
-            }
-
-            if (_options['renderer'])
-            {
-                _options['renderer'].cube = null;
-            }
-            _options['renderer'] = newRenderer;
-            _options['renderer'].cube = this;
-        },
-    });
-
     this.getDefaultOptions = function() {
         return __defaultOptions;
     };
@@ -158,7 +97,6 @@ var Cube = function Cube(size, opts) {
                         column: column,
                         row: row,
                         depth: depth,
-                        autoRender: false,
                     }));
                 }
             }
@@ -170,49 +108,7 @@ var Cube = function Cube(size, opts) {
     return this;
 };
 
-Cube.prototype.update = function() {
-    if (this.controller)
-    {
-        this.controller.getUpdate();
-    }
-};
-
-Cube.prototype.render = function() {
-    if (this.renderer)
-    {
-        this.renderer.render();
-    }
-};
-
 Cube.prototype.toJSON = function() {
-    /**
-     * Overrides the default (inherited) Object.toJSON() function to for custom
-     * serialization. This is necessary because of the cube.html property,
-     * which contains what are called "circular references," which prevent the
-     * serializer from completing. To prevent this, we expose only the relevant
-     * and serializable properties of the object.
-     *
-     * Example of a circular reference:
-     *     var y = {
-     *         property1: 'one',
-     *         property2: 'two',
-     *     };
-     *     var x = {
-     *         property1: 'aye',
-     *         property2: 'bee',
-     *         property3: y,
-     *     };
-     *     y.property3 = x;
-     *
-     * If you run the above code in the Chrome developer's console, you'll find
-     * that both x and y are valid objects and that each points to the other.
-     * You can verify this by expanding the properties of each (to see them,
-     * just type each's variable name in the console and hit enter) and seeing
-     * that the nesting of the objects never stops. This presents a problem for
-     * the .toJSON() method because it's doing a similar traversal when
-     * generating a string representation of each object.
-     */
-
     return {
         size: this.size,
         cells: this.cells,
@@ -243,16 +139,14 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
 
     var _stepSize = typeof stepSize !== 'undefined' ? stepSize : -1;
     var _wrap = typeof wrap !== 'undefined' ? !!wrap : true;
-
-    var cube = this;
-    var _cubeSize = cube.size;
+    var _cubeSize = this.size;
 
     var nextState = [];
-    for (var i = 0, numCells = cube.cells.length; i < numCells; i++)
+    for (var i = 0, numCells = this.cells.length; i < numCells; i++)
     {
         // We want to calculate the coordinates of the 'previous' cell along various directions
-        var shiftedCoords = cube.shiftedCoordsFns[axis](cube.cells[i], _cubeSize, _wrap, _stepSize);
-        var shiftedCell = cube.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]);
+        var shiftedCoords = this.shiftedCoordsFns[axis](this.cells[i], _cubeSize, _wrap, _stepSize);
+        var shiftedCell = this.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]);
 
         // Once we have it, grab its on status and color and return it
         nextState.push({
@@ -262,11 +156,11 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     }
 
     // Iterate over all the cells and change their on status and color to their 'previous' neighbor's
-    for (var i = 0, numCells = cube.cells.length; i < numCells; i++)
+    for (var i = 0, numCells = this.cells.length; i < numCells; i++)
     {
-        cube.cells[i].applyOptions({
+        applyOptions.call(this.cells[i], {
             on: nextState[i].on,
-            color: nextState[i].on ? nextState[i].color : cube.cells[i].color,
+            color: nextState[i].on ? nextState[i].color : this.cells[i].color,
         });
     }
 
