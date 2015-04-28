@@ -252,6 +252,11 @@ var CubeController = function CubeController(opts) {
         value: function() { return _animationFrames.length ? _animationFrames.shift() : null; },
     });
 
+    Object.defineProperty(this, 'clearAnimationFrames', {
+        writable: false,
+        value: function() { return _animationFrames.splice(0, _animationFrames.length); }
+    });
+
     Object.defineProperty(this, 'currentAnimationFrame', {
         get: function() { return _animationFrames.length ? _animationFrames[0] : null; },
     });

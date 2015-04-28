@@ -141,7 +141,8 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     function __updateTilesWithSpacing() {
         __tilesWithSpacing = _tiles.reduce(function(tilesWithSpacing, tile) {
-            return tilesWithSpacing.concat([tile].concat(__makeSpacingTiles()));
+            var spacingTiles = __makeSpacingTiles();
+            return tilesWithSpacing.concat([tile].concat(spacingTiles));
         }, []);
         __updateDuration();
     }
@@ -231,6 +232,21 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         __generateAnimationFrames();
     }
 
+    function __refreshAnimationFramesWithGenerated() {
+        cubePlaylistController.clearAnimationFrames();
+        cubePlaylistController.update();
+    }
+
+    function __updateGeneratedFrameValidTimes() {
+        var ctrl = cubePlaylistController;
+        var gendFrames = _generatedAnimationFrames;
+        for (var i = 0, numFrames = gendFrames.length; i < numFrames; i++)
+        {
+            gendFrames[i].start = i * ctrl.animationInterval;
+            gendFrames[i].end = (i * ctrl.animationInterval) + ctrl.animationInterval;
+        }
+    }
+
     function __generateAnimationFrames() {
         var numFramesToGenerate = {
             'across': __tileStrip.length,
@@ -241,14 +257,15 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         var ctrl = cubePlaylistController;
         ctrl.cube.clear();
         _generatedAnimationFrames = [];
+        __prevTileIdx = -1;
         for (var i = 0; i < numFramesToGenerate; i++)
         {
+            ctrl.animator();
             _generatedAnimationFrames.push({
                 cube: ctrl.cube.getForAnimationFrame(),
                 start: i * ctrl.animationInterval,
                 end: (i * ctrl.animationInterval) + ctrl.animationInterval,
             });
-            ctrl.animator();
         }
     }
 
@@ -619,29 +636,25 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             var currFrame = cubePlaylistController.currentAnimationFrame;
             if (!currFrame)
             {
-                console.log('emptyCube', localRenderTime);
                 return cubePlaylistController.getEmptyCube();
             } else if (localRenderTime < currFrame.start)
             {
-                console.log('before next valid frame', localRenderTime, currFrame.start, currFrame.end, cubePlaylistController.animationFrames.length);
                 return cubePlaylistController.getEmptyCube();
-            } else if ((localRenderTime >= currFrame.start) && (localRenderTime <= currFrame.end))
+            } else if ((localRenderTime >= currFrame.start) && (localRenderTime < currFrame.end))
             {
-                console.log('ret popped frame', localRenderTime, currFrame.start, currFrame.end, cubePlaylistController.animationFrames.length);
                 if (cubePlaylistController.animationFrames.length === 1)
                 {
-                    console.log('popping last frame');
                     cubePlaylistController.popCurrentAnimationFrame();
+                    cubePlaylistController.update();
                 }
                 return currFrame.data;
-            } else if (localRenderTime > currFrame.end)
+            } else if (localRenderTime >= currFrame.end)
             {
-                console.log('recurse', localRenderTime, currFrame.start, currFrame.end, cubePlaylistController.animationFrames.length);
                 cubePlaylistController.popCurrentAnimationFrame();
                 return cubePlaylistController.getRenderFrame(localRenderTime);
             } else
             {
-                console.log('else', localRenderTime, currFrame.start, currFrame.end, currFrame, cubePlaylistController.animationFrames.length);
+                console.error('else', localRenderTime, currFrame.start, currFrame.end, currFrame, cubePlaylistController.animationFrames.length);
             }
         },
     });
@@ -721,7 +734,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             }
 
             var prevSpacing = _options['spacing'];
-            _options['spacing'] = Math.max(0, parsed);   // must be int greater than 0
+            _options['spacing'] = Math.max(0, parsed);   // must be int greater than or equal to 0
             __updateTilesWithSpacing();
             __updateTileStrip();
 
@@ -765,6 +778,8 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         if (changeData.setting === 'animationInterval')
         {
             __updateDuration();
+            __updateGeneratedFrameValidTimes();
+            __refreshAnimationFramesWithGenerated();
         }
     });
 
@@ -798,7 +813,6 @@ CubePlaylistController.prototype.step = function(numSteps) {
 };
 
 CubePlaylistController.prototype.update = function(frameValidStart, frameValidEnd) {
-    // console.log('CubePlaylistController.update()');
     if (!this.currentAnimationFrame)
     {
         var numFrames = this.generatedAnimationFrames.length;

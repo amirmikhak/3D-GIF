@@ -466,13 +466,11 @@ CubeDOMRenderer.prototype.render = function(cubeData) {
     this.prevCube = this.cube;
     this.cube = cubeData;
 
-    console.assert(this.prevCube !== this.cube, 'cubes are not equal');
-
     for (var i = 0, numCells = cubeData.cells.length; i < numCells; i++)
     {
         this.cellRenderers[i].cell = cubeData.cells[i];
-        console.assert(this.cellRenderers[i].cell === cubeData.cells[i], 'cubeCell cell was assigned to renderer');
     }
+
     this.updateDOM();
 };
 

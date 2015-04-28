@@ -19,7 +19,7 @@ var plController = new CubePlaylistController({
     penColor: 'red',
     renderer: domRenderer,
     animationInterval: 300,
-    spacing: 2,
+    spacing: 3,
 });
 
 var rtController = new CubeRealtimeUserController({
