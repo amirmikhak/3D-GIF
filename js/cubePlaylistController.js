@@ -141,8 +141,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     function __updateTilesWithSpacing() {
         __tilesWithSpacing = _tiles.reduce(function(tilesWithSpacing, tile) {
-            var spacingTiles = __makeSpacingTiles();
-            return tilesWithSpacing.concat([tile].concat(spacingTiles));
+            return tilesWithSpacing.concat([tile].concat(__makeSpacingTiles()));
         }, []);
         __updateDuration();
     }
@@ -281,7 +280,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         var numTiles = __tilesWithSpacing.length;
         var tileIndexToReturn = __prevTileIdx + 1;
         if (cubePlaylistController.loops) {
-            tileIndexToReturn = tileIndexToReturn % (numTiles - 1);
+            tileIndexToReturn = tileIndexToReturn % (numTiles);
         } else
         {
             tileIndexToReturn = Math.min(tileIndexToReturn, numTiles - 1);
