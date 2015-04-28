@@ -89,6 +89,12 @@ function tryJSON(data, validator) {
 
     if (!validator(retData))
     {
+        console.trace();
+        console.group('Malformed data');
+        console.error('data', data);
+        console.error('retData', retData);
+        console.error('validator', validator);
+        console.groupEnd();
         throw 'Malformed data';
     }
 
