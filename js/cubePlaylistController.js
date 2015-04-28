@@ -749,26 +749,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         get: function() { return _mouseListeningCells; },
     });
 
-    Object.defineProperty(this, 'direction', {
-        get: function() { return _options['direction']; },
-        set: function(newDirection) {
-            if (this.directions.indexOf(newDirection) === -1)
-            {
-                console.error('Invalid direction for CubePlaylistController', newDirection);
-                throw 'Invalid direction';
-            }
-
-            var prevDirection = _options['direction'];
-            _options['direction'] = newDirection;
-
-            this.emit('propertyChanged', {
-                setting: 'direction',
-                newValue: _options['direction'],
-                oldValue: prevDirection,
-            });
-        },
-    });
-
     this.getDefaultOptions = function() {
         return __combinedDefaultOptions;
     };
