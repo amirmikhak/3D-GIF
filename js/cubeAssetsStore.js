@@ -80,20 +80,24 @@ var CubeAssetsStore = function CubeAssetsStore() {
      * because they need access to "private" variables: _fontMap, _shapeSetMap.
      */
 
-    this.loadFont = function(handle, url) {
+    this.loadFont = function(handle, url, cb) {
         /**
-         * Load a remote JSON file of a map of characters that can be displayed on
-         * the cube. Save the loaded map of shapes by a handle for optional removal.
-         */
+          * Load a remote JSON file of a map of characters that can be displayed on
+          * the cube. Save the loaded map of shapes by a handle for optional removal.
+          */
 
-       // this fetch is asynchronous
-       fetchJSONFile(url, function(fontData) {
-           _fontMap[handle] = fontData;
-           if (Object.keys(_fontMap).length === 1)
-           {   // if this newly loaded font is the only one available...
-               cubeAssetsStore.activeFont = handle;   // ... use it.
-           }
-       });
+        // this fetch is asynchronous
+        fetchJSONFile(url, function(fontData) {
+            _fontMap[handle] = fontData;
+            if (Object.keys(_fontMap).length === 1)
+            {   // if this newly loaded font is the only one available...
+                cubeAssetsStore.activeFont = handle;   // ... use it.
+            }
+            if (typeof cb === 'function')
+            {
+                cb();
+            }
+        });
     };
 
     this.unloadFont = function(handle) {
@@ -103,29 +107,33 @@ var CubeAssetsStore = function CubeAssetsStore() {
 
        delete(_fontMap[handle]);
 
-       if (!this.hasAFont)
-       {   // if there aren't any more loaded fonts after unloading this one...
+        if (!this.hasAFont)
+        {   // if there aren't any more loaded fonts after unloading this one...
            _activeFont = null;    // ... we can't have an active font
-       } else if (handle === _activeFont)
-       {   // if we unloaded our current font, but have another available...
+        } else if (handle === _activeFont)
+        {   // if we unloaded our current font, but have another available...
            _activeFont = this.fontNames[0]; // ... use it
-       }
+        }
     };
 
-    this.loadShapeSet = function(handle, url) {
+    this.loadShapeSet = function(handle, url, cb) {
         /**
          * Load a remote JSON file of a map of shapes that can be displayed on
          * the cube. Save the loaded map of shapes by a handle for optional removal.
          */
 
-       // this fetch is asynchronous
-       fetchJSONFile(url, function(shapeSetData) {
-           _shapeSetMap[handle] = shapeSetData;
-           if (Object.keys(_shapeSetMap).length === 1)
-           {   // if this newly loaded shapeSet is the only one available...
-               cubeAssetsStore.activeShapeSet = handle;   // ... use it.
-           }
-       });
+        // this fetch is asynchronous
+        fetchJSONFile(url, function(shapeSetData) {
+            _shapeSetMap[handle] = shapeSetData;
+            if (Object.keys(_shapeSetMap).length === 1)
+            {   // if this newly loaded shapeSet is the only one available...
+                cubeAssetsStore.activeShapeSet = handle;   // ... use it.
+            }
+            if (typeof cb === 'function')
+            {
+                cb();
+            }
+        });
     };
 
     this.unloadShapeSet = function(handle) {
@@ -133,15 +141,15 @@ var CubeAssetsStore = function CubeAssetsStore() {
         * Unload a previously loaded shapeSet.
         */
 
-       delete(_shapeSetMap[handle]);
+        delete(_shapeSetMap[handle]);
 
-       if (!this.hasAShapeSet)
-       {   // if there aren't any more loaded shapeSets after unloading this one...
-           _activeShapeSet = null;    // ... we can't have an active shapeSet
-       } else if (handle === _activeShapeSet)
-       {   // if we unloaded our current shapeSet, but have another available...
-           _activeShapeSet = this.shapeSetNames[0]; // ... use it
-       }
+        if (!this.hasAShapeSet)
+        {   // if there aren't any more loaded shapeSets after unloading this one...
+            _activeShapeSet = null;    // ... we can't have an active shapeSet
+        } else if (handle === _activeShapeSet)
+        {   // if we unloaded our current shapeSet, but have another available...
+            _activeShapeSet = this.shapeSetNames[0]; // ... use it
+        }
     };
 
     return this;
