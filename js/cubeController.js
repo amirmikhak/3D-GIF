@@ -271,6 +271,13 @@ var CubeController = function CubeController(opts) {
 
 };
 
+CubeController.prototype.render = function(cubeData) {
+    if (this.renderer && ((cubeData instanceof Cube) || this.cube))
+    {
+        this.renderer.render((cubeData instanceof Cube) ? cubeData : this.cube);
+    }
+};
+
 CubeController.prototype.togglePlaying = function() {
     this.playing = !this.playing;
 };
