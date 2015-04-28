@@ -187,10 +187,13 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             if (e.keyCode === 13)  // enter
             {
                 controller.togglePlaying();
-            } else if (e.ctrlKey && (e.keyCode === 8)) // backspace
+            } else if ((e.keyCode === 8)) // backspace
             {
-                controller.stop();
-                cube.clear();   // clear whole cube
+                if (e.ctrlKey)
+                {
+                    controller.stop();
+                    cube.clear();   // clear whole cube
+                }
             } else if (e.ctrlKey && (e.keyCode === 189))    // ctrl+minus
             {   // prev step
                 controller.step(-1);
