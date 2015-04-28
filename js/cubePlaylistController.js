@@ -233,7 +233,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     function __refreshAnimationFramesWithGenerated() {
         cubePlaylistController.clearAnimationFrames();
-        cubePlaylistController.update();
+        cubePlaylistController.repopulateAnimationFrames();
     }
 
     function __updateGeneratedFrameValidTimes() {
@@ -256,6 +256,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         var ctrl = cubePlaylistController;
         ctrl.cube.clear();
         _generatedAnimationFrames = [];
+        __prevStripIdx = -1;
         __prevTileIdx = -1;
         for (var i = 0; i < numFramesToGenerate; i++)
         {
@@ -641,16 +642,23 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             var currFrame = cubePlaylistController.currentAnimationFrame;
             if (!currFrame)
             {
+                cubePlaylistController.repopulateAnimationFrames();
                 return cubePlaylistController.getEmptyCube();
             } else if (localRenderTime < currFrame.start)
             {
+                if (_options['loops'])
+                {
+                    cubePlaylistController.clearAnimationFrames();
+                    cubePlaylistController.repopulateAnimationFrames();
+                    return currFrame.data;
+                }
                 return cubePlaylistController.getEmptyCube();
             } else if ((localRenderTime >= currFrame.start) && (localRenderTime < currFrame.end))
             {
                 if (cubePlaylistController.animationFrames.length === 1)
                 {
                     cubePlaylistController.popCurrentAnimationFrame();
-                    cubePlaylistController.update();
+                    cubePlaylistController.repopulateAnimationFrames();
                 }
                 return currFrame.data;
             } else if (localRenderTime >= currFrame.end)
@@ -780,7 +788,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     this.on('propertyChanged', function(changeData) {
         if (changeData.setting === 'animationInterval')
         {
-            __updateDuration();
+            __updateAnimationSettings();
             __updateGeneratedFrameValidTimes();
             __refreshAnimationFramesWithGenerated();
         }
@@ -815,7 +823,9 @@ CubePlaylistController.prototype.step = function(numSteps) {
     return this;
 };
 
-CubePlaylistController.prototype.update = function(frameValidStart, frameValidEnd) {
+CubePlaylistController.prototype.update = function(frameValidStart, frameValidEnd) {};
+
+CubePlaylistController.prototype.repopulateAnimationFrames = function() {
     if (!this.currentAnimationFrame)
     {
         var numFrames = this.generatedAnimationFrames.length;

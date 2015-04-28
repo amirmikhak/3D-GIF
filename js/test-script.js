@@ -18,8 +18,10 @@ var plController = new CubePlaylistController({
     cube: cube,
     penColor: 'red',
     renderer: domRenderer,
-    animationInterval: 300,
-    spacing: 3,
+    animationInterval: 100,
+    mode: 'around',
+    writeFace: 'front',
+    spacing: 0,
 });
 
 var rtController = new CubeRealtimeUserController({
@@ -31,7 +33,14 @@ var rtController = new CubeRealtimeUserController({
 var CubeAssets = new CubeAssetsStore();
 CubeAssets.loadFont('printChar21', '/js/assets/cube8PrintChar21Font.json');
 CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json', function() {
+    console.log('adding shape tiles to playlist...');
     plController.appendTile(CubeAssets.getShapeRender('smile'));
+    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
+    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
+    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
+    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
+    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
     plController.appendTile(CubeAssets.getShapeRender('frown'));
-    console.log('shapes loaded into playlist');
+    plController.appendTile(CubeAssets.getShapeRender('square'));
+    console.log('done adding shape tiles!');
 });
