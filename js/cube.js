@@ -115,9 +115,7 @@ Cube.prototype.toJSON = function() {
 };
 
 Cube.prototype.getCellOnStates = function() {
-    return this.cells.map(function(cell) {
-        return cell.on ? 1 : 0
-    }).toString();
+    return this.cells.map(function(cell) { return cell.on ? 1 : 0 }).toString();
 };
 
 Cube.prototype.getForAnimationFrame = function() {
@@ -387,7 +385,7 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         'front';
 
     var dataTile = (data instanceof CubeTile) ?
-        data :
+        new CubeTile(data.cells, {}, false) :
         new CubeTile(tryJSON(data, this.sliceValidator.bind(this)));
 
     var facesToReflectX = ['back', 'right'];

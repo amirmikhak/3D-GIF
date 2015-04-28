@@ -94,9 +94,15 @@ var CubeTile = function CubeTile(cells, cellOpts, shallow) {
         }
 
         _cells = _reflectedCells;
+
+        return this;
     };
 
     return this;
+};
+
+CubeTile.prototype.getCellOnStates = function() {
+    return this.cells.map(function(cell) { return cell.on ? 1 : 0; }).toString();
 };
 
 CubeTile.prototype.getPngData = function() {
