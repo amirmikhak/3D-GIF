@@ -223,7 +223,6 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
                 {
                     var shapeTile = CubeAssets.getShapeRender(shapeNames[shapeIndex]);
                     cube.writeSlice(shapeTile, controller.writeFace);
-                    controller.addAnimationFrame(controller.cube.getForAnimationFrame(), (new Date).getTime(), (new Date).getTime() + controller.animationInterval);
                 }
             } else
             {
@@ -250,7 +249,6 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             var colorRgb = cube.colors[controller.penColor];
             var charTile = CubeAssets.getCharacterRender(char, colorRgb);
             cube.writeSlice(charTile, controller.writeFace);
-            controller.addAnimationFrame(controller.cube.getForAnimationFrame(), (new Date).getTime(), (new Date).getTime() + controller.animationInterval);
         },
     });
 
@@ -266,7 +264,6 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             {
                 return cubeRealtimeUserController.getEmptyCube();
             }
-
             return cubeRealtimeUserController.popCurrentAnimationFrame().data;
         },
     });
@@ -446,7 +443,12 @@ CubeRealtimeUserController.prototype.step = function(numSteps) {
 };
 
 CubeRealtimeUserController.prototype.update = function(frameValidStart, frameValidEnd) {
+    var preOnStates = this.cube.serializeForCompare();
     this.step();
-    this.addAnimationFrame(this.cube.getForAnimationFrame(), frameValidStart, frameValidEnd);
+    var postOnStates = this.cube.serializeForCompare();
+    if (preOnStates !== postOnStates)
+    {
+        this.addAnimationFrame(this.cube.getForAnimationFrame(), frameValidStart, frameValidEnd);
+    }
     return this;
 };

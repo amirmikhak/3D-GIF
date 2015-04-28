@@ -114,6 +114,19 @@ Cube.prototype.toJSON = function() {
     };
 };
 
+Cube.prototype.serializeForCompare = function() {
+    var cells = this.cells;
+    var cellSimpleInfos = [];
+    for (var i = 0, numCells = cells.length; i < numCells; i++)
+    {
+        cellSimpleInfos.push(cells[i].simpleOptions);
+    }
+    return JSON.stringify({
+        size: this.size,
+        cells: cellSimpleInfos,
+    });
+};
+
 Cube.prototype.getCellOnStates = function() {
     return this.cells.map(function(cell) { return cell.on ? 1 : 0 }).toString();
 };

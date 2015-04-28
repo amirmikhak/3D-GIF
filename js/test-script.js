@@ -28,6 +28,7 @@ var rtController = new CubeRealtimeUserController({
     cube: cube,
     penColor: 'blue',
     renderer: domRenderer,
+    frameCacheSize: 200,
 });
 
 var CubeAssets = new CubeAssetsStore();

@@ -124,7 +124,7 @@ var Cell = function Cell(opts) {
     Object.defineProperty(this, 'simpleOptions', {
         get: function() {
             return {
-                'on': _options['on'],
+                'on': _options['on'] ? 1 : 0,
                 'color': __colorAsString,
                 'coord': __coordAsString,
             };

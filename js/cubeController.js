@@ -249,16 +249,22 @@ var CubeController = function CubeController(opts) {
 
     Object.defineProperty(this, 'popCurrentAnimationFrame', {
         writable: false,
-        value: function() { return _animationFrames.length ? _animationFrames.shift() : null; },
+        value: function() {
+            return _animationFrames.length ? _animationFrames.shift() : null;
+        },
     });
 
     Object.defineProperty(this, 'clearAnimationFrames', {
         writable: false,
-        value: function() { return _animationFrames.splice(0, _animationFrames.length); }
+        value: function() {
+            return _animationFrames.splice(0, _animationFrames.length);
+        },
     });
 
     Object.defineProperty(this, 'currentAnimationFrame', {
-        get: function() { return _animationFrames.length ? _animationFrames[0] : null; },
+        get: function() {
+            return _animationFrames.length ? _animationFrames[0] : null;
+        },
     });
 
     this.getDefaultOptions = function() {
