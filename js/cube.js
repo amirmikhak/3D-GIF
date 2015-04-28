@@ -114,6 +114,12 @@ Cube.prototype.toJSON = function() {
     };
 };
 
+Cube.prototype.getCellOnStates = function() {
+    return this.cells.map(function(cell) {
+        return cell.on ? 1 : 0
+    }).toString();
+};
+
 Cube.prototype.getForAnimationFrame = function() {
     var thisCells = this.cells;
     var retCube = new Cube(this.size);

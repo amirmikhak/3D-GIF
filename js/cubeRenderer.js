@@ -31,13 +31,13 @@ var CubeRenderer = function CubeRenderer(opts) {
     Object.defineProperty(this, 'cube', {
         get: function() { return _options['cube']; },
         set: function(newCube) {
-            var prevCube = _options['cube'];
             if ((newCube !== null) && !(newCube instanceof Cube))
             {
                 console.error('Invalid Cube for CubeRenderer: must be Cube', newCube);
                 throw 'Invalid Cube for CubeRenderer';
             }
 
+            var prevCube = _options['cube'];
             _options['cube'] = newCube;
             _cells = newCube === null ? [] : _options['cube'].cells;
             _numCells = newCube === null ? 0 : _options['cube'].cells.length;

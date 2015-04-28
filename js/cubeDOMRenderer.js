@@ -277,7 +277,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
     });
 
     Object.defineProperty(this, 'cellRenderers', {
-        get: function() { return _cellRenderers.slice(); },
+        get: function() { return _cellRenderers; },
     });
 
     Object.defineProperty(this, 'container', {
@@ -462,13 +462,16 @@ CubeDOMRenderer.prototype.render = function(cubeData) {
     {
         return;
     }
-    this.prevCube = this.cube;
 
+    this.prevCube = this.cube;
     this.cube = cubeData;
-    for (var i = 0, numCells = cubeData.length; i < numCells; i++)
+
+    console.assert(this.prevCube !== this.cube, 'cubes are not equal');
+
+    for (var i = 0, numCells = cubeData.cells.length; i < numCells; i++)
     {
-        console.log('copying cell');
-        _cellRenderers[i].cell = cubeData[i];
+        this.cellRenderers[i].cell = cubeData.cells[i];
+        console.assert(this.cellRenderers[i].cell === cubeData.cells[i], 'cubeCell cell was assigned to renderer');
     }
     this.updateDOM();
 };

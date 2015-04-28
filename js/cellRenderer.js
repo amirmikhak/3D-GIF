@@ -15,7 +15,7 @@ var CellRenderer = function CellRenderer(cell, opts) {
     }
 
     Object.defineProperty(this, 'cell', {
-        get: function() { return _cell; },
+        get: function() { return _options['cell']; },
         set: function(newCell) {
             if (newCell === null)
             {
@@ -23,13 +23,12 @@ var CellRenderer = function CellRenderer(cell, opts) {
                 throw 'Invalid cell';
             }
 
-            this.dirty = true;
             if (newCell instanceof Cell)
             {
-                return _cell = newCell;
+                return _options['cell'] = newCell;
             }
 
-            return _cell = applyOptions.call(new Cell(), newCell);
+            return _options['cell'] = applyOptions.call(new Cell(), newCell);
         }
     });
 

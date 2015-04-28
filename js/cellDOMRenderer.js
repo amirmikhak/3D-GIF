@@ -2,12 +2,10 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
 
     CellRenderer.apply(this, arguments);
 
-    var _cell = cell;
-    var _cellSimpleOptionsKeys = Object.keys(_cell.simpleOptions);
-
     var cellDOMRenderer = this;
 
     var __defaultOptions = {
+        cell: cell,
         size: 50,
         interactive: false,
         interactMode: 'drag',
@@ -99,27 +97,26 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     }
 
     function __calculateDirtyOptions() {
+        var _cellSimpleOptionsKeys = Object.keys(cellDOMRenderer.cell.simpleOptions);
         for (var i = 0, numKeys = _optionKeys.length; i < numKeys; i++)
         {
             _dirtyOptions[_optionKeys[i]] = _options[_optionKeys[i]] !== _drawnOptions[_optionKeys[i]];
         }
-
         for (var i = 0, numKeys = _cellSimpleOptionsKeys.length; i < numKeys; i++)
         {
-            _dirtyOptions[_cellSimpleOptionsKeys[i]] = _cell.simpleOptions[_cellSimpleOptionsKeys[i]] !== _drawnOptions[_cellSimpleOptionsKeys[i]];
-
+            _dirtyOptions[_cellSimpleOptionsKeys[i]] = cellDOMRenderer.cell.simpleOptions[_cellSimpleOptionsKeys[i]] !== _drawnOptions[_cellSimpleOptionsKeys[i]];
         }
     }
 
     function __updateDrawnOptions() {
+        var _cellSimpleOptionsKeys = Object.keys(cellDOMRenderer.cell.simpleOptions);
         for (var i = 0, numKeys = _optionKeys.length; i < numKeys; i++)
         {
             _drawnOptions[_optionKeys[i]] = _options[_optionKeys[i]];
         }
-
         for (var i = 0, numKeys = _cellSimpleOptionsKeys.length; i < numKeys; i++)
         {
-            _drawnOptions[_cellSimpleOptionsKeys[i]] = _cell.simpleOptions[_cellSimpleOptionsKeys[i]];
+            _drawnOptions[_cellSimpleOptionsKeys[i]] = cellDOMRenderer.cell.simpleOptions[_cellSimpleOptionsKeys[i]];
         }
     }
 
@@ -146,7 +143,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             }
         }
 
-        if (dirtyOptions.on || dirtyOptions.color)
+        if (dirtyOptions['on'] || dirtyOptions['color'])
         {
             // render the LED's on-ness
             led.classList.toggle('on', _on);
@@ -179,7 +176,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         }
 
         // set the size of the cell
-        if (dirtyOptions.size)
+        if (dirtyOptions['size'])
         {
             html.style.width = _size + 'px';
             html.style.height = _size + 'px';
@@ -226,8 +223,8 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
              * IF we have a connection to the cube and it has an opinion about
              * what color we should be, let's honor it.
              */
-            color: _on && _cell.cube && _cell.cube.controller ?
-                _cell.cube.controller.penColorRgb : _cell['color'],
+            color: _on && cellDOMRenderer.cell.cube && cellDOMRenderer.cell.cube.controller ?
+                cellDOMRenderer.cell.cube.controller.penColorRgb : _cell['color'],
         });
     }
 
@@ -240,12 +237,12 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
          */
         var _color = _cell['color'];
 
-        var newDragSetOn = !_cell['on'] || ((_cell.cube && _cell.cube.controller) ?
-            !__colorsAreEqual(_cell.cube.controller.penColorRgb, _color) :
+        var newDragSetOn = !_cell['on'] || ((cellDOMRenderer.cell.cube && cellDOMRenderer.cell.cube.controller) ?
+            !__colorsAreEqual(cellDOMRenderer.cell.cube.controller.penColorRgb, _color) :
             false);
 
-        var newDragSetColor = _cell.cube && _cell.cube.controller ?
-            _cell.cube.controller.penColorRgb :
+        var newDragSetColor = cellDOMRenderer.cell.cube && cellDOMRenderer.cell.cube.controller ?
+            cellDOMRenderer.cell.cube.controller.penColorRgb :
             _color;
 
         applyOptions.call(CellDraggingDelegate.get(), {
@@ -282,7 +279,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             __calculateDirtyOptions();
             if (__hasDirtyOptions())
             {
-                __updateDOM(_html, _led, _hasRotation, _cell, _options, _dirtyOptions);
+                __updateDOM(_html, _led, _hasRotation, cellDOMRenderer.cell, _options, _dirtyOptions);
                 __updateDrawnOptions();
             }
         },

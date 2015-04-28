@@ -1,7 +1,3 @@
-var CubeAssets = new CubeAssetsStore();
-CubeAssets.loadFont('printChar21', '/js/assets/cube8PrintChar21Font.json');
-CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json');
-
 var cubeContainer = document.getElementById('cube-wrapper');
 
 // Build a new Cube object
@@ -23,10 +19,19 @@ var plController = new CubePlaylistController({
     penColor: 'red',
     renderer: domRenderer,
     animationInterval: 300,
+    spacing: 2,
 });
 
 var rtController = new CubeRealtimeUserController({
     cube: cube,
     penColor: 'blue',
     renderer: domRenderer,
+});
+
+var CubeAssets = new CubeAssetsStore();
+CubeAssets.loadFont('printChar21', '/js/assets/cube8PrintChar21Font.json');
+CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json', function() {
+    plController.appendTile(CubeAssets.getShapeRender('smile'));
+    plController.appendTile(CubeAssets.getShapeRender('frown'));
+    console.log('shapes loaded into playlist');
 });

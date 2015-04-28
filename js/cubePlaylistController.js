@@ -239,14 +239,16 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         }[_options['mode']];
 
         var ctrl = cubePlaylistController;
+        ctrl.cube.clear();
+        _generatedAnimationFrames = [];
         for (var i = 0; i < numFramesToGenerate; i++)
         {
-            ctrl.animator();
             _generatedAnimationFrames.push({
                 cube: ctrl.cube.getForAnimationFrame(),
                 start: i * ctrl.animationInterval,
                 end: (i * ctrl.animationInterval) + ctrl.animationInterval,
             });
+            ctrl.animator();
         }
     }
 
@@ -617,24 +619,29 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             var currFrame = cubePlaylistController.currentAnimationFrame;
             if (!currFrame)
             {
-                console.log('emptyCube');
+                console.log('emptyCube', localRenderTime);
                 return cubePlaylistController.getEmptyCube();
             } else if (localRenderTime < currFrame.start)
             {
-                // console.log('before valid frame', localRenderTime, currFrame.start);
+                console.log('before next valid frame', localRenderTime, currFrame.start, currFrame.end, cubePlaylistController.animationFrames.length);
                 return cubePlaylistController.getEmptyCube();
             } else if ((localRenderTime >= currFrame.start) && (localRenderTime <= currFrame.end))
             {
-                console.log('ret popped frame');
-                return cubePlaylistController.popCurrentAnimationFrame().data;
+                console.log('ret popped frame', localRenderTime, currFrame.start, currFrame.end, cubePlaylistController.animationFrames.length);
+                if (cubePlaylistController.animationFrames.length === 1)
+                {
+                    console.log('popping last frame');
+                    cubePlaylistController.popCurrentAnimationFrame();
+                }
+                return currFrame.data;
             } else if (localRenderTime > currFrame.end)
             {
-                // console.log('recurse', localRenderTime, currFrame.end);
+                console.log('recurse', localRenderTime, currFrame.start, currFrame.end, cubePlaylistController.animationFrames.length);
                 cubePlaylistController.popCurrentAnimationFrame();
                 return cubePlaylistController.getRenderFrame(localRenderTime);
             } else
             {
-                console.log('else', localRenderTime, currFrame.start, currFrame.end, currFrame);
+                console.log('else', localRenderTime, currFrame.start, currFrame.end, currFrame, cubePlaylistController.animationFrames.length);
             }
         },
     });
