@@ -619,6 +619,12 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             _options['mode'] = newMode;
 
             __updateAnimationSettings();
+            __generateAnimationFrames();
+
+            if (this.playing)
+            {
+                __refreshAnimationFramesWithGenerated();
+            }
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
                 setting: 'mode',
@@ -672,6 +678,12 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
             __updateAnimationSettings();
             __updateMouseListeningCells();
+            __generateAnimationFrames();
+
+            if (this.playing)
+            {
+                __refreshAnimationFramesWithGenerated();
+            }
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
                 setting: 'writeFace',
@@ -700,6 +712,12 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             }
 
             __updateAnimationSettings();
+            __generateAnimationFrames();
+
+            if (this.playing)
+            {
+                __refreshAnimationFramesWithGenerated();
+            }
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
                 setting: 'wrapDirection',
@@ -736,6 +754,12 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             _options['spacing'] = Math.max(0, parsed);   // must be int greater than or equal to 0
             __updateTilesWithSpacing();
             __updateTileStrip();
+            __generateAnimationFrames();
+
+            if (this.playing)
+            {
+                __refreshAnimationFramesWithGenerated();
+            }
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
                 setting: 'spacing',
