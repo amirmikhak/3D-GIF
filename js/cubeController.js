@@ -212,38 +212,57 @@ var CubeController = function CubeController(opts) {
         },
     });
 
-    Object.defineProperty(this, 'addAnimationFrame', {
+    function __validateNewFrameArguments(cubeData, startTime, endTime) {
+        if (arguments.length !== 3)
+        {
+            console.error('Invalid arguments for CubeController.addAnimationFrame()');
+            throw 'Invalid arguments';
+        } else if (!(cubeData instanceof Cube))
+        {
+            console.error('Invalid cubeData for CubeController.addAnimationFrame()');
+            throw 'Invalid Cube data';
+        } else if (isNaN(parseInt(startTime, 10)))
+        {
+            console.error('Invalid start time for CubeController.addAnimationFrame()');
+            throw 'Invalid startTime';
+        } else if (isNaN(parseInt(endTime, 10)))
+        {
+            console.error('Invalid end time for CubeController.addAnimationFrame()');
+            throw 'Invalid endTime';
+        }
+    }
+
+    function __flushCacheIfWillOverflow() {
+        if (controller.frameCacheSize &&
+            (_animationFrames.length >= (controller.frameCacheSize - 1)))
+        {
+            _animationFrames = [];
+        }
+    }
+
+    Object.defineProperty(this, 'unshiftAnimationFrame', {
         writable: false,
         value: function(cubeData, startTime, endTime) {
-            if (arguments.length !== 3)
-            {
-                console.error('Invalid arguments for CubeController.addAnimationFrame()');
-                throw 'Invalid arguments';
-            } else if (!(cubeData instanceof Cube))
-            {
-                console.error('Invalid cubeData for CubeController.addAnimationFrame()');
-                throw 'Invalid Cube data';
-            } else if (isNaN(parseInt(startTime, 10)))
-            {
-                console.error('Invalid start time for CubeController.addAnimationFrame()');
-                throw 'Invalid startTime';
-            } else if (isNaN(parseInt(endTime, 10)))
-            {
-                console.error('Invalid end time for CubeController.addAnimationFrame()');
-                throw 'Invalid endTime';
-            }
-
-            if (this.frameCacheSize && (_animationFrames.length > this.frameCacheSize))
-            {
-                _animationFrames = [];
-            }
-
-            var newFrame = {
+            __validateNewFrameArguments.apply(this, arguments);
+            __flushCacheIfWillOverflow();
+            _animationFrames.unshift({
                 data: cubeData,
                 start: parseInt(startTime, 10),
                 end: parseInt(endTime, 10),
-            };
-            _animationFrames.push(newFrame);
+            });
+        },
+    });
+
+    Object.defineProperty(this, 'addAnimationFrame', {
+        writable: false,
+        value: function(cubeData, startTime, endTime) {
+            __validateNewFrameArguments.apply(this, arguments);
+            __flushCacheIfWillOverflow();
+            _animationFrames.push({
+                data: cubeData,
+                start: parseInt(startTime, 10),
+                end: parseInt(endTime, 10),
+            });
         },
     });
 
