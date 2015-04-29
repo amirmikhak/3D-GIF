@@ -1,10 +1,6 @@
-var cubeContainer = document.getElementById('cube-wrapper');
-
-// Build a new Cube object
-var cube = new Cube(8);
-
+// Build a DOM Renderer for the cube so we can see it
 var domRenderer = new CubeDOMRenderer({
-    container: cubeContainer,
+    container: document.getElementById('cube-wrapper'),
     listenForKeyEvents: true,
     xAngle: -30,
     yAngle: 30,
@@ -14,8 +10,9 @@ var domRenderer = new CubeDOMRenderer({
     },
 });
 
+var plCube = new Cube(8);
 var plController = new CubePlaylistController({
-    cube: cube,
+    cube: plCube,
     penColor: 'red',
     renderer: domRenderer,
     animationInterval: 100,
@@ -24,8 +21,9 @@ var plController = new CubePlaylistController({
     spacing: 0,
 });
 
+var rtCube = new Cube(8);
 var rtController = new CubeRealtimeUserController({
-    cube: cube,
+    cube: rtCube,
     penColor: 'blue',
     renderer: domRenderer,
     frameCacheSize: 200,

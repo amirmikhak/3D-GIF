@@ -287,9 +287,9 @@ Cube.prototype.affectXSlice = function(column, fn) {
      * Call a function on each cell within a given X slice starting from the left
      */
 
-    for (var depth = cube.size - 1; depth >= 0; depth--)
+    for (var depth = this.size - 1; depth >= 0; depth--)
     {
-        for (var row = 0; row < cube.size; row++)
+        for (var row = 0; row < this.size; row++)
         {
             fn.apply(this, [row, column, depth]);
         }
@@ -319,9 +319,9 @@ Cube.prototype.affectZSlice = function(depth, fn) {
      * Call a function on each cell within a given Z slice starting from the front
      */
 
-    for (var column = 0; column < cube.size; column++)
+    for (var column = 0; column < this.size; column++)
     {
-        for (var row = 0; row < cube.size; row++)
+        for (var row = 0; row < this.size; row++)
         {
             fn.apply(this, [row, column, depth]);
         }

@@ -103,7 +103,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
     }
 
     function __buildHTML() {
-        _html.id = 'cube';
+        _html.classList.add('cube');
         _html.innerHTML = '';
         for (var i = 0; i < cubeDOMRenderer.numCells; i++)
         {

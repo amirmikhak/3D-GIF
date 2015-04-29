@@ -217,7 +217,7 @@ body {
 /**
  * Cube and cell styling
  */
-#cube {
+.cube {
     position: relative;
     margin: 100px auto;
 }
