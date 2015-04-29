@@ -156,3 +156,24 @@ Array.prototype.equals = function (array) {
     }
     return true;
 }
+
+/**
+ * hokey speed test comparison functions
+ */
+function runTest(fn, iters) {
+    var startTime = new Date().getTime();
+    for (var i = 0; i < iters; i++)
+    {
+        fn();
+    }
+    return new Date().getTime() - startTime;
+}
+
+function runForAvgTestTime(fn, testIters, avgIters) {
+    var sum = 0;
+    for (var i = 0; i < avgIters; i++)
+    {
+        sum += runTest(fn, testIters);
+    }
+    return sum / avgIters;
+}
