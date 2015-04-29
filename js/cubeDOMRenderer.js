@@ -480,7 +480,7 @@ CubeDOMRenderer.prototype.nudge = function(direction, amount) {
      * (in degrees).
      */
 
-    amount = !isNaN(parseFloat(amount, 10)) ? amount : 1;
+    amount = !isNaN(parseFloat(amount, 10)) ? amount : 5;
 
     switch (direction) {
         case 'left':
@@ -496,6 +496,8 @@ CubeDOMRenderer.prototype.nudge = function(direction, amount) {
             this.xAngle -= amount;
             break;
     };
+
+    requestAnimationFrame(this.updateDOM);
 
     return this;    // enables multiple calls on cube to be "chained"
 };
