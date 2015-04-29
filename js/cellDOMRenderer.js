@@ -216,15 +216,14 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     function __mouseClickHandler(e) {
         e.preventDefault();
 
-        var _on = _cell['on'];
-        applyOptions.call(_cell, {
+        var _on = _options['cell']['on'];
+        applyOptions.call(_options['cell'], {
             on: !_on, // Toggle my on status when someone clicks the cell
-            /**
-             * IF we have a connection to the cube and it has an opinion about
-             * what color we should be, let's honor it.
-             */
-            color: _on && cellDOMRenderer.cell.cube && cellDOMRenderer.cell.cube.controller ?
-                cellDOMRenderer.cell.cube.controller.penColorRgb : _cell['color'],
+            // IF we have a connection to the cube and it has an opinion about
+            // what color we should be, let's honor it.
+            color: _on && cellDOMRenderer.controller ?
+                cellDOMRenderer.controller.penColorRgb :
+                _options['cell']['color'],
         });
     }
 
@@ -235,14 +234,14 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
          * If start on an on cell the same color as we, clear next ones,
          * otherwise continue to draw in cube's penColor
          */
-        var _color = _cell['color'];
+        var _color = _options['cell']['color'];
 
-        var newDragSetOn = !_cell['on'] || ((cellDOMRenderer.cell.cube && cellDOMRenderer.cell.cube.controller) ?
-            !__colorsAreEqual(cellDOMRenderer.cell.cube.controller.penColorRgb, _color) :
+        var newDragSetOn = !_options['cell']['on'] || (cellDOMRenderer.controller ?
+            !__colorsAreEqual(cellDOMRenderer.controller.penColorRgb, _color) :
             false);
 
-        var newDragSetColor = cellDOMRenderer.cell.cube && cellDOMRenderer.cell.cube.controller ?
-            cellDOMRenderer.cell.cube.controller.penColorRgb :
+        var newDragSetColor = cellDOMRenderer.controller ?
+            cellDOMRenderer.controller.penColorRgb :
             _color;
 
         applyOptions.call(CellDraggingDelegate.get(), {
@@ -266,9 +265,9 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         var dragDelegate = CellDraggingDelegate.get();
         if (dragDelegate.isDragging)
         {
-            applyOptions.call(_cell, {
+            applyOptions.call(_options['cell'], {
                 on: dragDelegate.dragSetOn,
-                color: dragDelegate.dragSetOn ? dragDelegate.dragSetColor : _cell['color'],
+                color: dragDelegate.dragSetOn ? dragDelegate.dragSetColor : _options['cell']['color'],
             });
         }
     }

@@ -1,10 +1,8 @@
 var Cell = function Cell(opts) {
 
     var cell = this; // 'this' can point to many, different things, so we grab an easy reference to the object
-    var _cube = cube;
 
     var __defaultOptions = {
-        cube: null,
         row: null,
         column: null,
         depth: null,
@@ -34,11 +32,6 @@ var Cell = function Cell(opts) {
             (colorArr[2] < 0) || (colorArr[2] > 255)
         );
     };
-
-    Object.defineProperty(this, 'cube', {
-        get: function() { return _options['cube']; },
-        set: function(newCube) { return _options['cube'] = newCube; },
-    });
 
     Object.defineProperty(this, 'row', {
         get: function() { return _options['row']; },
@@ -73,10 +66,7 @@ var Cell = function Cell(opts) {
 
     Object.defineProperty(this, 'on', {
         get: function() { return _options['on']; },
-        set: function(turnOn) {
-            _options['on'] = !!turnOn;
-            return _options['on'];
-        },
+        set: function(turnOn) { return _options['on'] = !!turnOn; },
     });
 
     Object.defineProperty(this, 'color', {
