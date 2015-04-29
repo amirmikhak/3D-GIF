@@ -296,6 +296,14 @@ var CubeController = function CubeController(opts) {
 
 };
 
+CubeController.prototype.serializeForNetworkSubmission = function() {
+    if (!this.cube)
+    {
+        return null;
+    }
+    return JSON.stringify(this.cube.getForNetworkSubmission());
+};
+
 CubeController.prototype.render = function(cubeData) {
     if (this.renderer && ((cubeData instanceof Cube) || this.cube))
     {

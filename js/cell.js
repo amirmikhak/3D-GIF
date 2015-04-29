@@ -140,6 +140,13 @@ Cell.prototype.toJSON = function() {
     return this.options;
 };
 
+Cell.prototype.getForNetworkSubmission = function() {
+    return {
+        o: this.on ? 1 : 0,
+        c: this.colorAsString,
+    };
+};
+
 Cell.prototype.setFromCell = function(otherCell) {
     /**
      * Copy visual properties from another cell into self.
