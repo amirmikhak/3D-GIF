@@ -256,15 +256,34 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
         get: function() { return _mouseListeningCells; },
     });
 
+    var _firstRenderTimeOfCurrFrame = 0;
+    var _prevFrame = null;
     Object.defineProperty(this, 'getRenderFrame', {
         writable: false,
         value: function getRenderFrame(renderTime) {
             var currFrame = cubeRealtimeUserController.currentAnimationFrame;
             if (!currFrame)
             {
+                _firstRenderTimeOfCurrFrame = renderTime;
+                _prevFrame = currFrame;
                 return cubeRealtimeUserController.getEmptyCube();
             }
-            return cubeRealtimeUserController.popCurrentAnimationFrame().data;
+
+            var currFrameValidDuration = currFrame.end - currFrame.start;
+            var timeSinceFirstSeenFrame = renderTime - _firstRenderTimeOfCurrFrame;
+            if (timeSinceFirstSeenFrame > currFrameValidDuration)
+            {
+                _firstRenderTimeOfCurrFrame = renderTime;
+                _prevFrame = cubeRealtimeUserController.popCurrentAnimationFrame();
+                return currFrame.data;
+            }
+
+            if (currFrame !== _prevFrame)
+            {
+                _prevFrame = currFrame;
+                _firstRenderTimeOfCurrFrame = renderTime;
+            }
+            return currFrame.data;
         },
     });
 
@@ -376,6 +395,13 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     this.getDefaultOptions = function() {
         return __combinedDefaultOptions;
     };
+
+    this.on('propertyChanged', function(changeData) {
+        if (changeData.setting === 'animationInterval')
+        {
+            cubeRealtimeUserController.play();
+        }
+    });
 
     applyOptions.call(this, _options);
 
