@@ -89,13 +89,14 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     function __updateMouseListeningCells() {
         _mouseListeningCells = [];
 
-        if (!this.cube) {
+        if (!cubePlaylistController.cube) {
             return;
         }
 
-        for (var i = 0, numCells = this.cube.cells.length; i < numCells; i++)
+        var cubeCells = cubePlaylistController.cube.cells;
+        for (var i = 0, numCells = cubeCells.length; i < numCells; i++)
         {
-            var cell = this.cube.cells[i];
+            var cell = cubeCells[i];
 
             var shouldBeInteractive = {
                 front: (cell.depth === 0),
@@ -422,12 +423,12 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         {
             var srcDim1 = dirtyCols[i + 1][0];
             var srcDim2 = dirtyCols[i + 1][1];
-            var data = this.cube[__columnReader](srcDim1, srcDim2);
+            var data = cubePlaylistController.cube[__columnReader](srcDim1, srcDim2);
 
             var destDim1 = dirtyCols[i][0];
             var destDim2 = dirtyCols[i][1];
 
-            this.cube[__columnWriter](destDim1, destDim2, data);
+            cubePlaylistController.cube[__columnWriter](destDim1, destDim2, data);
         }
     }
 
@@ -436,7 +437,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         var stripIdx = strip.idx;
         var stripData = strip.strip;
         __propigateColumns(numColumns);
-        this.cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
+        cubePlaylistController.cube[__columnWriter](__animationCursorDim1, __animationCursorDim2, stripData);
     }
 
     function __animatorAcross() {
@@ -453,14 +454,14 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         var tileData = tile.tile;
         // animate current contents through the cube
         CubeRealtimeUserController.prototype.getAnimationCb.call({
-            cube: this.cube,
+            cube: cubePlaylistController.cube,
             stepSize: 1,
             wrap: false,
             action: 'slide',
             direction: __throughFaceDirectionMap[_options['writeFace']],
         })();
         // write the newest tile
-        this.cube.writeSlice(tileData, _options['writeFace'], 0);
+        cubePlaylistController.cube.writeSlice(tileData, _options['writeFace'], 0);
     }
 
 

@@ -39,13 +39,14 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     function __updateMouseListeningCells() {
         _mouseListeningCells = [];
 
-        if (!this.cube) {
+        if (!cubeRealtimeUserController.cube) {
             return;
         }
 
-        for (var i = 0, numCells = this.cube.cells.length; i < numCells; i++)
+        var cubeCells = cubeRealtimeUserController.cube.cells;
+        for (var i = 0, numCells = cubeCells.length; i < numCells; i++)
         {
-            var cell = this.cube.cells[i];
+            var cell = cubeCells[i];
 
             var shouldBeInteractive = {
                 front: (cell.depth === 0),
