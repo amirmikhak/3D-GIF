@@ -57,6 +57,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     var _animator = function() {};
 
     var _generatedAnimationFrames = [];
+    var __batchInsertingTiles = false;
 
     var PLAYLIST_SETTINGS_CHANGE_NAME = 'playlistSettingsChange';
 
@@ -211,6 +212,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         __updateAnimator();
         __updateAnimationCursorPosition();
         __updateAnimationColumnTouchers();
+        __generateAnimationFrames();
 
         if (cubePlaylistController.playing)
         {
@@ -248,6 +250,10 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     }
 
     function __generateAnimationFrames() {
+        if (__batchInsertingTiles)
+        {
+            return;
+        }
         var numFramesToGenerate = {
             'across': __tileStrip.length,
             'around': __tileStrip.length,
@@ -509,6 +515,17 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         return this;
     };
 
+    this.insertTiles = function(newTiles, index) {
+        __batchInsertingTiles = true;
+        var i = Math.max(0, Math.min(parseInt(index, 10), _tiles.length)) || 0;
+        newTiles.forEach(function(tile) {
+            cubePlaylistController.insertTile(tile, i++);
+        });
+        __batchInsertingTiles = false;
+        __updateForTileChange();
+        return this;
+    };
+
     this.insertTileAtAndMoveCursor = function(newTile)
     {
         return this.insertTile(newTile, __userCursorPosition++);
@@ -621,7 +638,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             _options['mode'] = newMode;
 
             __updateAnimationSettings();
-            __generateAnimationFrames();
 
             if (this.playing)
             {
@@ -687,7 +703,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
             __updateAnimationSettings();
             __updateMouseListeningCells();
-            __generateAnimationFrames();
 
             if (this.playing)
             {
@@ -721,7 +736,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             }
 
             __updateAnimationSettings();
-            __generateAnimationFrames();
 
             if (this.playing)
             {
@@ -763,10 +777,10 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             _options['spacing'] = Math.max(0, parsed);   // must be int greater than or equal to 0
             __updateTilesWithSpacing();
             __updateTileStrip();
-            __generateAnimationFrames();
 
             if (this.playing)
             {
+                __generateAnimationFrames();
                 __refreshAnimationFramesWithGenerated();
             }
 

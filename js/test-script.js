@@ -35,13 +35,15 @@ var CubeAssets = new CubeAssetsStore();
 CubeAssets.loadFont('printChar21', '/js/assets/cube8PrintChar21Font.json');
 CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json', function() {
     console.log('adding shape tiles to playlist...');
-    plController.appendTile(CubeAssets.getShapeRender('smile'));
-    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
-    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
-    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
-    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
-    plController.appendTile(CubeAssets.getShapeRender('battleaxe'));
-    plController.appendTile(CubeAssets.getShapeRender('frown'));
-    plController.appendTile(CubeAssets.getShapeRender('square'));
+    plController.insertTiles([
+        CubeAssets.getShapeRender('smile'),
+        CubeAssets.getShapeRender('battleaxe'),
+        CubeAssets.getShapeRender('battleaxe'),
+        CubeAssets.getShapeRender('battleaxe'),
+        CubeAssets.getShapeRender('battleaxe'),
+        CubeAssets.getShapeRender('battleaxe'),
+        CubeAssets.getShapeRender('frown'),
+        CubeAssets.getShapeRender('square'),
+    ]);
     console.log('done adding shape tiles!');
 });
