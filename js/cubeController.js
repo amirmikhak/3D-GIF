@@ -105,7 +105,7 @@ var CubeController = function CubeController(opts) {
             }
 
             var prevRenderer = _options['renderer'];
-            if (prevRenderer !== newRenderer)
+            if (prevRenderer && (prevRenderer !== newRenderer))
             {
                 prevRenderer.cube = null;
             }
