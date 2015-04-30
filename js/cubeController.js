@@ -48,6 +48,10 @@ var CubeController = function CubeController(opts) {
         clearInterval(__animationLoopInterval);
     };
 
+    var __handleMediatedComponentEvent = function(event) {
+        console.log('__handleMediatedComponentEvent', event, this);
+    };
+
     Object.defineProperty(this, 'directions', {
         configurable: true,
         writable: false,
@@ -281,6 +285,8 @@ var CubeController = function CubeController(opts) {
         return __defaultOptions;
     };
 
+    this.on('mediatedComponentEvent', __handleMediatedComponentEvent);
+
     applyOptions.call(this, _options);
 
     return this;
@@ -315,5 +321,6 @@ CubeController.prototype.play = function(resetTimers) {
     this.playing = true;
 };
 
+CubeController.prototype.clear = function() {};
 CubeController.prototype.step = function() {};
 CubeController.prototype.update = function(frameValidStart, frameValidEnd) {};

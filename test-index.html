@@ -12,8 +12,25 @@
 </head>
 
 <body class="l3d">
-    <div id="container">
-        <div id="cube-wrapper"></div>
+    <div class="container">
+        <div class="cube-wrapper">
+            <!-- <div class="write-face-picker"></div> -->
+            <!-- <div class="color-picker"></div> -->
+<!--
+            <div class="playback-controls">
+                <div class="realtime-controls"></div>
+                <div class="playlist-controls"></div>
+            </div>
+ -->
+            <div class="controls">
+                <!-- <div class="playback-mode control-button">--</div> -->
+                <!-- <div class="prev-step control-button">Prev</div> -->
+                <!-- <div class="next-step control-button">Next</div> -->
+                <!-- <div class="play control-button">Play</div> -->
+                <div class="clear control-button">Clear</div>
+            </div>
+            <div class="shape-picker"></div>
+        </div>
     </div>
     <script src="js/cell-dragging-delegate.js"></script>
     <script src="js/cell.js"></script>
@@ -28,6 +45,10 @@
     <script src="js/cubeController.js"></script>
     <script src="js/cubeRealtimeUserController.js"></script>
     <script src="js/cubePlaylistController.js"></script>
+    <script src="js/uiMediator.js"></script>
+    <script src="js/uiComponent.js"></script>
+    <script src="js/uiDOMClearButton.js"></script>
+    <script src="js/uiDOMShapePicker.js"></script>
     <script src="js/appController.js"></script>
     <script src="js/test-script.js"></script>
 </body>

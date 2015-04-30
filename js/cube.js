@@ -346,8 +346,6 @@ Cube.prototype.readSlice = function(face, offset, output) {
     /**
      * Use reasonable default values if the caller didn't give you any or gave
      * values that are out of bounds or otherwise invalid.
-     *
-     * !TODO: log an error the console?
      */
     offset = (typeof offset !== 'undefined') ?
         Math.max(0, Math.min(parseInt(offset, 10), this.size - 1)) :

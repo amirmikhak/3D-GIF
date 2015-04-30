@@ -819,6 +819,9 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 CubePlaylistController.prototype = Object.create(CubeController.prototype);
 CubePlaylistController.prototype.constructor = CubePlaylistController;
 
+// !TODO: implement CubeRealtimeController.clear() -- need to determine reasonable behavior
+CubeController.prototype.clear = function() {};
+
 CubePlaylistController.prototype.step = function(numSteps) {
     /**
      * Performs a single step of the current animation. If the number of steps

@@ -432,6 +432,17 @@ CubeRealtimeUserController.prototype.getAnimationCb = function getAnimationCb() 
     }
 };
 
+CubeController.prototype.clear = function() {
+    var prevPlaying = this.playing;
+    this.stop();
+    this.clearAnimationFrames();
+    this.cube.clear();
+    if (prevPlaying)
+    {
+        this.play();
+    }
+};
+
 CubeRealtimeUserController.prototype.step = function(numSteps) {
     /**
      * Performs a single step of the current animation. If the number of steps

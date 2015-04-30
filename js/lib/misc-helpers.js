@@ -12,6 +12,7 @@ Object.defineProperty(Object.prototype, 'can', {
 function applyOptions(newOpts) {
     if (!(newOpts instanceof Object))
     {
+        console.trace();
         throw 'TypeError: Options must be object';
     }
 
