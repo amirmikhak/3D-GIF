@@ -10,30 +10,28 @@ var domRenderer = new CubeDOMRenderer({
     },
 });
 
-var plCube = new Cube(8);
-var plController = new CubePlaylistController({
-    cube: plCube,
-    penColor: 'red',
+var appCtrl = new AppController({
     renderer: domRenderer,
+});
+appCtrl.loadController('realtime', new CubeRealtimeUserController({
+    cube: new Cube(8),
+    penColor: 'blue',
+    frameCacheSize: 200,
+})).loadController('playlist', new CubePlaylistController({
+    cube: new Cube(8),
+    penColor: 'red',
     animationInterval: 100,
     mode: 'around',
     writeFace: 'front',
     spacing: 0,
-});
-
-var rtCube = new Cube(8);
-var rtController = new CubeRealtimeUserController({
-    cube: rtCube,
-    penColor: 'blue',
-    renderer: domRenderer,
-    frameCacheSize: 200,
-});
+}));
 
 var CubeAssets = new CubeAssetsStore();
 CubeAssets.loadFont('printChar21', '/js/assets/cube8PrintChar21Font.json');
 CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json', function() {
     console.log('adding shape tiles to playlist...');
-    plController.insertTiles([
+    appCtrl.activeController = 'playlist';
+    appCtrl.activeController.insertTiles([
         CubeAssets.getShapeRender('smile'),
         CubeAssets.getShapeRender('battleaxe'),
         CubeAssets.getShapeRender('battleaxe'),
@@ -45,3 +43,4 @@ CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json', function() 
     ]);
     console.log('done adding shape tiles!');
 });
+

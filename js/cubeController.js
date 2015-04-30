@@ -91,10 +91,6 @@ var CubeController = function CubeController(opts) {
         set: function(newRenderer) {
             if ((newRenderer === null))
             {
-                if (_options['renderer'])
-                {
-                    _options['renderer'].cube = null;
-                }
                 return _options['renderer'] = null;
             }
 
@@ -104,11 +100,6 @@ var CubeController = function CubeController(opts) {
                 throw 'Invalid renderer for CubeController';
             }
 
-            var prevRenderer = _options['renderer'];
-            if (prevRenderer && (prevRenderer !== newRenderer))
-            {
-                prevRenderer.cube = null;
-            }
             _options['renderer'] = newRenderer;
             if (_options['renderer'].cube !== this.cube)
             {
