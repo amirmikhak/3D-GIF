@@ -332,9 +332,9 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
          * Animate transforms on the cube (does not apply to cells, whose property
          * is set separately).
          */
-        get: function() { return _transitionTransforms; },
+        get: function() { return _options['transitionTransforms']; },
         set: function(shouldTransition) {
-            _transitionTransforms = shouldTransition;
+            _options['transitionTransforms'] = shouldTransition;
 
             var TRANSITION_DURATION = '300ms';
             var TRANSITION_EASING = 'ease-in-out';
