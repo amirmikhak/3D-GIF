@@ -5,7 +5,7 @@ var AppController = function AppController(opts) {
     Emitter(this);
 
     var __defaultOptions = {
-        renderer: null
+        renderer: null,
     };
 
     var _opts = opts || {};
@@ -86,7 +86,6 @@ var AppController = function AppController(opts) {
             __detachRendererFromController();
             _activeController = _loadedControllers[ctrlKey];
             __attachRendererToController(prevPlaying);
-            return _activeController;
         },
     });
 
