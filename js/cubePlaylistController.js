@@ -274,6 +274,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
                 end: (i * ctrl.animationInterval) + ctrl.animationInterval,
             });
         }
+        ctrl.cube.clear();
     }
 
     /**
