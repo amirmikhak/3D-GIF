@@ -4,19 +4,7 @@ var loadShapes = new Promise(function(success, failure) {
     CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json', success);
 });
 
-// Build a DOM Renderer for the cube so we can see it
-var domRenderer = new CubeDOMRenderer({
-    container: document.getElementsByClassName('cube-wrapper')[0],
-    listenForKeyEvents: true,
-    xAngle: -30,
-    yAngle: 30,
-    cellConfig: {
-        size: 45,
-        rotate: false,
-    },
-});
-
-var uiMediator = new UIMediator({
+var domMediator = new UIMediator({
 }).addComponent('clearButton', new UIDOMClearButton({
     containerEl: document.getElementsByClassName('clear')[0],
     componentEventCb: function(event) {
@@ -34,9 +22,22 @@ var uiMediator = new UIMediator({
     },
 }));
 
+// Build a DOM Renderer for the cube so we can see it
+var domRenderer = new CubeDOMRenderer({
+    mediator: domMediator,
+    container: document.getElementsByClassName('cube-wrapper')[0],
+    listenForKeyEvents: true,
+    xAngle: -30,
+    yAngle: 30,
+    cellConfig: {
+        size: 45,
+        rotate: false,
+    },
+});
+
 var appCtrl = new AppController({
     renderer: domRenderer,
-    mediator: uiMediator,
+    mediator: domMediator,
 }).loadController('realtime', new CubeRealtimeUserController({
     cube: new Cube(8),
     penColor: 'blue',

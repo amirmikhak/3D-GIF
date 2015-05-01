@@ -30,6 +30,16 @@ var UIMediator = function UIMediator() {
         });
     }
 
+    function __handleRendererEvent(event) {
+        this.emit('mediatedEvent', {
+            origin: 'renderer',
+            type: event.type,
+            data: event.data,
+            renderer: event.renderer,
+            callback: event.callback,
+        });
+    }
+
     this.addComponent = function(key, newComponent) {
         if (_componentKeys.indexOf(key) !== -1)
         {
@@ -65,6 +75,7 @@ var UIMediator = function UIMediator() {
 
     this.on('controllerEvent', __handleControllerEvent);
     this.on('componentEvent', __handleComponentEvent);
+    this.on('rendererEvent', __handleRendererEvent);
 
     return this;
 

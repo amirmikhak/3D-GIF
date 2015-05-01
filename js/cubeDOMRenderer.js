@@ -10,6 +10,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         xAngle: 0,
         yAngle: 0,
         listenForKeyEvents: true,
+        mediator: null,
         cellConfig: {
             rotate: false,
             size: 50, // size of our cells in pixels
@@ -108,7 +109,15 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         for (var i = 0; i < cubeDOMRenderer.numCells; i++)
         {
             var cell = cubeDOMRenderer.cells[i];
-            var cellRenderer = new CellDOMRenderer(cell, _options.cellConfig);
+
+            var mergedCellConfig = {};
+            for (var key in _options.cellConfig)
+            {
+                mergedCellConfig[key] = _options.cellConfig[key];
+            }
+            mergedCellConfig.mediator = _options.mediator;
+
+            var cellRenderer = new CellDOMRenderer(cell, mergedCellConfig);
             _cellRenderers.push(cellRenderer);
             _html.appendChild(cellRenderer.html);
         }
@@ -180,24 +189,15 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
     }
 
     function __updateCellsDOM() {
-        var mouseListeningCells = cubeDOMRenderer.cube.controller ?
-            cubeDOMRenderer.cube.controller.mouseListeningCells :
-            [];
-
         for (var i = 0; i < cubeDOMRenderer.numCells; i++)
         {
             var cellRenderer = _cellRenderers[i];
             var cell = cellRenderer.cell;
-
-            var newCellRendererOptions = {
-                interactive: mouseListeningCells.indexOf(cell.coordAsString) !== -1,
-            };
-
+            var newCellRendererOptions = {};
             if (__dirtyViewAngle && _options['cellConfig']['rotate'])
             {
                 newCellRendererOptions['rotation'] = [-1 * _options['xAngle'], -1 * _options['yAngle'], 0];
             }
-
             applyOptions.call(cellRenderer, newCellRendererOptions);
             cellRenderer.render();
         }
@@ -423,6 +423,31 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
                 document.addEventListener('keyup', __keyupped);
             }
         },
+    });
+
+    Object.defineProperty(this, 'mediator', {
+        get: function() { return _options['mediator']; },
+        set: function(newMediator) {
+            if ((newMediator !== null) && !(newMediator instanceof UIMediator))
+            {
+                console.error('Invalid mediator: must be a UIMediator.', newMediator);
+                throw 'Invalid mediator';
+            }
+            var prevMediator = _options['mediator'];
+            for (var i = 0; i < this.numCells; i++)
+            {
+                _cellRenderers[i].mediator = newMediator;
+            }
+            if (prevMediator !== newMediator)
+            {
+                uiComponent.emit('propertyChanged', {
+                    property: 'mediator',
+                    newValue: newMediator,
+                    oldValue: prevMediator,
+                });
+                _options['mediator'] = newMediator;
+            }
+        }
     });
 
     this.getDefaultOptions = function() {

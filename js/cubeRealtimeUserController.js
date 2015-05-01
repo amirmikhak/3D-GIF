@@ -432,7 +432,7 @@ CubeRealtimeUserController.prototype.getAnimationCb = function getAnimationCb() 
     }
 };
 
-CubeController.prototype.clear = function() {
+CubeRealtimeUserController.prototype.clear = function() {
     var prevPlaying = this.playing;
     this.stop();
     this.clearAnimationFrames();

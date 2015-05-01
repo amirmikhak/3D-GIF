@@ -7,11 +7,12 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     var __defaultOptions = {
         cell: cell,
         size: 50,
-        interactive: false,
+        interactive: true,
         interactMode: 'drag',
         rotate: false,
         rotation: [0, 0, 0],
         transitionTransforms: false,
+        mediator: null,
     };
 
     var __parentDefaultOptions = this.getDefaultOptions();
@@ -213,47 +214,38 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         }
     }
 
+    function __cellIsListening(cell, listeningCells) {
+        return listeningCells && (listeningCells.indexOf(cell.coordAsString) !== -1);
+    }
+
     function __mouseClickHandler(e) {
         e.preventDefault();
-
-        var _on = _options['cell']['on'];
-        applyOptions.call(_options['cell'], {
-            on: !_on, // Toggle my on status when someone clicks the cell
-            // IF we have a connection to the cube and it has an opinion about
-            // what color we should be, let's honor it.
-            color: _on && cellDOMRenderer.controller ?
-                cellDOMRenderer.controller.penColorRgb :
-                _options['cell']['color'],
-        });
+        if (cellDOMRenderer.mediator)
+        {
+            cellDOMRenderer.mediator.emit('rendererEvent', {
+                type: 'mouseClick',
+                data: e,
+                renderer: cellDOMRenderer,
+                callback: __mouseClickCtrlCb,
+            });
+        }
     }
 
     function __mouseDownHandler(e) {
         e.preventDefault();
-
-        /**
-         * If start on an on cell the same color as we, clear next ones,
-         * otherwise continue to draw in cube's penColor
-         */
-        var _color = _options['cell']['color'];
-
-        var newDragSetOn = !_options['cell']['on'] || (cellDOMRenderer.controller ?
-            !__colorsAreEqual(cellDOMRenderer.controller.penColorRgb, _color) :
-            false);
-
-        var newDragSetColor = cellDOMRenderer.controller ?
-            cellDOMRenderer.controller.penColorRgb :
-            _color;
-
-        applyOptions.call(CellDraggingDelegate.get(), {
-            isDragging: true,
-            dragSetOn: newDragSetOn,
-            dragSetColor: newDragSetColor,
-        });
+        if (cellDOMRenderer.mediator)
+        {
+            cellDOMRenderer.mediator.emit('rendererEvent', {
+                type: 'mouseDown',
+                data: e,
+                renderer: cellDOMRenderer,
+                callback: __mouseDownCtrlCb,
+            });
+        }
     }
 
     function __mouseUpHandler(e) {
         e.preventDefault();
-
         applyOptions.call(CellDraggingDelegate.get(), {
             isDragging: false,
         });
@@ -261,14 +253,74 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
 
     function __mouseMoveHandler(e) {
         e.preventDefault();
-
-        var dragDelegate = CellDraggingDelegate.get();
-        if (dragDelegate.isDragging)
+        if (cellDOMRenderer.mediator)
         {
-            applyOptions.call(_options['cell'], {
-                on: dragDelegate.dragSetOn,
-                color: dragDelegate.dragSetOn ? dragDelegate.dragSetColor : _options['cell']['color'],
+            cellDOMRenderer.mediator.emit('rendererEvent', {
+                type: 'mouseMove',
+                data: e,
+                renderer: cellDOMRenderer,
+                callback: __mouseMoveCtrlCb,
             });
+        }
+    }
+
+    function __mouseClickCtrlCb(event) {
+        if (__cellIsListening(_options['cell'], event.ctrl.mouseListeningCells))
+        {
+            var _on = _options['cell']['on'];
+            applyOptions.call(_options['cell'], {
+                on: !_on, // Toggle my on status when someone clicks the cell
+                // IF we have a connection to the cube and it has an opinion about
+                // what color we should be, let's honor it.
+                color: _on && event.ctrl ?
+                    event.ctrl.penColorRgb :
+                    _options['cell']['color'],
+            });
+            event.ctrl.cube.applyCell(_options['cell']);
+        }
+    }
+
+    function __mouseDownCtrlCb(event) {
+        console.log('__mouseDownCtrlCb', __cellIsListening(_options['cell'], event.ctrl.mouseListeningCells));
+        if (__cellIsListening(_options['cell'], event.ctrl.mouseListeningCells))
+        {
+            /**
+             * If start on an on cell the same color as we, clear next ones,
+             * otherwise continue to draw in cube's penColor
+             */
+            var newDragSetOn = !(_options['cell']['on'] &&
+                __colorsAreEqual(_options['cell']['color'], event.ctrl.penColorRgb));
+            var newDragSetColor = event.ctrl.penColorRgb;
+            applyOptions.call(CellDraggingDelegate.get(), {
+                isDragging: true,
+                dragSetOn: newDragSetOn,
+                dragSetColor: newDragSetColor,
+            });
+        }
+    }
+
+    function __mouseMoveCtrlCb(event) {
+        /**
+         * "this" is cellDOMRenderer
+         * event.ctrl === activeController
+         * event.type === type from "original" event (from component)
+         * event.data === data from "original" event (from component)
+         */
+        if (__cellIsListening(_options['cell'], event.ctrl.mouseListeningCells))
+        {
+            var dragDelegate = CellDraggingDelegate.get();
+            if (dragDelegate.isDragging)
+            {
+                var newCellOpts = {
+                    on: dragDelegate.dragSetOn,
+                };
+                if (newCellOpts.on)
+                {
+                    newCellOpts.color = dragDelegate.dragSetColor;
+                }
+                applyOptions.call(_options['cell'], newCellOpts);
+                event.ctrl.cube.applyCell(_options['cell']);
+            }
         }
     }
 
@@ -375,16 +427,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
              * were called 20 times, there would be 20 listeners that will have
              * been added to capture a single click causing 20 callbacks to occur.
              */
-            if (prevInteractive && !newInteractive)
-            {
-                __unbindClickHandler();
-                if (_options['interactMode'] === 'drag')
-                {
-                    __unbindDragHandlers();
-                }
-            }
-
-            if (!prevInteractive && newInteractive)
+            if (newInteractive)
             {
                 if (_options['interactMode'] === 'click' ||
                     _options['interactMode'] === 'drag')
@@ -394,6 +437,13 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
                     {
                         __bindDragHandlers();
                     }
+                }
+            } else
+            {
+                __unbindClickHandler();
+                if (_options['interactMode'] === 'drag')
+                {
+                    __unbindDragHandlers();
                 }
             }
         },
@@ -426,6 +476,27 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
                 __bindDragHandlers();
             }
         },
+    });
+
+    Object.defineProperty(this, 'mediator', {
+        get: function() { return _options['mediator']; },
+        set: function(newMediator) {
+            if (!(newMediator instanceof UIMediator) && (newMediator !== null))
+            {
+                console.error('Invalid mediator: must be a UIMediator.', newMediator);
+                throw 'Invalid mediator';
+            }
+            var prevMediator = _options['mediator'];
+            _options['mediator'] = newMediator;
+            if (prevMediator !== newMediator)
+            {
+                uiComponent.emit('propertyChanged', {
+                    property: 'mediator',
+                    newValue: newMediator,
+                    oldValue: prevMediator,
+                });
+            }
+        }
     });
 
     this.getDefaultOptions = function() {

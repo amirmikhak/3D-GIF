@@ -27,7 +27,7 @@ var UIDOMClearButton = function UIDOMClearButton(opts) {
             uiClearButton.mediator.emit('componentEvent', {
                 type: 'clearClicked',
                 data: null,
-                component: this,
+                component: uiClearButton,
                 callback: uiClearButton.componentEventCb,
             });
         }

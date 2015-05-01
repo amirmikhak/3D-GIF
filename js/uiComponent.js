@@ -63,12 +63,15 @@ var UIComponent = function UIComponent(opts) {
                 throw 'Invalid mediator';
             }
             var prevMediator = _options['mediator'];
-            uiComponent.emit('propertyChanged', {
-                property: 'mediator',
-                newValue: newMediator,
-                oldValue: prevMediator,
-            });
-            _options['mediator'] = newMediator;
+            if (prevMediator !== newMediator)
+            {
+                uiComponent.emit('propertyChanged', {
+                    property: 'mediator',
+                    newValue: newMediator,
+                    oldValue: prevMediator,
+                });
+                _options['mediator'] = newMediator;
+            }
         }
     });
 

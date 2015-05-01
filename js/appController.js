@@ -23,12 +23,11 @@ var AppController = function AppController(opts) {
     var _loadedControllers = [];
 
     function __handleMediatedEvent(event) {
-        console.log('appCtrl __handleMediatedEvent', event);
-        if (event.origin === 'component')
+        if ((event.origin === 'component') || (event.origin === 'renderer'))
         {
             if (typeof event.callback === 'function')
             {
-                event.callback.call(event.component, {
+                event.callback.call(event[event.origin], {
                     ctrl: appCtrl.activeController,
                     type: event.type,
                     data: event.data,
@@ -92,6 +91,18 @@ var AppController = function AppController(opts) {
             {
                 throw 'Invalid Renderer';
             }
+            var prevRenderer = _options['renderer'];
+            if (prevRenderer !== newRenderer)
+            {
+                if (prevRenderer && prevRenderer.hasOwnProperty('mediator'))
+                {
+                    prevRenderer.mediator = null;
+                }
+            }
+            if (newRenderer && newRenderer.hasOwnProperty('mediator'))
+            {
+                newRenderer.mediator = _options['mediator'];
+            }
             var prevPlaying = this.playing;
             __detachRendererFromController();
             _options['renderer'] = newRenderer;
@@ -107,15 +118,16 @@ var AppController = function AppController(opts) {
                 console.error('Invalid mediator for AppController: must be a UIMediator', newMediator);
                 throw 'Invalid mediator';
             }
-            if (prevMediator !== _options['mediator'])
+            var prevMediator = _options['mediator'];
+            _options['mediator'] = newMediator;
+            _options['mediator'].on('mediatedEvent', __handleMediatedEvent);
+            if (newMediator && newMediator.hasOwnProperty('mediator'))
             {
-                var prevMediator = _options['mediator'];
-                if (_options['mediator'])
-                {
-                    _options['mediator'].off('mediatedEvent', __handleMediatedEvent);
-                }
-                _options['mediator'] = newMediator;
-                _options['mediator'].on('mediatedEvent', __handleMediatedEvent);
+                newMediator.mediator = _options['mediator'];
+            }
+            if (prevMediator && (prevMediator !== newMediator))
+            {
+                prevMediator.off('mediatedEvent', __handleMediatedEvent);
             }
         },
     });
