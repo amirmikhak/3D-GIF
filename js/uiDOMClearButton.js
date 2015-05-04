@@ -1,15 +1,19 @@
 var UIDOMClearButton = function UIDOMClearButton(opts) {
 
-    UIComponent.apply(this, arguments);
+    UIDOMLabelledButton.apply(this, arguments);
 
     var uiClearButton = this;
 
-    var __defaultOptions = {};
+    var __defaultOptions = {
+        label: 'Clear',
+    };
 
     var __parentDefaultOptions = this.getDefaultOptions();
     var _parentOptionKeys = Object.keys(__parentDefaultOptions);
     for (var i = 0, numOpts = _parentOptionKeys.length; i < numOpts; i++) {
-        __defaultOptions[_parentOptionKeys[i]] = __parentDefaultOptions[_parentOptionKeys[i]];
+        __defaultOptions[_parentOptionKeys[i]] = (_parentOptionKeys[i] in __defaultOptions) ?
+            __defaultOptions[_parentOptionKeys[i]] :
+            __parentDefaultOptions[_parentOptionKeys[i]];
     }
 
     var _opts = opts || {};
@@ -21,47 +25,16 @@ var UIDOMClearButton = function UIDOMClearButton(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
-    function __clickListener(e) {
-        if (uiClearButton.mediator)
-        {
-            uiClearButton.mediator.emit('componentEvent', {
-                type: 'clearClicked',
-                data: null,
-                component: uiClearButton,
-                callback: uiClearButton.componentEventCb,
-            });
-        }
-    }
-
-    function __bindListeners(el) {
-        el.addEventListener('click', __clickListener);
-    }
-
-    function __unbindListeners(el) {
-        el.removeEventListener('click', __clickListener);
-    }
-
-    Object.defineProperty(this, '_destroyer', {
-        writable: false,
-        value: function() {
-            this.html.innerHTML = '';
-            __unbindListeners(this.html);
-        },
-    });
-
     this.getDefaultOptions = function() {
         return __defaultOptions;
     };
 
     // init
     applyOptions.call(this, _options);
-    this.html = this.containerEl;
-    this.html.innerHTML = 'Clear';
-    __bindListeners(this.html);
 
     return this;
 
 };
 
-UIDOMClearButton.prototype = Object.create(UIComponent.prototype);
+UIDOMClearButton.prototype = Object.create(UIDOMLabelledButton.prototype);
 UIDOMClearButton.prototype.constructor = UIDOMClearButton;
