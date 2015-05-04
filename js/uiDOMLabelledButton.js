@@ -25,7 +25,15 @@ var UIDOMLabelledButton = function UIDOMLabelledButton(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
-    function __clickListener(e) {
+    function __containerClickListener(e) {
+        // yoinked from http://darktalker.com/2010/manually-trigger-dom-event/
+        evt = document.createEvent('HTMLEvents');
+        evt.initEvent('click', false, true); // event type,bubbling,cancelable
+        uiButton.html.dispatchEvent(evt);
+    }
+
+    function __ownClickListener(e) {
+        e.stopPropagation();
         if (uiButton.mediator)
         {
             uiButton.mediator.emit('componentEvent', {
@@ -37,19 +45,24 @@ var UIDOMLabelledButton = function UIDOMLabelledButton(opts) {
         }
     }
 
-    function __bindListeners(el) {
-        el.addEventListener('click', __clickListener);
+    function __bindOwnListeners() {
+        this.html.addEventListener('click', __ownClickListener);
     }
 
-    function __unbindListeners(el) {
-        el.removeEventListener('click', __clickListener);
+    function __bindContainerListeners() {
+        this.containerEl.addEventListener('click', __containerClickListener);
+    }
+
+    function __unbindListeners() {
+        this.html.removeEventListener('click', __ownClickListener);
+        this.containerEl.removeEventListener('click', __containerClickListener);
     }
 
     Object.defineProperty(this, '_destroyer', {
         writable: false,
         value: function() {
             this.html.innerHTML = '';
-            __unbindListeners(this.html);
+            __unbindListeners.call(this);
         },
     });
 
@@ -72,11 +85,10 @@ var UIDOMLabelledButton = function UIDOMLabelledButton(opts) {
     };
 
     // init
-    __bindListeners(this.html);
-
     applyOptions.call(this, _options);
 
-
+    __bindOwnListeners.call(this);
+    __bindContainerListeners.call(this);
 
     return this;
 
