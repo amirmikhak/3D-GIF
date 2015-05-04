@@ -44,6 +44,7 @@ var UIDOMClearButton = function UIDOMClearButton(opts) {
     Object.defineProperty(this, '_destroyer', {
         writable: false,
         value: function() {
+            this.html.innerHTML = '';
             __unbindListeners(this.html);
         },
     });
@@ -55,6 +56,7 @@ var UIDOMClearButton = function UIDOMClearButton(opts) {
     // init
     applyOptions.call(this, _options);
     this.html = this.containerEl;
+    this.html.innerHTML = 'Clear';
     __bindListeners(this.html);
 
     return this;
