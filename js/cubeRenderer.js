@@ -48,6 +48,11 @@ var CubeRenderer = function CubeRenderer(opts) {
                     curr: newCube,
                 });
             }
+            this.emit('propertyChanged', {
+                property: 'cube',
+                oldValue: prevCube,
+                newValue: newCube,
+            });
         },
     });
 

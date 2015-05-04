@@ -442,13 +442,13 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             }
             if (prevMediator !== newMediator)
             {
-                uiComponent.emit('propertyChanged', {
-                    property: 'mediator',
-                    newValue: newMediator,
-                    oldValue: prevMediator,
-                });
                 _options['mediator'] = newMediator;
             }
+            cubeDOMRenderer.emit('propertyChanged', {
+                property: 'mediator',
+                newValue: newMediator,
+                oldValue: prevMediator,
+            });
         }
     });
 

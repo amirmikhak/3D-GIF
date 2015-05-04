@@ -490,14 +490,11 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
             }
             var prevMediator = _options['mediator'];
             _options['mediator'] = newMediator;
-            if (prevMediator !== newMediator)
-            {
-                uiComponent.emit('propertyChanged', {
-                    property: 'mediator',
-                    newValue: newMediator,
-                    oldValue: prevMediator,
-                });
-            }
+            cellDOMRenderer.emit('propertyChanged', {
+                property: 'mediator',
+                newValue: newMediator,
+                oldValue: prevMediator,
+            });
         }
     });
 

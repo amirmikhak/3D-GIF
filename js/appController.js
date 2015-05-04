@@ -125,19 +125,19 @@ var AppController = function AppController(opts) {
     Object.defineProperty(this, 'mediator', {
         get: function() { return _options['mediator']; },
         set: function(newMediator) {
-            if (!(newMediator instanceof UIMediator))
+            if ((newMediator !== null) && !(newMediator instanceof UIMediator))
             {
                 console.error('Invalid mediator for AppController: must be a UIMediator', newMediator);
                 throw 'Invalid mediator';
             }
             var prevMediator = _options['mediator'];
             _options['mediator'] = newMediator;
-            _options['mediator'].on('mediatedEvent', __handleMediatedEvent);
-            if (newMediator && newMediator.hasOwnProperty('mediator'))
+            if (_options['mediator'])
             {
-                newMediator.mediator = _options['mediator'];
+                _options['mediator'].on('mediatedEvent', __handleMediatedEvent);
+                _options['mediator'].triggerControllerInit(this);
             }
-            if (prevMediator && (prevMediator !== newMediator))
+            if (prevMediator && (prevMediator !== _options['mediator']))
             {
                 prevMediator.off('mediatedEvent', __handleMediatedEvent);
             }
@@ -155,7 +155,6 @@ var AppController = function AppController(opts) {
                 {
                     _activeController.off('propertyChanged', __handleActiveControllerPropertyChanged);
                 }
-                console.log('x', newActiveControllerKey);
                 this.emit('propertyChanged', {
                     property: 'activeController',
                     newValue: _activeControllerKey,

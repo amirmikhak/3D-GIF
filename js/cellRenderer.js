@@ -1,5 +1,7 @@
 var CellRenderer = function CellRenderer(cell, opts) {
 
+    Emitter(this);
+
     var __defaultOptions = {
         cell: cell,
         dirty: true,
