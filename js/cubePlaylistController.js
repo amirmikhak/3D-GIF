@@ -646,7 +646,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             }
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
-                setting: 'mode',
+                property: 'mode',
                 newValue: _options['mode'],
                 oldValue: prevMode,
             });
@@ -711,7 +711,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             }
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
-                setting: 'writeFace',
+                property: 'writeFace',
                 newValue: _options['writeFace'],
                 oldValue: prevFace,
             });
@@ -744,7 +744,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             }
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
-                setting: 'wrapDirection',
+                property: 'wrapDirection',
                 newValue: _options['wrapDirection'],
                 oldValue: prevWrapDirection,
             });
@@ -758,7 +758,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             _options['loops'] = !!shouldLoop;
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
-                setting: 'loops',
+                property: 'loops',
                 newValue: _options['loops'],
                 oldValue: prevLoops,
             });
@@ -786,7 +786,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             }
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
-                setting: 'spacing',
+                property: 'spacing',
                 newValue: _options['spacing'],
                 oldValue: prevSpacing,
             });

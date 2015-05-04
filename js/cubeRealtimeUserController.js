@@ -309,7 +309,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             _options['action'] = newAction;
 
             this.emit('propertyChanged', {
-                setting: 'action',
+                property: 'action',
                 newValue: _options['action'],
                 oldValue: prevAction,
             });
@@ -329,7 +329,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             _options['direction'] = newDirection;
 
             this.emit('propertyChanged', {
-                setting: 'direction',
+                property: 'direction',
                 newValue: _options['direction'],
                 oldValue: prevDirection,
             });
@@ -350,7 +350,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             _options['stepSize'] = newStepSize;
 
             this.emit('propertyChanged', {
-                setting: 'stepSize',
+                property: 'stepSize',
                 newValue: _options['stepSize'],
                 oldValue: prevStepSize,
             });
@@ -364,7 +364,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             _options['wrap'] = !!newWrap;
 
             this.emit('propertyChanged', {
-                setting: 'wrapys',
+                property: 'wrapys',
                 newValue: _options['wrap'],
                 oldValue: prevWrap,
             });
@@ -386,7 +386,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             __listenForKeystrokes();
 
             this.emit('propertyChanged', {
-                setting: 'listenForKeys',
+                property: 'listenForKeys',
                 newValue: _options['listenForKeys'],
                 oldValue: prevListenForKeys,
             });

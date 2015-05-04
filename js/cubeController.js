@@ -166,7 +166,7 @@ var CubeController = function CubeController(opts) {
             _options['penColor'] = newPenColor;
 
             this.emit('propertyChanged', {
-                setting: 'penColor',
+                property: 'penColor',
                 newValue: _options['penColor'],
                 oldValue: prevPenColor,
             });
@@ -205,7 +205,7 @@ var CubeController = function CubeController(opts) {
             _options['animationInterval'] = parsedValue;
 
             this.emit('propertyChanged', {
-                setting: 'animationInterval',
+                property: 'animationInterval',
                 newValue: _options['animationInterval'],
                 oldValue: prevAnimationInterval,
             });
