@@ -304,7 +304,7 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
     });
 
     Object.defineProperty(this, 'outerDimensions', {
-        get: function() { return this.cube.size * _options.cellConfig.size; },
+        get: function() { return this.cube ? (this.cube.size * _options.cellConfig.size) : 0; },
     });
 
     Object.defineProperty(this, 'xAngle', {
@@ -473,6 +473,19 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
         }
 
         cubeDOMRenderer.updateDOM();
+
+        if (cubeDOMRenderer.mediator)
+        {
+            cubeDOMRenderer.mediator.emit('rendererEvent', {
+                type: 'rendererPropertyChanged',
+                data: {
+                    property: 'cube',
+                    newValue: changeData.curr,
+                    oldValue: changeData.prev,
+                },
+                renderer: cubeDOMRenderer,
+            });
+        }
     });
 
     init();

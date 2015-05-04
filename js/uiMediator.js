@@ -70,6 +70,12 @@ var UIMediator = function UIMediator() {
         return this;
     };
 
+    this.triggerControllerInit = function(ctrl) {
+        _components.forEach(function(component) {
+            component.controllerInitCb.call(component, ctrl);
+        });
+    };
+
     this.on('controllerEvent', __handleControllerEvent);
     this.on('componentEvent', __handleComponentEvent);
     this.on('rendererEvent', __handleRendererEvent);

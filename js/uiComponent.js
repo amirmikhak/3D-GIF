@@ -12,6 +12,7 @@ var UIComponent = function UIComponent(opts) {
         containerEl: null,
         visibleCondition: __fnTrueCb,
         enabledCondition: __fnTrueCb,
+        controllerInitCb: __fnNop,  // called whenever our mediator is told that an "init" has happened
         componentEventCb: __fnNop,
         /**
          * ComponentEventCb details:
@@ -110,6 +111,7 @@ var UIComponent = function UIComponent(opts) {
     var __fnProps = [
         'visibleCondition',
         'enabledCondition',
+        'controllerInitCb',
         'componentEventCb',
         'controllerEventCb',
     ];

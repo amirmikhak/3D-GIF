@@ -26,6 +26,17 @@ var AppController = function AppController(opts) {
     function __handleMediatedEvent(event) {
         if ((event.origin === 'component') || (event.origin === 'renderer'))
         {
+            if (event.origin === 'renderer')
+            {
+                if (event.type === 'rendererPropertyChanged')
+                {
+                    appCtrl.mediator.emit('controllerEvent', {
+                        type: event.type,
+                        data: event.data,
+                        ctrl: _activeController,
+                    });
+                }
+            }
             if (typeof event.callback === 'function')
             {
                 event.callback.call(event[event.origin], {
@@ -119,6 +130,10 @@ var AppController = function AppController(opts) {
             __detachRendererFromController();
             _options['renderer'] = newRenderer;
             __attachRendererToController(prevPlaying);
+            if (_options['mediator'])
+            {
+                _options['mediator'].triggerControllerInit(this);
+            }
         },
     });
 
@@ -183,6 +198,10 @@ var AppController = function AppController(opts) {
                 oldValue: prevActiveControllerKey
             });
         },
+    });
+
+    Object.defineProperty(this, 'activeControllerKey', {
+        get: function() { return _activeControllerKey; },
     });
 
     Object.defineProperty(this, 'nextControllerKey', {

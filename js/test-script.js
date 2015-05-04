@@ -12,6 +12,16 @@ var domMediator = new UIMediator({
 }).addComponent('colorPicker', new UIDOMColorPicker({
     containerEl: document.getElementsByClassName('color-picker')[0],
     cubeOuterDimensions: 360,
+    controllerInitCb: function(ctrl) {
+        if (ctrl.hasOwnProperty('penColor'))
+        {
+            this.selectedColor = ctrl.penColor;
+        }
+        if (ctrl.renderer && ctrl.renderer.hasOwnProperty('outerDimensions'))
+        {
+            this.cubeOuterDimensions = ctrl.renderer.outerDimensions;
+        }
+    },
     componentEventCb: function(event) {
         if (event.type === 'colorSelected')
         {
@@ -25,6 +35,9 @@ var domMediator = new UIMediator({
         } else if (_eventPropertyChangedIs(event, 'activeController'))
         {
             this.selectedColor = event.ctrl.penColor;
+        } else if (event.type === 'rendererPropertyChanged')
+        {
+            this.cubeOuterDimensions = event.ctrl.renderer.outerDimensions;
         }
     },
 })).addComponent('clearButton', new UIDOMClearButton({
@@ -38,6 +51,13 @@ var domMediator = new UIMediator({
     },
 })).addComponent('playToggle', new UIDOMPlayingCheckbox({
     containerEl: document.getElementsByClassName('play')[0],
+    controllerInitCb: function(ctrl) {
+        if (ctrl.hasOwnProperty('playing'))
+        {
+            this.checked = ctrl.playing;
+            this.html.classList.toggle('playing', this.checked);
+        }
+    },
     componentEventCb: function(event) {
         if (event.ctrl.hasOwnProperty('playing'))
         {
@@ -61,6 +81,9 @@ var domMediator = new UIMediator({
     },
 })).addComponent('modeToggle', new UIDOMLabelledButton({
     containerEl: document.getElementsByClassName('playback-mode')[0],
+    controllerInitCb: function(ctrl) {
+        this.label = ctrl.activeControllerKey || '';
+    },
     componentEventCb: function(event) {
         event.appCtrl.useNextController();
     },
