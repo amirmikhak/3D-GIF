@@ -41,12 +41,15 @@ var domMediator = new UIMediator({
             this.checked = newPlaying;
         }
     },
+})).addComponent('modeToggle', new UIDOMLabelledButton({
+    containerEl: document.getElementsByClassName('playback-mode')[0],
     componentEventCb: function(event) {
-        this.html.classList.toggle('playing', this.checked);
-        if (event.ctrl.hasOwnProperty('playing'))
+        event.appCtrl.useNextController();
+    },
+    controllerEventCb: function(event) {
+        if (_eventPropertyChangedIs(event, 'activeController'))
         {
-            event.ctrl.playing = this.checked;
-            return;
+            this.label = event.data.newValue;
         }
     },
 }));

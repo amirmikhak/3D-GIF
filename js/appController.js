@@ -18,6 +18,7 @@ var AppController = function AppController(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
+    var _activeControllerKey = null;
     var _activeController = null;
     var _loadedControllerKeys = [];
     var _loadedControllers = [];
@@ -28,12 +29,13 @@ var AppController = function AppController(opts) {
             if (typeof event.callback === 'function')
             {
                 event.callback.call(event[event.origin], {
+                    appCtrl: appCtrl,
                     ctrl: appCtrl.activeController,
                     type: event.type,
                     data: event.data,
                 });
             }
-        } else if (event.origin === 'controller')
+        } else if ((event.origin === 'controller') || (event.origin === 'appController'))
         {
             appCtrl.mediator.emit('controllerEvent', {
                 type: event.type,
@@ -41,6 +43,14 @@ var AppController = function AppController(opts) {
                 ctrl: _activeController,
             });
         }
+    }
+
+    function __handleOwnPropertyChanged(changeData) {
+        appCtrl.mediator.emit('mediatedEvent', {
+            origin: 'appController',
+            type: 'propertyChanged',
+            data: changeData,
+        });
     }
 
     function __handleActiveControllerPropertyChanged(changeData) {
@@ -137,6 +147,7 @@ var AppController = function AppController(opts) {
     Object.defineProperty(this, 'activeController', {
         get: function() { return _activeController; },
         set: function(newActiveControllerKey) {
+            var prevActiveControllerKey = _activeControllerKey;
             if (newActiveControllerKey === null)
             {
                 __detachRendererFromController();
@@ -144,10 +155,16 @@ var AppController = function AppController(opts) {
                 {
                     _activeController.off('propertyChanged', __handleActiveControllerPropertyChanged);
                 }
-                return _activeController = null;
+                console.log('x', newActiveControllerKey);
+                this.emit('propertyChanged', {
+                    property: 'activeController',
+                    newValue: _activeControllerKey,
+                    oldValue: prevActiveControllerKey
+                });
+                return _activeControllerKey = _activeController = null;
             }
-            var ctrlKey = _loadedControllerKeys.indexOf(newActiveControllerKey);
-            if (ctrlKey === -1)
+            var ctrlIndex = _loadedControllerKeys.indexOf(newActiveControllerKey);
+            if (ctrlIndex === -1)
             {
                 throw 'Controller not loaded';
             }
@@ -157,15 +174,33 @@ var AppController = function AppController(opts) {
             {
                 _activeController.off('propertyChanged', __handleActiveControllerPropertyChanged);
             }
-            _activeController = _loadedControllers[ctrlKey];
+            _activeControllerKey = newActiveControllerKey;
+            _activeController = _loadedControllers[ctrlIndex];
             _activeController.on('propertyChanged', __handleActiveControllerPropertyChanged);
             __attachRendererToController(prevPlaying);
+            this.emit('propertyChanged', {
+                property: 'activeController',
+                newValue: _activeControllerKey,
+                oldValue: prevActiveControllerKey
+            });
         },
+    });
+
+    Object.defineProperty(this, 'nextControllerKey', {
+        get: function() {
+            return (!_loadedControllers.length) ? null :
+                ((_activeControllerKey === null) ? 0 :
+                    _loadedControllerKeys[(_loadedControllerKeys.indexOf(_activeControllerKey) + 1) % _loadedControllerKeys.length]);
+        }
     });
 
     Object.defineProperty(this, 'loadedControllers', {
         get: function() { return _loadedControllerKeys.slice(); },
     });
+
+    this.useNextController = function() {
+        this.activeController = this.nextControllerKey;
+    };
 
     this.loadController = function(key, cubeCtrl) {
         if (!(cubeCtrl instanceof CubeController))
@@ -197,6 +232,8 @@ var AppController = function AppController(opts) {
         }
         return this;
     };
+
+    this.on('propertyChanged', __handleOwnPropertyChanged);
 
     applyOptions.call(this, _options);
 

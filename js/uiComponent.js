@@ -16,6 +16,7 @@ var UIComponent = function UIComponent(opts) {
         /**
          * ComponentEventCb details:
          * - "this" is component
+         * - event.appCtrl === appController
          * - event.ctrl === activeController
          * - event.type === type from "original" event (from component)
          * - event.data === data from "original" event (from component)
