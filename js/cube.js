@@ -2,7 +2,7 @@ var Cube = function Cube(size, opts) {
     var cube = this;
 
     // DEFINE SOME PROPERTIES
-    var _size = size;
+    var _size = size || 0;
     var _cells = [];
     var __defaultOptions = {};
 
