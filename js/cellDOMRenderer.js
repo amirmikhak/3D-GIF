@@ -18,7 +18,9 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
     var __parentDefaultOptions = this.getDefaultOptions();
     var _parentOptionKeys = Object.keys(__parentDefaultOptions);
     for (var i = 0, numOpts = _parentOptionKeys.length; i < numOpts; i++) {
-        __defaultOptions[_parentOptionKeys[i]] = __parentDefaultOptions[_parentOptionKeys[i]];
+        __defaultOptions[_parentOptionKeys[i]] = (_parentOptionKeys[i] in __defaultOptions) ?
+            __defaultOptions[_parentOptionKeys[i]] :
+            __parentDefaultOptions[_parentOptionKeys[i]];
     }
 
     var _opts = opts || {};
