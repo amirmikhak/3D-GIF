@@ -41,7 +41,7 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
     }
 
     function __containerClickListener(e) {
-        var ownCb = uiPlayingCheckbox.html.querySelector('input');
+        var ownCb = uiPlayingCheckbox.containerEl.querySelector('input');
         ownCb.checked = !ownCb.checked;
         // yoinked from http://darktalker.com/2010/manually-trigger-dom-event/
         evt = document.createEvent('HTMLEvents');
@@ -49,16 +49,13 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
         ownCb.dispatchEvent(evt);
     }
 
-    function __bindOwnListeners() {
-        this.html.addEventListener('change', __changeListener);
-    }
-
     function __bindContainerListeners() {
+        this.containerEl.addEventListener('change', __changeListener);
         this.containerEl.addEventListener('click', __containerClickListener);
     }
 
     function __unbindListeners(el) {
-        this.html.removeEventListener('change', __changeListener);
+        this.containerEl.removeEventListener('change', __changeListener);
         this.containerEl.removeEventListener('change', __containerClickListener);
     }
 
@@ -92,6 +89,7 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
     }
 
     function __buildHTML() {
+        var frag = document.createDocumentFragment();
         var wrapperLabel = document.createElement('label');
         var inputEl = document.createElement('input');
         inputEl.name = 'playing';
@@ -101,17 +99,18 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
         textSpan.innerHTML = 'Play';
         wrapperLabel.appendChild(textSpan);
         wrapperLabel.appendChild(inputEl);
+        frag.appendChild(wrapperLabel);
+        return frag;
         return wrapperLabel;
     }
 
     // init
     __addStyles();
     this.containerEl.classList.add(__guid);
-    this.containerEl.appendChild(__buildHTML());
-    applyOptions.call(this, _options);
-    this.html = this.containerEl;
-    __bindOwnListeners.call(this);
+    this.html = __buildHTML();
     __bindContainerListeners.call(this);
+
+    applyOptions.call(this, _options);
 
     return this;
 

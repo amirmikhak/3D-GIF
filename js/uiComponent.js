@@ -45,7 +45,7 @@ var UIComponent = function UIComponent(opts) {
     Object.defineProperty(this, 'html', {
         get: function() { return _html; },
         set: function(newHTML) {
-            if (!(newHTML instanceof HTMLElement) && !(newHTML instanceof DocumentFragment))
+            if ((newHTML !== null) && !(newHTML instanceof HTMLElement) && !(newHTML instanceof DocumentFragment))
             {
                 throw 'Invalid htmlEl';
             }
@@ -54,7 +54,9 @@ var UIComponent = function UIComponent(opts) {
                 return;
             }
             _options['containerEl'].innerHTML = '';
-            _options['containerEl'].appendChild(newHTML);
+            if (newHTML) {
+                _options['containerEl'].appendChild(newHTML);
+            }
         },
     });
 
