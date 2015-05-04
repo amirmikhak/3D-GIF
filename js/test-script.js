@@ -1,3 +1,7 @@
+var _eventPropertyChangedIs = function(e, p) {
+    return (e.type === 'propertyChanged') && e.data && (e.data.property === p);
+}
+
 var CubeAssets = new CubeAssetsStore();
 CubeAssets.loadFont('printChar21', '/js/assets/cube8PrintChar21Font.json');
 var loadShapes = new Promise(function(success, failure) {
@@ -16,21 +20,25 @@ var domMediator = new UIMediator({
     },
 })).addComponent('playToggle', new UIDOMPlayingCheckbox({
     containerEl: document.getElementsByClassName('play')[0],
-    controllerEventCb: function(event) {
-        if ((event.type === 'propertyChanged') &&
-            event.data && (event.data.property === 'playing'))
-        {
-            this.html.classList.toggle('playing', event.data.newValue);
-            this.checked = event.data.newValue;
-        }
-    },
     componentEventCb: function(event) {
         if (event.ctrl.hasOwnProperty('playing'))
         {
-            console.log('playing checked', this.checked);
             this.html.classList.toggle('playing', this.checked);
             event.ctrl.playing = this.checked;
-            return;
+        }
+    },
+    controllerEventCb: function(event) {
+        if (_eventPropertyChangedIs(event, 'playing'))
+        {
+            _setPlaying.call(this, event.data.newValue);
+        } else if (_eventPropertyChangedIs(event, 'activeController'))
+        {
+            _setPlaying.call(this, event.ctrl.playing);
+        }
+
+        function _setPlaying(newPlaying) {
+            this.html.classList.toggle('playing', newPlaying);
+            this.checked = newPlaying;
         }
     },
     componentEventCb: function(event) {

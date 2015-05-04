@@ -40,18 +40,32 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
         }
     }
 
-    function __bindListeners(el) {
-        el.addEventListener('change', __changeListener);
+    function __containerClickListener(e) {
+        var ownCb = uiPlayingCheckbox.html.querySelector('input');
+        ownCb.checked = !ownCb.checked;
+        // yoinked from http://darktalker.com/2010/manually-trigger-dom-event/
+        evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, true); // event type,bubbling,cancelable
+        ownCb.dispatchEvent(evt);
+    }
+
+    function __bindOwnListeners() {
+        this.html.addEventListener('change', __changeListener);
+    }
+
+    function __bindContainerListeners() {
+        this.containerEl.addEventListener('click', __containerClickListener);
     }
 
     function __unbindListeners(el) {
-        el.removeEventListener('change', __changeListener);
+        this.html.removeEventListener('change', __changeListener);
+        this.containerEl.removeEventListener('change', __containerClickListener);
     }
 
     Object.defineProperty(this, '_destroyer', {
         writable: false,
         value: function() {
-            __unbindListeners(this.html);
+            __unbindListeners.call(this);
             __jss.destroy();
         },
     });
@@ -96,7 +110,8 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
     this.containerEl.appendChild(__buildHTML());
     applyOptions.call(this, _options);
     this.html = this.containerEl;
-    __bindListeners(this.html);
+    __bindOwnListeners.call(this);
+    __bindContainerListeners.call(this);
 
     return this;
 

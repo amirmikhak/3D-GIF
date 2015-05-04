@@ -21,6 +21,13 @@ var UIComponent = function UIComponent(opts) {
          * - event.data === data from "original" event (from component)
          */
         controllerEventCb: __fnNop,
+        /**
+         * ControllerEventCb details:
+         * - "this" is component
+         * - event.ctrl === activeController
+         * - event.type === type from "original" event (from component)
+         * - event.data === data from "original" event (from component)
+         */
     };
 
     var _opts = opts || {};
