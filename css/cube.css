@@ -185,10 +185,6 @@ body {
     bottom: 0;
 }
 
-.color-list .swatch > div {
-    background-color: attr(data-color); /* someday this will work, but not yet. JS to the rescue! */
-}
-
 .write-face-list .swatch > div {
     box-sizing: border-box;
     font-size: 9px;

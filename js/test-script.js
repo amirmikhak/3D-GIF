@@ -9,7 +9,25 @@ var loadShapes = new Promise(function(success, failure) {
 });
 
 var domMediator = new UIMediator({
-}).addComponent('clearButton', new UIDOMClearButton({
+}).addComponent('colorPicker', new UIDOMColorPicker({
+    containerEl: document.getElementsByClassName('color-picker')[0],
+    cubeOuterDimensions: 360,
+    componentEventCb: function(event) {
+        if (event.type === 'colorSelected')
+        {
+            event.ctrl.penColor = event.data;
+        }
+    },
+    controllerEventCb: function(event) {
+        if (_eventPropertyChangedIs(event, 'penColor'))
+        {
+            this.selectedColor = event.data.newValue;
+        } else if (_eventPropertyChangedIs(event, 'activeController'))
+        {
+            this.selectedColor = event.ctrl.penColor;
+        }
+    },
+})).addComponent('clearButton', new UIDOMClearButton({
     containerEl: document.getElementsByClassName('clear')[0],
     componentEventCb: function(event) {
         if (event.ctrl.can('clear'))
