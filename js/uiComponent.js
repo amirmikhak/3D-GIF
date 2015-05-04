@@ -78,7 +78,7 @@ var UIComponent = function UIComponent(opts) {
     Object.defineProperty(this, 'containerEl', {
         get: function() { return _options['containerEl']; },
         set: function(newContainerEl) {
-            if (!(newContainerEl instanceof HTMLElement) && (newMediator !== null))
+            if (!(newContainerEl instanceof HTMLElement) && (newContainerEl !== null))
             {
                 console.error('Invalid containerEl for UIComponent: must be HTMLElement.', newContainerEl);
                 throw 'Invalid containerEl';
