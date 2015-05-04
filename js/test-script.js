@@ -20,6 +20,22 @@ var domMediator = new UIMediator({
             return;
         }
     },
+})).addComponent('playToggle', new UIDOMPlayingCheckbox({
+    containerEl: document.getElementsByClassName('play')[0],
+    componentEventCb: function(event) {
+        /*
+         * "this" is component
+         * event.ctrl === activeController
+         * event.type === type from "original" event (from component)
+         * event.data === data from "original" event (from component)
+         */
+        this.html.classList.toggle('playing', this.checked);
+        if (event.ctrl.hasOwnProperty('playing'))
+        {
+            event.ctrl.playing = this.checked;
+            return;
+        }
+    },
 }));
 
 // Build a DOM Renderer for the cube so we can see it
