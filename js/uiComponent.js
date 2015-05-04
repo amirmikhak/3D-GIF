@@ -13,6 +13,13 @@ var UIComponent = function UIComponent(opts) {
         visibleCondition: __fnTrueCb,
         enabledCondition: __fnTrueCb,
         componentEventCb: __fnNop,
+        /**
+         * ComponentEventCb details:
+         * - "this" is component
+         * - event.ctrl === activeController
+         * - event.type === type from "original" event (from component)
+         * - event.data === data from "original" event (from component)
+         */
         controllerEventCb: __fnNop,
     };
 

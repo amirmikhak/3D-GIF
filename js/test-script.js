@@ -8,12 +8,6 @@ var domMediator = new UIMediator({
 }).addComponent('clearButton', new UIDOMClearButton({
     containerEl: document.getElementsByClassName('clear')[0],
     componentEventCb: function(event) {
-        /*
-         * "this" is component
-         * event.ctrl === activeController
-         * event.type === type from "original" event (from component)
-         * event.data === data from "original" event (from component)
-         */
         if (event.ctrl.can('clear'))
         {
             event.ctrl.clear.call(event.ctrl, event.data);
@@ -23,12 +17,6 @@ var domMediator = new UIMediator({
 })).addComponent('playToggle', new UIDOMPlayingCheckbox({
     containerEl: document.getElementsByClassName('play')[0],
     componentEventCb: function(event) {
-        /*
-         * "this" is component
-         * event.ctrl === activeController
-         * event.type === type from "original" event (from component)
-         * event.data === data from "original" event (from component)
-         */
         this.html.classList.toggle('playing', this.checked);
         if (event.ctrl.hasOwnProperty('playing'))
         {
