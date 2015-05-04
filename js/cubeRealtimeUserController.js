@@ -417,6 +417,10 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
 CubeRealtimeUserController.prototype = Object.create(CubeController.prototype);
 CubeRealtimeUserController.prototype.constructor = CubeRealtimeUserController;
 
+CubeRealtimeUserController.prototype.write = function write(tile) {
+    this.cube.writeSlice(tile, this.writeFace);
+};
+
 CubeRealtimeUserController.prototype.getAnimationCb = function getAnimationCb() {
     var that = this;
     if (this.action === 'slide')

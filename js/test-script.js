@@ -40,6 +40,22 @@ var domMediator = new UIMediator({
             this.cubeOuterDimensions = event.ctrl.renderer.outerDimensions;
         }
     },
+})).addComponent('shapePicker', new UIDOMShapePicker({
+    containerEl: document.getElementsByClassName('shape-picker')[0],
+    shapes: CubeAssets.activeShapeSetShapes,
+    componentEventCb: function(event) {
+        if (event.ctrl.can('write'))
+        {
+            event.ctrl.write.call(event.ctrl, this.shapes[event.data]);
+            return;
+        }
+    },
+    controllerEventCb: function(event) {
+        if (event.type === 'rendererPropertyChanged')
+        {
+            this.cubeOuterDimensions = event.ctrl.renderer.outerDimensions;
+        }
+    },
 })).addComponent('clearButton', new UIDOMClearButton({
     containerEl: document.getElementsByClassName('clear')[0],
     componentEventCb: function(event) {
@@ -125,23 +141,8 @@ var appCtrl = new AppController({
 }));
 
 loadShapes.then(function shapesLoaded() {
-    appCtrl.mediator.addComponent('shapePicker', new UIDOMShapePicker({
-        containerEl: document.getElementsByClassName('shape-picker')[0],
-        shapesGetter: function() { return CubeAssets.activeShapeSetShapes; },
-        componentEventCb: function(event) {
-            /*
-             * "this" is component
-             * event.ctrl === activeController
-             * event.type === type from "original" event (from component)
-             * event.data === data from "original" event (from component)
-             */
-            if (event.ctrl.can('write'))
-            {
-                event.ctrl.write.call(event.ctrl, event.data);
-                return;
-            }
-        },
-    }));
+    console.log('assigning shapes to shape-picker component', CubeAssets.activeShapeSetShapes);
+    domMediator.getComponent('shapePicker').shapes = CubeAssets.activeShapeSetShapes;
 
     console.log('adding shape tiles to playlist...');
     appCtrl.activeController = 'playlist';

@@ -8,7 +8,7 @@ var UIDOMShapePicker = function UIDOMShapePicker(opts) {
     var __fnNop = function() {};
 
     var __defaultOptions = {
-        shapesGetter: __fnNop,
+        shapes: null,
         cubeOuterDimensions: 0,
     };
 
@@ -29,81 +29,117 @@ var UIDOMShapePicker = function UIDOMShapePicker(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
-    function __clickListener(e) {
-        console.log('click in shapepicker');
-        uiShapePicker.componentEventCb({
-            type: 'shapeSelected',
-            data: e.target.dataset.shape,
-        });
+    function __containerClickListener(e) {
+        var swatch = getClosest(e.target, '.swatch');
+        if (!swatch || e.target.nodeName === 'INPUT')
+        {
+            return; // clicked in white space between cells
+        }
+        if (uiShapePicker.mediator)
+        {
+            uiShapePicker.mediator.emit('componentEvent', {
+                type: 'shapeSelected',
+                data: e.target.dataset.shape,
+                component: uiShapePicker,
+                callback: uiShapePicker.componentEventCb,
+            });
+        }
     }
 
-    function __bindListeners(el) {
-        el.addEventListener('click', __clickListener);
+    function __bindContainerListeners() {
+        this.containerEl.addEventListener('click', __containerClickListener);
     }
 
-    function __unbindListeners(el) {
-        el.removeEventListener('click', __clickListener);
-    }
-
-    function __buildHTML(shapes) {
-        var pickerEl = document.createElement('div');
-        var shapeNames = Object.keys(shapes);
-        pickerEl.innerHTML = shapeNames.map(function(shapeName) {
-            var shapeRender = new CubeTile(shapes[shapeName]).getPngData();
-            return `<div class="swatch" data-shapeName="${shapeName}"
-                style="background-image:url('${shapeRender}');
-                    background-size:cover;
-                    background-position:50% 50%;"></div>`;
-        }).join('');
-        // !TODO: Fix this. We need this correction look correct.
-        var shapePickerHeight = pickerEl.getBoundingClientRect().height - 120;
-        pickerEl.style.position = 'absolute';
-        pickerEl.style.top = `calc(50% - ${(shapePickerHeight / 2)}px)`;
-        pickerEl.style.right = `calc(50% - ${_options['cubeOuterDimensions']}px)`;
-        __bindListeners(pickerEl);
-        return pickerEl;
+    function __unbindListeners() {
+        this.containerEl.removeEventListener('click', __containerClickListener);
     }
 
     Object.defineProperty(this, '_destroyer', {
         writable: false,
         value: function() {
             this.html.innerHTML = '';
-            __unbindListeners(this.html);
+            __unbindListeners.call(uiShapePicker);
         },
     });
 
-    Object.defineProperty(this, 'shapesGetter', {
-        get: function() { return _options['shapesGetter']; },
-        set: function(newValue) {
-            if (typeof newValue !== 'function')
+    Object.defineProperty(this, 'shapes', {
+        get: function() { return _options['shapes']; },
+        set: function(newShapes) {
+            if ((newShapes !== null) && !(newShapes instanceof Object))
             {
-                console.error('Invalid shapesGetter for UIComponent: must be function.', newValue);
-                var err = 'Invalid shapesGetter';
-                throw err;
+                console.error('Invalid shapes for UIDOMShapePicker: ' +
+                    'must be object mapping shape names, each to an array of its cell states.', newShapes);
+                throw 'Invalid shapes';
             }
-
-            var prevValue = _options['shapesGetter'];
+            var prevShapes = _options['shapes'];
+            _options['shapes'] = newShapes;
+            __updateDOM.call(this);
             this.emit('propertyChanged', {
-                property: 'shapesGetter',
-                newValue: newValue,
-                oldValue: prevValue,
+                property: 'shapes',
+                oldValue: prevShapes,
+                newValue: newShapes,
             });
-            _options['shapesGetter'] = newValue;
         },
     });
 
     Object.defineProperty(this, 'cubeOuterDimensions', {
         get: function() { return _options['cubeOuterDimensions']; },
-        set: function(newOuterDimensions) { return _options['cubeOuterDimensions'] = newOuterDimensions; },
+        set: function(newCubeOuterDimensions) {
+            var parsed = parseInt(newCubeOuterDimensions, 10);
+            if (isNaN(parsed) || (parsed < 0))
+            {
+                console.error('Invalid cubeOuterDimensions for UIDOMShapePicker: ' +
+                    'must be positive integer or zero.', newCubeOuterDimensions);
+                throw 'Invalid cubeOuterDimensions';
+            }
+            var prevCubeOuterDimensions = _options['cubeOuterDimensions'];
+            _options['cubeOuterDimensions'] = newCubeOuterDimensions;
+            __updateContainerElDOM.call(this);
+            this.emit('propertyChanged', {
+                property: 'cubeOuterDimensions',
+                oldValue: prevCubeOuterDimensions,
+                newValue: newCubeOuterDimensions,
+            });
+        },
     });
 
-    // if shapes change...
-    _options['controllerEventCb'] = function(changeData) {
-        this.html = __buildHTML(_options['shapesGetter']());
-    };
+    function __buildHTML(shapes) {
+        if (!this.shapes)
+        {
+            return null;
+        }
+        var that = this;
+        var pickerFrag = document.createDocumentFragment();
+        Object.keys(this.shapes).map(function(shapeName) {
+            var shapeRender = new CubeTile(that.shapes[shapeName]).getPngData();
+            var swatchEl = document.createElement('div');
+            swatchEl.classList.add('swatch');
+            swatchEl.dataset.shape = shapeName;
+            swatchEl.style.backgroundImage = `url('${shapeRender}')`;
+            swatchEl.style.backgroundSize = 'cover';
+            swatchEl.style.backgroundPosition = '50% 50%;';
+            return swatchEl;
+        }).forEach(function(swatchEl) {
+            document.appendChild.call(pickerFrag, swatchEl);
+        });
+        return pickerFrag;
+    }
+
+    function __updateDOM() {
+        __unbindListeners.call(this);
+        this.html = __buildHTML.call(this);
+        __updateContainerElDOM.call(this);
+        __bindContainerListeners.call(this);
+    }
+
+    function __updateContainerElDOM() {
+        this.containerEl.classList.add('shape-list');
+        this.containerEl.style.position = 'absolute';
+        this.containerEl.style.top = `calc(50% - ${(this.containerEl.getBoundingClientRect().height - 120) / 2}px)`;
+        this.containerEl.style.right = `calc(50% - ${_options['cubeOuterDimensions']}px)`;
+    }
 
     // init
-    this.html = __buildHTML(_options['shapesGetter']());
     applyOptions.call(this, _options);
 
     return this;
