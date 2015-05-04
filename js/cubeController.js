@@ -133,6 +133,11 @@ var CubeController = function CubeController(opts) {
                     _options['renderer'].stopRenderLoop();
                 }
             }
+            this.emit('propertyChanged', {
+                property: 'playing',
+                oldValue: prevPlaying,
+                newValue: _options['playing'],
+            });
         },
     });
 

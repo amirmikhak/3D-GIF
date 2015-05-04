@@ -8,14 +8,11 @@ var UIMediator = function UIMediator() {
     var _components = [];
 
     function __handleControllerEvent(event) {
-        // !TODO: __handleControllerEvent incomplete, untested
-        console.log('__handleControllerEvent', event);
         _components.forEach(function(component) {
-            console.log('emitting to component', component);
-            component.emit('mediatedEvent', {
-                origin: 'controller',
+            component.controllerEventCb.call(component, {
                 type: event.type,
                 data: event.data,
+                ctrl: event.ctrl,
             });
         });
     }

@@ -58,6 +58,9 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
 
     Object.defineProperty(this, 'checked', {
         get: function() { return _checked; },
+        set: function(newChecked) {
+            this.containerEl.querySelector('input').checked = !!newChecked;
+        },
     });
 
     this.getDefaultOptions = function() {

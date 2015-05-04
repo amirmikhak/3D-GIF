@@ -38,12 +38,14 @@ var AppController = function AppController(opts) {
             appCtrl.mediator.emit('controllerEvent', {
                 type: event.type,
                 data: event.data,
+                ctrl: _activeController,
             });
         }
     }
 
     function __handleActiveControllerPropertyChanged(changeData) {
-        appCtrl.emit('mediatedEvent', {
+        // !TODO: fix unnecessary indirection of events/callers
+        appCtrl.mediator.emit('mediatedEvent', {
             origin: 'controller',
             type: 'propertyChanged',
             data: changeData,

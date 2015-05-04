@@ -16,6 +16,23 @@ var domMediator = new UIMediator({
     },
 })).addComponent('playToggle', new UIDOMPlayingCheckbox({
     containerEl: document.getElementsByClassName('play')[0],
+    controllerEventCb: function(event) {
+        if ((event.type === 'propertyChanged') &&
+            event.data && (event.data.property === 'playing'))
+        {
+            this.html.classList.toggle('playing', event.data.newValue);
+            this.checked = event.data.newValue;
+        }
+    },
+    componentEventCb: function(event) {
+        if (event.ctrl.hasOwnProperty('playing'))
+        {
+            console.log('playing checked', this.checked);
+            this.html.classList.toggle('playing', this.checked);
+            event.ctrl.playing = this.checked;
+            return;
+        }
+    },
     componentEventCb: function(event) {
         this.html.classList.toggle('playing', this.checked);
         if (event.ctrl.hasOwnProperty('playing'))
