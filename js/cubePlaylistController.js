@@ -802,7 +802,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     };
 
     this.on('propertyChanged', function(changeData) {
-        if (changeData.setting === 'animationInterval')
+        if (changeData.property === 'animationInterval')
         {
             __updateAnimationSettings();
             __updateGeneratedFrameValidTimes();

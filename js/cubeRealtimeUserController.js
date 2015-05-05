@@ -398,7 +398,7 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
     };
 
     this.on('propertyChanged', function(changeData) {
-        if (changeData.setting === 'animationInterval')
+        if (changeData.property === 'animationInterval')
         {
             if (cubeRealtimeUserController.playing)
             {
