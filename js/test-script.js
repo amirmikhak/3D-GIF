@@ -120,14 +120,81 @@ var domMediator = new UIMediator({
     controllerEventCb: function(event) {
         if (_eventPropertyChangedIs(event, 'activeController'))
         {
+            // !TODO: consider a more elegant way (not using instanceof) of determining whether this should be visible
             if (event.ctrl instanceof CubeRealtimeUserController)
             {
                 this.bringToFront();
                 this.selectedDirection = event.ctrl.direction;
+                // !TODO: add support for setting animationInterval from GUI
+                // this.selectedAnimationInterval = event.ctrl.animationInterval;
             } else
             {
                 this.sendToBack();
             }
+        }
+    },
+})).addComponent('playlistControls', new UIDOMPlaylistControls({
+    containerEl: document.getElementsByClassName('playlist-controls')[0],
+    controllerInitCb: function(appCtrl) {
+        var ctrl = appCtrl.activeController;
+        if (ctrl && ctrl.direction) {
+            this.selectedDirection = ctrl.direction;
+        }
+        if (ctrl && ctrl.wrapDirection) {
+            this.selectedWrapDirection = ctrl.wrapDirection;
+        }
+    },
+    componentEventCb: function(event) {
+        var enumProperties = ['wrapDirection', 'mode'];
+        enumProperties.forEach(function(prop) {
+            if (event.ctrl.hasOwnProperty(prop + 's') && event.ctrl[prop + 's'].indexOf(event.data) !== -1)
+            {
+                event.ctrl[prop] = event.data;
+            }
+        });
+        if (event.type === 'loopingChanged')
+        {   // !TODO: ensure that loops -> looping rename works
+            if (event.ctrl.hasOwnProperty('looping'))
+            {
+                event.ctrl.looping = !!event.data;
+            }
+        }
+        if (event.type === 'spacingChanged')
+        {   // !TODO: add handing for spacingChanged to UIDOMPlaylistControls
+        }
+        if (event.type === 'animationIntervalChanged')
+        {   // !TODO: add handing for animationIntervalChanged to UIDOMPlaylistControls
+        }
+    },
+    controllerEventCb: function(event) {
+        if (_eventPropertyChangedIs(event, 'activeController'))
+        {
+            // !TODO: consider a more elegant way (not using instanceof) of determining whether this should be visible
+            if (event.ctrl instanceof CubePlaylistController)
+            {
+                this.selectedLooping = event.ctrl.looping;
+                this.selectedMode = event.ctrl.mode;
+                this.selectedWrapDirection = event.ctrl.wrapDirection;
+                // !TODO: ensure that tiles (or something like it) is defined on PlaylistController to be able render/manipulate each in the GUI
+                // this.selectedTiles = event.ctrl.tiles;
+                // !TODO: add support for setting spacing from GUI
+                // this.selectedSpacing = event.ctrl.spacing;
+                // !TODO: add support for setting animationInterval from GUI
+                // this.selectedAnimationInterval = event.ctrl.animationInterval;
+                this.bringToFront();
+            } else
+            {
+                this.sendToBack();
+            }
+        } else if (_eventPropertyChangedIs(event, 'looping'))
+        {
+            this.selectedLooping = event.ctrl.looping;
+        } else if (_eventPropertyChangedIs(event, 'mode'))
+        {
+            this.selectedMode = event.ctrl.mode;
+        } else if (_eventPropertyChangedIs(event, 'wrapDirection'))
+        {
+            this.selectedWrapDirection = event.ctrl.wrapDirection;
         }
     },
 })).addComponent('clearButton', new UIDOMClearButton({

@@ -49,7 +49,7 @@ JsStyleSheet.prototype.insertRule = function(_selector, _props, _index) {
     }
     var propsStr = _props && (typeof _props === 'object') ? __propsToString(_props) : _props;
     var rulesStr = selector + ' {' + propsStr + '}';
-    console.log('JSS rule:', rulesStr);
+    console.info('JSS rule:', rulesStr);
     this.css.insertRule(rulesStr, _index);
 
     return this;

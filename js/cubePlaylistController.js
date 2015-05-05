@@ -15,7 +15,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         mode: 'through',
         writeFace: 'front',
         wrapDirection: 'cw',
-        loops: true,
+        looping: true,
         spacing: 2,       // number of ticks between tile rendering before next appears
         frameCacheSize: 0,
     };
@@ -158,7 +158,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     function __updateDuration() {
         _duration = _options['mode'] === 'through' ?
             __tilesWithSpacing.length * cubePlaylistController.animationInterval :
-            __tileStrip.length * cubePlaylistController.animationInterval // update duration, used for _options['loops']
+            __tileStrip.length * cubePlaylistController.animationInterval // update duration, used for _options['looping']
     }
 
     function __updateAnimator() {
@@ -288,7 +288,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     function __getSelfTickingTile() {
         var numTiles = __tilesWithSpacing.length;
         var tileIndexToReturn = __prevTileIdx + 1;
-        if (cubePlaylistController.loops) {
+        if (cubePlaylistController.looping) {
             tileIndexToReturn = tileIndexToReturn % (numTiles);
         } else
         {
@@ -308,7 +308,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     function __getSelfTickingTileStripCursor() {
         var numTileStrips = __tileStrip.length;
         var tileStripIndexToReturn = __prevStripIdx + 1;
-        if (cubePlaylistController.loops) {
+        if (cubePlaylistController.looping) {
             tileStripIndexToReturn = tileStripIndexToReturn % (numTileStrips - 1);
         } else
         {
@@ -407,7 +407,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     }
 
     function __stopIfShould() {
-        if (!_options['loops'] &&
+        if (!_options['looping'] &&
             (this.lastRenderedTime > this.animationStartTime + _duration))
         {
             cubePlaylistController.playing = false;
@@ -656,7 +656,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     Object.defineProperty(this, 'getRenderFrame', {
         writable: false,
         value: function getRenderFrame(renderTime) {
-            var localRenderTime = _options['loops'] ? (renderTime % _duration) : renderTime;
+            var localRenderTime = _options['looping'] ? (renderTime % _duration) : renderTime;
             var currFrame = cubePlaylistController.currentAnimationFrame;
             if (!currFrame)
             {
@@ -664,7 +664,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
                 return cubePlaylistController.getEmptyCube();
             } else if (localRenderTime < currFrame.start)
             {
-                if (_options['loops'])
+                if (_options['looping'])
                 {
                     cubePlaylistController.clearAnimationFrames();
                     cubePlaylistController.repopulateAnimationFrames();
@@ -752,15 +752,15 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         }
     });
 
-    Object.defineProperty(this, 'loops', {
-        get: function() { return _options['loops']; },
+    Object.defineProperty(this, 'looping', {
+        get: function() { return _options['looping']; },
         set: function(shouldLoop) {
-            var prevLoops = _options['loops'];
-            _options['loops'] = !!shouldLoop;
+            var prevLoops = _options['looping'];
+            _options['looping'] = !!shouldLoop;
 
             this.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
-                property: 'loops',
-                newValue: _options['loops'],
+                property: 'looping',
+                newValue: _options['looping'],
                 oldValue: prevLoops,
             });
         }

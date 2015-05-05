@@ -7,7 +7,7 @@ var CubeController = function CubeController(opts) {
     var __emptyCube = new Cube(8);
 
     var __defaultOptions = {
-        cube: null,
+        cube: new Cube,
         renderer: null,
         playing: false,
         animationInterval: 1,
