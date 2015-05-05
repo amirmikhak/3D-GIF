@@ -685,7 +685,8 @@ var CubePlaylistController = function CubePlaylistController(opts) {
                 return cubePlaylistController.getRenderFrame(localRenderTime);
             } else
             {
-                console.error('else', localRenderTime, currFrame.start, currFrame.end, currFrame, cubePlaylistController.animationFrames.length);
+                // console.warn('else', localRenderTime, currFrame.start, currFrame.end, currFrame, cubePlaylistController.animationFrames.length);
+                return cubePlaylistController.getEmptyCube();
             }
         },
     });
