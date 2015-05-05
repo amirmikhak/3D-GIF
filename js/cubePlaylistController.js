@@ -234,6 +234,14 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         __generateAnimationFrames();
     }
 
+    function __emitTileChangeEvent() {
+        cubePlaylistController.emit(PLAYLIST_SETTINGS_CHANGE_NAME, {
+            property: 'playlistTiles',
+            oldValue: null,
+            newValue: cubePlaylistController.fullTileData,
+        });
+    }
+
     function __refreshAnimationFramesWithGenerated() {
         cubePlaylistController.clearAnimationFrames();
         cubePlaylistController.repopulateAnimationFrames();
@@ -494,11 +502,9 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         {
             return;
         }
-
         _tiles.splice(newIndex, 0, _tiles.splice(tileIndex, 1));
-
         __updateForTileChange();
-
+        __emitTileChangeEvent();
         return this;
     };
 
@@ -508,11 +514,9 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         {
             return this.moveTile(newTile, index);
         }
-
         _tiles.splice(index, 0, newTile);
-
         __updateForTileChange();
-
+        __emitTileChangeEvent();
         return this;
     };
 
@@ -524,35 +528,35 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         });
         __batchInsertingTiles = false;
         __updateForTileChange();
+        __emitTileChangeEvent();
         return this;
     };
 
-    this.insertTileAtAndMoveCursor = function(newTile)
-    {
-        return this.insertTile(newTile, __userCursorPosition++);
-    }
-
     this.appendTile = function(newTile) {
         _tiles.push(newTile);
-
         __updateForTileChange();
+        __emitTileChangeEvent();
+        return this;
+    };
 
+    this.removeTileByIndex = function(index) {
+        _tiles.splice(index, 1);
+        __updateForTileChange();
+        __emitTileChangeEvent();
         return this;
     };
 
     this.removeTile = function(tile) {
         _tiles.splice(_tiles.indexOf(tile), 1);
-
         __updateForTileChange();
-
+        __emitTileChangeEvent();
         return this;
     };
 
     this.replaceTile = function(index, tile) {
         _tiles.splice(index, 1, tile);
-
         __updateForTileChange();
-
+        __emitTileChangeEvent();
         return this;
     };
 
@@ -567,6 +571,18 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     this.getEmptyTile = function() {
         return __emptyTile;
     };
+
+    Object.defineProperty(this, 'fullTileData', {
+        get: function() {
+            return _tiles.map(function(tileData, idx) {
+                return {
+                    'idx': idx,
+                    'data': tileData,
+                    'thumb': __tileThumbs[idx],
+                };
+            });
+        },
+    });
 
 
     /**

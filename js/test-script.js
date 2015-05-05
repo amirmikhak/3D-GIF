@@ -143,6 +143,9 @@ var domMediator = new UIMediator({
         if (ctrl && ctrl.wrapDirection) {
             this.selectedWrapDirection = ctrl.wrapDirection;
         }
+        if (ctrl && ctrl.fullTileData) {
+            this.tiles = ctrl.fullTileData;
+        }
     },
     componentEventCb: function(event) {
         var enumProperties = ['wrapDirection', 'mode'];
@@ -153,17 +156,49 @@ var domMediator = new UIMediator({
             }
         });
         if (event.type === 'loopingChanged')
-        {   // !TODO: ensure that loops -> looping rename works
+        {
             if (event.ctrl.hasOwnProperty('looping'))
             {
                 event.ctrl.looping = !!event.data;
             }
-        }
-        if (event.type === 'spacingChanged')
+        } else if (event.type === 'spacingChanged')
         {   // !TODO: add handing for spacingChanged to UIDOMPlaylistControls
-        }
-        if (event.type === 'animationIntervalChanged')
+        } else if (event.type === 'animationIntervalChanged')
         {   // !TODO: add handing for animationIntervalChanged to UIDOMPlaylistControls
+        } else if (event.type === 'tileAdded')
+        {
+            if (!event.ctrl.can('insertTile'))
+            {
+                return;
+            }
+            var cubeTile;
+            if (event.data.tileType === 'raw')
+            {
+                cubeTile = event.data.tileData;
+            } else if (event.data.tileType === 'character')
+            {
+                var colorRGB = event.ctrl.cube.colors[event.ctrl.penColor];
+                cubeTile = CubeAssets.getCharacterRender(event.data.tileData, colorRGB);
+            } else if (event.data.tileType === 'shapeIndex')
+            {
+                var shapeName = Object.keys(CubeAssets.activeShapeSetShapes)[event.data.tileData];
+                if (shapeName)
+                {
+                    cubeTile = CubeAssets.getShapeRender(shapeName);
+                }
+            }
+            event.ctrl.insertTile.apply(event.ctrl, [
+                (cubeTile ? cubeTile : new EmptyCubeTile()),
+                event.data.tileIdx,
+            ]);
+            this.cursorPosition++;
+        } else if (event.type === 'tileBackspaced')
+        {
+            event.ctrl.removeTileByIndex.call(event.ctrl, event.data - 1);
+            this.cursorPosition--;
+        } else if (event.type === 'tileDeleted')
+        {
+            event.ctrl.removeTileByIndex.call(event.ctrl, event.data);
         }
     },
     controllerEventCb: function(event) {
@@ -175,8 +210,7 @@ var domMediator = new UIMediator({
                 this.selectedLooping = event.ctrl.looping;
                 this.selectedMode = event.ctrl.mode;
                 this.selectedWrapDirection = event.ctrl.wrapDirection;
-                // !TODO: ensure that tiles (or something like it) is defined on PlaylistController to be able render/manipulate each in the GUI
-                // this.selectedTiles = event.ctrl.tiles;
+                this.tiles = event.ctrl.fullTileData;
                 // !TODO: add support for setting spacing from GUI
                 // this.selectedSpacing = event.ctrl.spacing;
                 // !TODO: add support for setting animationInterval from GUI
@@ -195,6 +229,9 @@ var domMediator = new UIMediator({
         } else if (_eventPropertyChangedIs(event, 'wrapDirection'))
         {
             this.selectedWrapDirection = event.ctrl.wrapDirection;
+        } else if (_eventPropertyChangedIs(event, 'playlistTiles'))
+        {
+            this.tiles = event.ctrl.fullTileData;
         }
     },
 })).addComponent('clearButton', new UIDOMClearButton({

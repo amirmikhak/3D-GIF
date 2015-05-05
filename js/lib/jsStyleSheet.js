@@ -40,7 +40,7 @@ JsStyleSheet.prototype.insertRule = function(_selector, _props, _index) {
     }
 
     var _prefix = _selector.charAt(0);
-    var _selSansPrefix = _prefix === '&' ? _selector.substring(1) : _selector;
+    var _selSansPrefix = (_prefix === '&' ? _selector.substring(1) : _selector).trim();
     var selector = _selSansPrefix;
     if (this._guid.length)
     {

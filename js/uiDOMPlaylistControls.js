@@ -4,12 +4,12 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
 
     var uiPlaylistControls = this;
 
-    var __fnNop = function() {};
-
     var __defaultOptions = {
         wrapDirections: (new CubePlaylistController).wrapDirections,
         modes: (new CubePlaylistController).modes,
         tiles: [],
+        cursorPosition: 0,
+        inFocus: false,
     };
 
     var __parentDefaultOptions = this.getDefaultOptions();
@@ -39,6 +39,43 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
         inputEl.dispatchEvent(evt);
     }
 
+    function __getCursorEl() {
+        return uiPlaylistControls.containerEl ?
+            uiPlaylistControls.containerEl.querySelector('.cursor') :
+            null;
+    }
+
+    function __getTileTrayEl() {
+        return uiPlaylistControls.containerEl ?
+            uiPlaylistControls.containerEl.querySelector('.tile-tray') :
+            null;
+    }
+
+    function __renderTileElFromTileData(tile) {
+        var imgEl = document.createElement('img');
+        imgEl.src = tile.thumb;
+        var tileEl = document.createElement('div');
+        tileEl.className = 'tile';
+        tileEl.dataset.idx = tile.idx,
+        tileEl.appendChild(imgEl);
+        return tileEl;
+    }
+
+    function __rebuildTileTray() {
+        var that = this;
+        var tileEls = this.tiles.map(__renderTileElFromTileData);
+        var cursorEl = __getCursorEl();
+        if (cursorEl)
+        {
+            tileEls.splice(that.cursorPosition, 0, cursorEl);
+        }
+        var tileTrayEl = __getTileTrayEl();
+        tileTrayEl.innerHTML = '';
+        tileEls.forEach(function(tileEl) {
+            tileTrayEl.appendChild(tileEl);
+        });
+    }
+
     function __getRadioEls(key) {
         var radioSelector = 'input[type="radio"][name="' + key + '"]';
         var radioElList = uiPlaylistControls.containerEl.querySelectorAll(radioSelector);
@@ -61,6 +98,114 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
         }
     }
 
+    function __containerClickListener(e) {
+        uiPlaylistControls.inFocus = true;
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    function __documentClickListener(e) {
+        uiPlaylistControls.inFocus = false;
+    }
+
+    function __documentKeydownListener(e) {
+        var ui = uiPlaylistControls;
+        var keyMap = {
+            37: 'left',
+            38: 'up',
+            39: 'right',
+            40: 'down',
+            46: 'delete',
+            8: 'backspace',
+        };
+
+        if (ui.inFocus)
+        {
+            /**
+             * INSERT SHAPE
+             */
+            if (e.ctrlKey)
+            {
+                var charAsNum = parseInt(String.fromCharCode(e.which)) - 1;
+                if (!isNaN(charAsNum) && (charAsNum >= 0) && ui.mediator)
+                {
+                    ui.mediator.emit('componentEvent', {
+                        type: 'tileAdded',
+                        data: {
+                            tileIdx: ui.cursorPosition,
+                            tileType: 'shapeIndex',
+                            tileData: charAsNum,
+                        },
+                        component: ui,
+                        callback: ui.componentEventCb,
+                    });
+                }
+            }
+
+            /**
+             * CURSOR MOVEMENT (AND BACKSPACE/DELETE)
+             */
+            if (Object.keys(keyMap).indexOf(e.keyCode.toString()) === -1)
+            {
+                return;
+            } else if (keyMap[e.keyCode] === 'up')
+            {
+                ui.cursorPosition = 0;
+            } else if (keyMap[e.keyCode] === 'down')
+            {
+                ui.cursorPosition = ui.tiles.length;
+            } else if (keyMap[e.keyCode] === 'right')
+            {
+                ui.cursorPosition++;
+            } else if (keyMap[e.keyCode] === 'left')
+            {
+                ui.cursorPosition = Math.max(0, ui.cursorPosition - 1);
+            } else if (keyMap[e.keyCode] === 'delete')
+            {
+                if (ui.mediator)
+                {
+                    ui.mediator.emit('componentEvent', {
+                        type: 'tileDeleted',
+                        data: ui.cursorPosition,
+                        component: ui,
+                        callback: ui.componentEventCb,
+                    });
+                }
+            } else if (keyMap[e.keyCode] === 'backspace')
+            {
+                if (ui.mediator)
+                {
+                    ui.mediator.emit('componentEvent', {
+                        type: 'tileBackspaced',
+                        data: ui.cursorPosition,
+                        component: ui,
+                        callback: ui.componentEventCb,
+                    });
+                }
+            }
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            return;
+        }
+    }
+
+    function __documentKeypressListener(e) {
+        var ui = uiPlaylistControls;
+        if (ui.mediator)
+        {
+            ui.mediator.emit('componentEvent', {
+                type: 'tileAdded',
+                data: {
+                    tileIdx: ui.cursorPosition,
+                    tileType: 'character',
+                    tileData: String.fromCharCode(e.which),
+                },
+                component: ui,
+                callback: ui.componentEventCb,
+            });
+        }
+    }
+
     function __containerChangeListener(e) {
         if (uiPlaylistControls.containerEl && (e.target.name === 'modes'))
         {
@@ -73,7 +218,6 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
             var eventType = propIsSelectable ?
                 (e.target.name.slice(0, -1) + 'Selected') :
                 e.target.name + 'Changed';
-            console.log('eventtype', eventType);
             uiPlaylistControls.mediator.emit('componentEvent', {
                 type: eventType,
                 data: propIsSelectable ? e.target.value : e.target.checked, // !TODO: yuck...
@@ -83,12 +227,20 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
         }
     }
 
-    function __bindContainerListeners() {
+    function __bindListeners() {
         this.containerEl.addEventListener('change', __containerChangeListener);
+        this.containerEl.addEventListener('click', __containerClickListener);
+        document.addEventListener('click', __documentClickListener);
+        document.addEventListener('keydown', __documentKeydownListener);
+        document.addEventListener('keypress', __documentKeypressListener);
     }
 
     function __unbindListeners() {
         this.containerEl.removeEventListener('change', __containerChangeListener);
+        this.containerEl.removeEventListener('click', __containerClickListener);
+        document.removeEventListener('click', __documentClickListener);
+        document.removeEventListener('keydown', __documentKeydownListener);
+        document.removeEventListener('keypress', __documentKeypressListener);
     }
 
     Object.defineProperty(this, '_destroyer', {
@@ -100,7 +252,6 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
     });
 
     Object.defineProperty(this, 'tiles', {
-        // !TODO: actually implement tiles getter/setter
         get: function() { return _options['tiles']; },
         set: function(newTiles) {
             if ((newTiles !== null) && !(newTiles instanceof Array))
@@ -109,12 +260,12 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
                     'must be an array of CubeTiles.', newTiles);
                 throw 'Invalid tiles';
             }
-            var prevModes = _options['tiles'];
+            var prevTiles = _options['tiles'];
             _options['tiles'] = newTiles;
-            __updateDOM.call(this);
+            __rebuildTileTray.call(this);
             this.emit('propertyChanged', {
                 property: 'tiles',
-                oldValue: prevModes,
+                oldValue: prevTiles,
                 newValue: newTiles,
             });
         },
@@ -184,6 +335,43 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
         },
     });
 
+    Object.defineProperty(this, 'inFocus', {
+        get: function() { return _options['inFocus']; },
+        set: function(newInFocus) {
+            var prevInFocus = _options['inFocus'];
+            _options['inFocus'] = !!newInFocus;
+            this.containerEl.classList.toggle('focus', _options['inFocus']);
+            this.emit('propertyChanged', {
+                property: 'inFocus',
+                oldValue: prevInFocus,
+                newValue: newInFocus,
+            });
+        },
+    });
+
+    Object.defineProperty(this, 'cursorPosition', {
+        get: function() { return _options['cursorPosition']; },
+        set: function(newCursorPosition) {
+            var parsed = parseInt(newCursorPosition, 10);
+            if (isNaN(parsed))
+            {
+                console.error('Invalid cursor position for UIDOMPlaylistControls: must be integer', newCursorPosition);
+                throw 'Invalid cursorPosition';
+            }
+            parsed = (parsed < 0) ?
+                Math.max(0, this.tiles.length + parsed) :
+                Math.min(this.tiles.length, parsed);
+            var prevCursorPosition = _options['cursorPosition'];
+            _options['cursorPosition'] = parsed;
+            __rebuildTileTray.call(this);
+            this.emit('propertyChanged', {
+                property: 'cursorPosition',
+                oldValue: prevCursorPosition,
+                newValue: newCursorPosition,
+            });
+        },
+    });
+
     function __radioTabForItem(fieldName, item) {
         var inputEl = document.createElement('input');
         inputEl.type = 'radio';
@@ -223,8 +411,12 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
             return wrapDirectionSelectorEl;
         },
         tileTrayHTML: function() {
-            // !TODO: implement __buildTileTrayHTML()
-            return document.createDocumentFragment();
+            var cursorEl = document.createElement('div');
+            cursorEl.className = 'cursor';
+            var tileTrayEl = document.createElement('div');
+            tileTrayEl.className = 'tile-tray';
+            tileTrayEl.appendChild(cursorEl);
+            return tileTrayEl;
         },
         loopCheckboxHTML: function() {
             var inputEl = document.createElement('input');
@@ -374,13 +566,65 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
             'color': '#fff',
         }).insertRule('.looping-cb:hover input:checked + span', {
             'color': '#9f9',
+        }).insertRule('.tile-tray', {
+            'position': 'absolute',
+            'top': '0',
+            'bottom': '0',
+            'right': '0',
+            'left': '0',
+            'text-transform': 'uppercase',
+            'overflow-y': 'hidden',
+            'overflow-x': 'auto',
+            'white-space': 'nowrap',
+            'font-size': '0',
+            'background': '#fff',
+        }).insertRule('.tile', {
+            'box-sizing': 'border-box',
+            'display': 'inline-block',
+            'border': '1px solid #ccc',
+            'width': '42px',
+            'height': '42px',
+            'padding': '0',
+            'margin': '4px',
+        }).insertRule('.tile img', {
+            'width': '100%',
+            'height': '100%',
+        }).insertRule('.cursor', {
+            'position': 'relative',
+            'left': '-4px',
+            'width': '10px',
+            'height': '42px',
+            'display': 'none',
+        }).insertRule('&.focus', {
+            'border-color': '#777',
+        }).insertRule('&.focus .cursor', {
+            'display': 'inline-block',
+            '-webkit-animation': 'blink 700ms infinite linear alternate',
+            '-webkit-font-smoothing': 'antialiased',
+        }).insertRule(['.cursor:after', '.cursor:before'], {
+            'position': 'absolute',
+            'top': '5px',
+            'left': '3px',
+            'right': '0',
+            'bottom': '0',
+            'font-size': '48px',
+            'line-height': '24px',
+            'font-weight': '200',
+            'content': `']'`,
+            'color': '#555',
+            'text-align': 'center',
+        }).insertRule('.cursor:before', {
+            'perspective': '10px',
+            'transform-style': 'preserve-3d',
+            'transform-origin': '90% 50%',
+            'transform': 'rotateY(180deg)',
         });
     }
 
     function __updateDOM() {
         __unbindListeners.call(this);
         this.html = __buildHTML.call(this);
-        __bindContainerListeners.call(this);
+        __bindListeners.call(this);
     }
 
     // init
