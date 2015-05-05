@@ -26,17 +26,19 @@ var UIDOMColorPicker = function UIDOMColorPicker(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
-    function __containerClickListener(e) {
-        var swatch = getClosest(e.target, '.swatch');
-        if (!swatch || e.target.nodeName === 'INPUT')
-        {
-            return; // clicked in white space between cells
-        }
+    function __getRadioEls() {
+        var radioSelector = 'input[type="radio"][name="color"]';
+        var radioElList = uiColorPicker.containerEl.querySelectorAll(radioSelector);
+        var radioElArray = Array.prototype.slice.apply(radioElList);
+        return radioElArray;
+    }
+
+    function __containerChangeListener(e) {
         if (uiColorPicker.mediator)
         {
             uiColorPicker.mediator.emit('componentEvent', {
                 type: 'colorSelected',
-                data: e.target.dataset.color,
+                data: e.target.value,
                 component: uiColorPicker,
                 callback: uiColorPicker.componentEventCb,
             });
@@ -44,11 +46,11 @@ var UIDOMColorPicker = function UIDOMColorPicker(opts) {
     }
 
     function __bindContainerListeners() {
-        this.containerEl.addEventListener('click', __containerClickListener);
+        this.containerEl.addEventListener('change', __containerChangeListener);
     }
 
     function __unbindListeners() {
-        this.containerEl.removeEventListener('click', __containerClickListener);
+        this.containerEl.removeEventListener('change', __containerChangeListener);
     }
 
     Object.defineProperty(this, '_destroyer', {
@@ -81,23 +83,17 @@ var UIDOMColorPicker = function UIDOMColorPicker(opts) {
 
     Object.defineProperty(this, 'selectedColor', {
         get: function() {
-            var radioSelector = 'input[type="radio"][name="color"]';
-            var radioElList = this.containerEl.querySelectorAll(radioSelector);
-            var radioElArray = Array.prototype.slice.apply(radioElList);
-            var checked = radioElArray.filter(function(radioEl) {
+            var checked = __getRadioEls().filter(function(radioEl) {
                 return radioEl.checked;
             });
             return checked[0] ? checked[0].value : null;
         },
         set: function(newColor) {
-            var radioSelector = 'input[type="radio"][name="color"]';
-            var radioElList = this.containerEl.querySelectorAll(radioSelector);
-            var radioElArray = Array.prototype.slice.apply(radioElList);
-            radioElArray.forEach(function(input) {
+            __getRadioEls().forEach(function(input) {
                 input.checked = (input.value === newColor);
             });
         },
-    })
+    });
 
     Object.defineProperty(this, 'cubeOuterDimensions', {
         get: function() { return _options['cubeOuterDimensions']; },
