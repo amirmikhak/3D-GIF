@@ -4,8 +4,6 @@ var UIDOMShapePicker = function UIDOMShapePicker(opts) {
 
     var uiShapePicker = this;
 
-    var __fnNop = function() {};
-
     var __defaultOptions = {
         shapes: null,
         cubeOuterDimensions: 0,

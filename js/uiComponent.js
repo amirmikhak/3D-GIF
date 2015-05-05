@@ -4,14 +4,11 @@ var UIComponent = function UIComponent(opts) {
 
     Emitter(this);
 
-    var __fnTrueCb = function() { return true; };
     var __fnNop = function() {};
 
     var __defaultOptions = {
         mediator: null,
         containerEl: null,
-        visibleCondition: __fnTrueCb,
-        enabledCondition: __fnTrueCb,
         controllerInitCb: __fnNop,  // called whenever our mediator is told that an "init" has happened
         componentEventCb: __fnNop,
         /**
@@ -109,14 +106,10 @@ var UIComponent = function UIComponent(opts) {
     });
 
     var __fnProps = [
-        'visibleCondition',
-        'enabledCondition',
         'controllerInitCb',
         'componentEventCb',
         'controllerEventCb',
     ];
-
-    // !TODO: controllerEventCb: incomplete, untested
 
     __fnProps.forEach(function(prop) {
         Object.defineProperty(uiComponent, prop, {

@@ -4,8 +4,6 @@ var UIDOMRealtimeControls = function UIDOMRealtimeControls(opts) {
 
     var uiRealtimeControls = this;
 
-    var __fnNop = function() {};
-
     var __defaultOptions = {
         directions: (new CubeController).directions,
     };
