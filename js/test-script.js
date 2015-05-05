@@ -11,14 +11,15 @@ var loadShapes = new Promise(function(success, failure) {
 var domMediator = new UIMediator({
 }).addComponent('colorPicker', new UIDOMColorPicker({
     containerEl: document.getElementsByClassName('color-picker')[0],
-    controllerInitCb: function(ctrl) {
-        if (ctrl.hasOwnProperty('penColor'))
+    controllerInitCb: function(appCtrl) {
+        var ctrl = appCtrl.activeController;
+        if (ctrl && ctrl.hasOwnProperty('penColor'))
         {
             this.selectedColor = ctrl.penColor;
         }
-        if (ctrl.renderer && ctrl.renderer.hasOwnProperty('outerDimensions'))
+        if (appCtrl.renderer && appCtrl.renderer.hasOwnProperty('outerDimensions'))
         {
-            this.cubeOuterDimensions = ctrl.renderer.outerDimensions;
+            this.cubeOuterDimensions = appCtrl.renderer.outerDimensions;
         }
     },
     componentEventCb: function(event) {
@@ -41,11 +42,12 @@ var domMediator = new UIMediator({
     },
 })).addComponent('writeFacePicker', new UIDOMFacePicker({
     containerEl: document.getElementsByClassName('write-face-picker')[0],
-    controllerInitCb: function(ctrl) {
-        this.enabledFaces = ctrl.currentSupportedFaces || null;
-        if (ctrl.renderer && ctrl.renderer.can('applyViewAngle'))
+    controllerInitCb: function(appCtrl) {
+        var ctrl = appCtrl.activeController;
+        this.enabledFaces = ctrl && ctrl.currentSupportedFaces ? (ctrl.currentSupportedFaces || null) : null;
+        if (appCtrl.renderer && appCtrl.renderer.can('applyViewAngle'))
         {
-            ctrl.renderer.applyViewAngle(ctrl.writeFace || 'front');
+            appCtrl.renderer.applyViewAngle(ctrl && ctrl.writeFace ? (ctrl.writeFace || 'front') : 'front');
         }
     },
     componentEventCb: function(event) {
@@ -110,8 +112,9 @@ var domMediator = new UIMediator({
     },
 })).addComponent('playToggle', new UIDOMPlayingCheckbox({
     containerEl: document.getElementsByClassName('play')[0],
-    controllerInitCb: function(ctrl) {
-        if (ctrl.hasOwnProperty('playing'))
+    controllerInitCb: function(appCtrl) {
+        var ctrl = appCtrl.activeController;
+        if (ctrl && ctrl.hasOwnProperty('playing'))
         {
             this.checked = ctrl.playing;
             this.containerEl.classList.toggle('playing', this.checked);
@@ -140,8 +143,8 @@ var domMediator = new UIMediator({
     },
 })).addComponent('modeToggle', new UIDOMLabelledButton({
     containerEl: document.getElementsByClassName('playback-mode')[0],
-    controllerInitCb: function(ctrl) {
-        this.label = ctrl.activeControllerKey || '';
+    controllerInitCb: function(appCtrl) {
+        this.label = appCtrl.activeControllerKey || '';
     },
     componentEventCb: function(event) {
         event.appCtrl.useNextController();
