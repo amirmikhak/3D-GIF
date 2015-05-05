@@ -61,14 +61,14 @@ var UIDOMRealtimeControls = function UIDOMRealtimeControls(opts) {
         writable: false,
         value: function() {
             this.html.innerHTML = '';
-            __unbindListeners.call(uiRealtimeControls);
+            __unbindListeners.call(this);
         },
     });
 
     Object.defineProperty(this, 'directions', {
         get: function() { return _options['directions']; },
         set: function(newDirections) {
-            if ((newDirections !== null) && !(newDirections instanceof Object))
+            if ((newDirections !== null) && !(newDirections instanceof Array))
             {
                 console.error('Invalid directions for UIDOMRealtimeControls: ' +
                     'must be an array of direction names.', newDirections);
