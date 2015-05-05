@@ -27,6 +27,9 @@ var UIDOMFacePicker = function UIDOMFacePicker(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
+    var __guid = 'x' + guid();  // prepend a non-numeric character to ensure class names are valid
+    var __jss = new JsStyleSheet(__guid);
+
     function __getRadioEls() {
         var radioSelector = 'input[type="radio"][name="face"]';
         var radioElList = uiFacePicker.containerEl.querySelectorAll(radioSelector);
@@ -57,8 +60,10 @@ var UIDOMFacePicker = function UIDOMFacePicker(opts) {
     Object.defineProperty(this, '_destroyer', {
         writable: false,
         value: function() {
-            this.html.innerHTML = '';
             __unbindListeners.call(this);
+            this.html.innerHTML = '';
+            this.containerEl.innerHTML = '';
+            __jss.destroy();
         },
     });
 
@@ -156,9 +161,7 @@ var UIDOMFacePicker = function UIDOMFacePicker(opts) {
             divEl.innerHTML = faceName;
             var swatchEl = document.createElement('label');
             swatchEl.classList.add('swatch');
-            swatchEl.style.backgroundFace = '#fff';
             swatchEl.dataset.face = faceName;
-            radioEl.style.pointerEvents = divEl.style.pointerEvents = 'none';  // we get double events if we don't disable pointer events on stacked elements
             swatchEl.appendChild(radioEl);
             swatchEl.appendChild(divEl);    // must come after radio for CSS to work
             return swatchEl;
@@ -166,6 +169,13 @@ var UIDOMFacePicker = function UIDOMFacePicker(opts) {
             document.appendChild.call(pickerFrag, swatchEl);
         });
         return pickerFrag;
+    }
+
+    function __addStyles() {
+        __jss.insertRule('label', {
+            'cursor': 'pointer',
+            'backgroundColor': '#fff',
+        });
     }
 
     function __updateDOM() {
@@ -183,6 +193,8 @@ var UIDOMFacePicker = function UIDOMFacePicker(opts) {
     }
 
     // init
+    __addStyles();
+    this.containerEl.classList.add(__guid);
     applyOptions.call(this, _options);
 
     return this;

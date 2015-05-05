@@ -133,7 +133,6 @@ var UIDOMColorPicker = function UIDOMColorPicker(opts) {
             swatchEl.classList.add('swatch');
             swatchEl.style.backgroundColor = `rgb(${that.colors[colorName].join(',')})`;
             swatchEl.dataset.color = colorName;
-            radioEl.style.pointerEvents = divEl.style.pointerEvents = 'none';  // we get double events if we don't disable pointer events on stacked elements
             swatchEl.appendChild(radioEl);
             swatchEl.appendChild(divEl);    // must come after radio for CSS to work
             return swatchEl;

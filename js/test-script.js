@@ -64,6 +64,10 @@ var domMediator = new UIMediator({
             _eventPropertyChangedIs(event, 'mode'))
         {
             this.enabledFaces = event.ctrl.currentSupportedFaces || null;
+            if (this.enabledFaces && (this.enabledFaces.indexOf(this.selectedFace) === -1))
+            {
+                this.selectedFace = this.enabledFaces.length ? this.enabledFaces[0] : null;
+            }
         } else if (_eventPropertyChangedIs(event, 'writeFace'))
         {
             if (event.ctrl.renderer && event.ctrl.renderer.can('applyViewAngle'))

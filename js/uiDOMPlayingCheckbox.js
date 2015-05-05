@@ -23,7 +23,7 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
             __defaultOptions[_optionKeys[i]];
     }
 
-    var _checked;
+    var _checked = false;
     var __guid = 'x' + guid();  // prepend a non-numeric character to ensure class names are valid
     var __jss = new JsStyleSheet(__guid);
 
