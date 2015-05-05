@@ -9,29 +9,36 @@ var JsStyleSheet = function JsStyleSheet(guid) {
     return this;
 };
 
-JsStyleSheet.prototype.insertRule = function(_selector, _rules, _index) {
+JsStyleSheet.prototype.insertRule = function(_selector, _props, _index) {
     if (!_selector || (typeof _selector !== 'string'))
     {
         return;
     }
 
-    function __rulesToString(rules) {
+    function __propsToString(rules) {
         var frags = [];
         var keys = Object.keys(rules);
         for (var i = 0, numKeys = keys.length; i < numKeys; i++)
         {
-            frags.push(`${keys[i]}:${rules[keys[i]]};`);
+            frags.push(keys[i] + ':' + rules[keys[i]] + ';');
         }
         return frags.join('');
     }
 
-    var selector = (this._guid.length && (_selector.indexOf(' ') === -1) ? `.${this._guid} ` : '') + _selector;
-    if (_selector.indexOf(' ') !== -1)
+    var _prefix = _selector.charAt(0);
+    var _selSansPrefix = _prefix === '&' ? _selector.substring(1) : _selector;
+    var selector = _selSansPrefix;
+    if (this._guid.length)
     {
-        console.warn('Cannot (yet) apply GUID-specific selector for selectors with nested rules.');
+        var guidSelectorPrefix = '.' + this._guid + (_prefix === '&' ? '' : ' ');
+        selector = guidSelectorPrefix + selector;
     }
-    var rulesStr = _rules && (typeof _rules === 'object') ? __rulesToString(_rules) : _rules;
-    this.css.insertRule(`${selector} {${rulesStr}}`, _index);
+    var propsStr = _props && (typeof _props === 'object') ? __propsToString(_props) : _props;
+    var rulesStr = selector + ' {' + propsStr + '}';
+    console.log('JSS rule:', rulesStr);
+    this.css.insertRule(rulesStr, _index);
+
+    return this;
 };
 
 JsStyleSheet.prototype.destroy = function() {
