@@ -10,9 +10,23 @@ var JsStyleSheet = function JsStyleSheet(guid) {
 };
 
 JsStyleSheet.prototype.insertRule = function(_selector, _props, _index) {
-    if (!_selector || (typeof _selector !== 'string'))
+    if (!_selector ||
+        ((typeof _selector !== 'string') && !(_selector instanceof Array)))
     {
-        return;
+        console.error('Invalid Selector: must be either ' +
+            '1) a string with a single selector, ' +
+            '2) a string of comma-separated selectors, or ' +
+            '3) an array of either 1 or 2', _selector);
+        throw 'Invalid JSS rule';
+    }
+
+    if ((_selector instanceof Array) || (_selector.indexOf(',') !== -1))
+    {
+        var that = this;
+        (_selector instanceof Array ? _selector : _selector.split(',')).forEach(function(sel) {
+            that.insertRule(sel, _props, _index);
+        });
+        return this;
     }
 
     function __propsToString(rules) {
