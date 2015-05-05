@@ -71,13 +71,13 @@ var domMediator = new UIMediator({
         if (ctrl.hasOwnProperty('playing'))
         {
             this.checked = ctrl.playing;
-            this.html.classList.toggle('playing', this.checked);
+            this.containerEl.classList.toggle('playing', this.checked);
         }
     },
     componentEventCb: function(event) {
         if (event.ctrl.hasOwnProperty('playing'))
         {
-            this.html.classList.toggle('playing', this.checked);
+            this.containerEl.classList.toggle('playing', this.checked);
             event.ctrl.playing = this.checked;
         }
     },
@@ -91,7 +91,7 @@ var domMediator = new UIMediator({
         }
 
         function _setPlaying(newPlaying) {
-            this.html.classList.toggle('playing', newPlaying);
+            this.containerEl.classList.toggle('playing', newPlaying);
             this.checked = newPlaying;
         }
     },

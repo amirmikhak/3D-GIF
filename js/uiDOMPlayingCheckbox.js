@@ -86,6 +86,10 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
             'top': '0',
             'left': '0',
         });
+
+        __jss.insertRule('label', {
+            'cursor': 'pointer',
+        });
     }
 
     function __buildHTML() {
