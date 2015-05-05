@@ -151,8 +151,12 @@ var UIDOMRealtimeControls = function UIDOMRealtimeControls(opts) {
             'font-size': '16px',
             'padding': '0',         // override .control-button
             'margin': '0 2px',
+        }).insertRule('.radio-tab:hover', {
+            'background-color': '#aaa',
         }).insertRule('.radio-tab input', {
             'display': 'none',
+        }).insertRule('.radio-tab input:checked + div', {
+            'background-color': '#999',
         }).insertRule('.radio-tab > div', {
             'padding': '12px 0',    // make up for overridden .control-button
         });
