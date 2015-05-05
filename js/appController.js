@@ -180,6 +180,7 @@ var AppController = function AppController(opts) {
             var ctrlIndex = _loadedControllerKeys.indexOf(newActiveControllerKey);
             if (ctrlIndex === -1)
             {
+                console.error(`Could not load controller: ${newActiveControllerKey}`, _loadedControllerKeys);
                 throw 'Controller not loaded';
             }
             var prevPlaying = this.playing;
@@ -215,10 +216,6 @@ var AppController = function AppController(opts) {
     Object.defineProperty(this, 'loadedControllers', {
         get: function() { return _loadedControllerKeys.slice(); },
     });
-
-    this.useNextController = function() {
-        this.activeController = this.nextControllerKey;
-    };
 
     this.loadController = function(key, cubeCtrl) {
         if (!(cubeCtrl instanceof CubeController))
@@ -259,10 +256,22 @@ var AppController = function AppController(opts) {
 
 };
 
+AppController.prototype.useNextController = function() {
+    this.activeController = this.nextControllerKey;
+    return this;
+};
+
+AppController.prototype.useController = function(controllerKey) {
+    this.activeController = controllerKey;
+    return this;
+};
+
 AppController.prototype.stop = function() {
     this.playing = false;
+    return this;
 };
 
 AppController.prototype.play = function() {
     this.playing = true;
+    return this;
 };

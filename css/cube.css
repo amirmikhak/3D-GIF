@@ -75,31 +75,29 @@ body {
     background-color: #999;
 }
 
-.radio-tabs {
-    letter-spacing: 0.125em;
-
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    -webkit-user-select: none;
-}
-
 .radio-tabs.vertical {
+    display: flex;
     flex-direction: column;
     justify-content: center;
+    -webkit-user-select: none;
+    letter-spacing: 0.125em;
+}
+
+.radio-tabs.vertical .radio-tab {
+    flex: 1;
+    font-size: 16px;
+}
+
+.radio-tabs.vertical .radio-tab input[type="radio"] {
+    display: none;
+}
+
+.radio-tabs.vertical .radio-tab input[type="radio"]:checked + div {
+    background-color: #999;
 }
 
 .radio-tabs.vertical.mini .radio-tab:not(:last-of-type) {
     border-bottom: 1px solid #999;
-}
-
-.radio-tabs input[type="radio"] {
-    display: none;
-}
-
-.radio-tabs .radio-tab {
-    flex: 1;
-    font-size: 16px;
 }
 
 .radio-tabs.vertical.mini .radio-tab {
@@ -113,11 +111,6 @@ body {
     line-height: 1em;
 }
 
-.control-button.radio-tab {
-    padding: 12px 0;
-    margin: 0 2px;
-}
-
 .radio-tabs.vertical.mini .control-button.radio-tab:hover {
     border-color: #aaa;
 }
@@ -128,10 +121,6 @@ body {
 
 .radio-tabs.vertical.mini input[type="radio"]:checked + .control-button.radio-tab:active {
     border-color: #999;
-}
-
-.radio-tabs input[type="radio"]:checked + .radio-tab {
-    background-color: #999;
 }
 
 /**

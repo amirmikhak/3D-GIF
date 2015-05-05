@@ -101,6 +101,35 @@ var domMediator = new UIMediator({
             this.cubeOuterDimensions = event.ctrl.renderer.outerDimensions;
         }
     },
+})).addComponent('realtimeControls', new UIDOMRealtimeControls({
+    containerEl: document.getElementsByClassName('realtime-controls')[0],
+    controllerInitCb: function(appCtrl) {
+        var ctrl = appCtrl.activeController;
+        if (ctrl && ctrl.direction) {
+            this.selectedDirection = ctrl.direction;
+        }
+    },
+    componentEventCb: function(event) {
+        if (event.ctrl.hasOwnProperty('directions') &&
+            (event.ctrl.directions.indexOf(event.data) !== -1))
+        {
+            event.ctrl.direction = event.data;
+            return;
+        }
+    },
+    controllerEventCb: function(event) {
+        if (_eventPropertyChangedIs(event, 'activeController'))
+        {
+            if (event.ctrl instanceof CubeRealtimeUserController)
+            {
+                this.bringToFront();
+                this.selectedDirection = event.ctrl.direction;
+            } else
+            {
+                this.sendToBack();
+            }
+        }
+    },
 })).addComponent('clearButton', new UIDOMClearButton({
     containerEl: document.getElementsByClassName('clear')[0],
     componentEventCb: function(event) {

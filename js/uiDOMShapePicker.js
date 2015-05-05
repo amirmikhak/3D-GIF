@@ -1,4 +1,3 @@
-// !TODO: make uiDOMShapePicker actually work
 var UIDOMShapePicker = function UIDOMShapePicker(opts) {
 
     UIComponent.apply(this, arguments);
