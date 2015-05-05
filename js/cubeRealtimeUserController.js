@@ -441,6 +441,7 @@ CubeRealtimeUserController.prototype.clear = function() {
     this.stop();
     this.clearAnimationFrames();
     this.cube.clear();
+    this.render();
     if (prevPlaying)
     {
         this.play();

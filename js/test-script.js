@@ -141,9 +141,7 @@ var appCtrl = new AppController({
 }));
 
 loadShapes.then(function shapesLoaded() {
-    console.log('assigning shapes to shape-picker component', CubeAssets.activeShapeSetShapes);
     domMediator.getComponent('shapePicker').shapes = CubeAssets.activeShapeSetShapes;
-
     console.log('adding shape tiles to playlist...');
     appCtrl.activeController = 'playlist';
     appCtrl.activeController.insertTiles([
