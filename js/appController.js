@@ -207,8 +207,8 @@ var AppController = function AppController(opts) {
     Object.defineProperty(this, 'nextControllerKey', {
         get: function() {
             return (!_loadedControllers.length) ? null :
-                ((_activeControllerKey === null) ? 0 :
-                    _loadedControllerKeys[(_loadedControllerKeys.indexOf(_activeControllerKey) + 1) % _loadedControllerKeys.length]);
+                (_loadedControllerKeys[(_activeControllerKey === null) ? 0 :
+                    (_loadedControllerKeys.indexOf(_activeControllerKey) + 1) % _loadedControllerKeys.length]);
         }
     });
 
