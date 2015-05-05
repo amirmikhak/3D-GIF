@@ -514,6 +514,13 @@ CubeDOMRenderer.prototype.render = function(cubeData) {
     this.updateDOM();
 };
 
+CubeDOMRenderer.prototype.applyViewAngle = function(angleName) {
+    var angles = this.faceCubeViewingAngles[angleName || 'front'];
+    this.xAngle = angles[0];
+    this.yAngle = angles[1];
+    this.updateDOM();
+};
+
 CubeDOMRenderer.prototype.nudge = function(direction, amount) {
     /**
      * Rotate the cube in a direction (left, right, up, down) by an amount

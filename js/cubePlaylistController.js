@@ -59,7 +59,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     var _generatedAnimationFrames = [];
     var __batchInsertingTiles = false;
 
-    var PLAYLIST_SETTINGS_CHANGE_NAME = 'playlistSettingsChange';
+    var PLAYLIST_SETTINGS_CHANGE_NAME = 'propertyChanged';
 
     var __throughFaceDirectionMap = {
         'front': 'back',

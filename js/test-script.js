@@ -11,7 +11,6 @@ var loadShapes = new Promise(function(success, failure) {
 var domMediator = new UIMediator({
 }).addComponent('colorPicker', new UIDOMColorPicker({
     containerEl: document.getElementsByClassName('color-picker')[0],
-    cubeOuterDimensions: 360,
     controllerInitCb: function(ctrl) {
         if (ctrl.hasOwnProperty('penColor'))
         {
@@ -35,6 +34,42 @@ var domMediator = new UIMediator({
         } else if (_eventPropertyChangedIs(event, 'activeController'))
         {
             this.selectedColor = event.ctrl.penColor;
+        } else if (event.type === 'rendererPropertyChanged')
+        {
+            this.cubeOuterDimensions = event.ctrl.renderer.outerDimensions;
+        }
+    },
+})).addComponent('writeFacePicker', new UIDOMFacePicker({
+    containerEl: document.getElementsByClassName('write-face-picker')[0],
+    controllerInitCb: function(ctrl) {
+        this.enabledFaces = ctrl.currentSupportedFaces || null;
+        if (ctrl.renderer && ctrl.renderer.can('applyViewAngle'))
+        {
+            ctrl.renderer.applyViewAngle(ctrl.writeFace || 'front');
+        }
+    },
+    componentEventCb: function(event) {
+        if (event.ctrl.hasOwnProperty('writeFace'))
+        {
+            event.ctrl.writeFace = event.data;
+            if (event.ctrl.renderer && event.ctrl.renderer.can('applyViewAngle'))
+            {
+                event.ctrl.renderer.applyViewAngle(event.ctrl.writeFace || 'front');
+            }
+            return;
+        }
+    },
+    controllerEventCb: function(event) {
+        if (_eventPropertyChangedIs(event, 'activeController') ||
+            _eventPropertyChangedIs(event, 'mode'))
+        {
+            this.enabledFaces = event.ctrl.currentSupportedFaces || null;
+        } else if (_eventPropertyChangedIs(event, 'writeFace'))
+        {
+            if (event.ctrl.renderer && event.ctrl.renderer.can('applyViewAngle'))
+            {
+                event.ctrl.renderer.applyViewAngle(event.ctrl.writeFace || 'front');
+            }
         } else if (event.type === 'rendererPropertyChanged')
         {
             this.cubeOuterDimensions = event.ctrl.renderer.outerDimensions;

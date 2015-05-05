@@ -139,7 +139,7 @@ body {
  */
 .shape-list,
 .color-list,
-.write-face-list {
+.face-list {
     display: block;
     width: 62px;
     height: auto;
@@ -152,7 +152,7 @@ body {
 
 .shape-list .swatch,
 .color-list .swatch,
-.write-face-list .swatch {
+.face-list .swatch {
     box-sizing: border-box;
     position: relative;
     display: inline-block;
@@ -161,6 +161,10 @@ body {
     height: 46px;
     cursor: pointer;
     box-shadow: 0 1px 5px #777;
+}
+
+.face-list .swatch {
+    cursor: default;
 }
 
 .shape-list .swatch {
@@ -176,16 +180,17 @@ body {
 }
 
 .color-list .swatch > div,
-.write-face-list .swatch > div {
+.face-list .swatch > div {
     box-sizing: border-box;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    cursor: pointer;
 }
 
-.write-face-list .swatch > div {
+.face-list .swatch > div {
     box-sizing: border-box;
     font-size: 9px;
     text-align: center;
@@ -195,16 +200,16 @@ body {
 }
 
 .color-list .swatch > input[type="radio"],
-.write-face-list .swatch > input[type="radio"] {
+.face-list .swatch > input[type="radio"] {
     display: none;
 }
 
 .color-list .swatch > input[type="radio"]:checked + div,
-.write-face-list .swatch > input[type="radio"]:checked + div {
+.face-list .swatch > input[type="radio"]:checked + div {
     border: 4px solid rgba(190, 190, 190, 1);
 }
 
-.write-face-list .swatch > input[type="radio"]:disabled + div {
+.face-list .swatch > input[type="radio"]:disabled + div {
     color: #ccc;
     cursor: default;
 }
