@@ -100,8 +100,7 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
 
     function __containerClickListener(e) {
         uiPlaylistControls.inFocus = true;
-        e.stopPropagation();
-        e.preventDefault();
+        e.stopImmediatePropagation();
     }
 
     function __documentClickListener(e) {
