@@ -120,12 +120,14 @@ var CubeController = function CubeController(opts) {
 
             if (_options['playing'] && !prevPlaying)
             {
+                __stopAnimationLoop();
                 __startAnimationLoop();
                 if (_options['renderer'])
                 {
+                    _options['renderer'].stopRenderLoop();
                     _options['renderer'].startRenderLoop(this.getRenderFrame);
                 }
-            } else if (!_options['playing'] && prevPlaying)
+            } else if (!_options['playing'])
             {
                 __stopAnimationLoop();
                 if (_options['renderer'])

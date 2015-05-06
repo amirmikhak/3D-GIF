@@ -218,6 +218,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         __updateAnimator();
         __updateAnimationCursorPosition();
         __updateAnimationColumnTouchers();
+        __framesAreDirty = true;
 
         if (cubePlaylistController.playing)
         {
@@ -690,7 +691,10 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             var currFrame = cubePlaylistController.currentAnimationFrame;
             if (!currFrame)
             {
-                cubePlaylistController.repopulateAnimationFrames();
+                if (_options['looping'])
+                {
+                    cubePlaylistController.repopulateAnimationFrames();
+                }
                 return cubePlaylistController.getEmptyCube();
             } else if (localRenderTime < currFrame.start)
             {
@@ -706,7 +710,13 @@ var CubePlaylistController = function CubePlaylistController(opts) {
                 if (cubePlaylistController.animationFrames.length === 1)
                 {
                     cubePlaylistController.popCurrentAnimationFrame();
-                    cubePlaylistController.repopulateAnimationFrames();
+                    if (_options['looping'])
+                    {
+                        cubePlaylistController.repopulateAnimationFrames();
+                    } else
+                    {
+                        cubePlaylistController.playing = false;
+                    }
                 }
                 return currFrame.data;
             } else if (localRenderTime >= currFrame.end)
@@ -840,7 +850,12 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             __refreshAnimationFramesWithGenerated();
         } else if (changeData.property === 'playing')
         {
-            this.updateForPlayback();
+            if (changeData.newValue)
+            {
+                this.updateForPlayback();
+                this.clearAnimationFrames();
+                this.repopulateAnimationFrames();
+            }
         }
     });
 
