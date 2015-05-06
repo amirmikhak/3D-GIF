@@ -154,6 +154,10 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         __tileStrip = _tiles.reduce(function(strips, tile) {
             return strips.concat(tile.getAsStrips()).concat(__makeSpacingStrips());
         }, []);
+        if (_options['wrapDirection'] === 'ccw')
+        {
+            __tileStrip.reverse();
+        }
         __updateDuration();
     }
 
