@@ -117,7 +117,15 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
             46: 'delete',
             8: 'backspace',
             13: 'enter',
+            192: 'backtick',
         };
+
+        if (e.ctrlKey && (keyMap[e.which] === 'backtick'))
+        {
+            ui.inFocus = true;
+            e.preventDefault();
+            return;
+        }
 
         if (ui.inFocus)
         {
