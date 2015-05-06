@@ -417,14 +417,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         }
     }
 
-    function __stopIfShould() {
-        if (!_options['looping'] &&
-            (this.lastRenderedTime > this.animationStartTime + _duration))
-        {
-            cubePlaylistController.playing = false;
-        }
-    }
-
     function __propigateColumns(numColumns) {
         var start = __getCursorColumn();
         var dirtyCols = [start];
