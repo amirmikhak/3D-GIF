@@ -116,6 +116,7 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
             40: 'down',
             46: 'delete',
             8: 'backspace',
+            13: 'enter',
         };
 
         if (ui.inFocus)
@@ -159,6 +160,17 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
             } else if (keyMap[e.keyCode] === 'left')
             {
                 ui.cursorPosition = Math.max(0, ui.cursorPosition - 1);
+            } else if (keyMap[e.keyCode] === 'enter')
+            {
+                if (ui.mediator)
+                {
+                    ui.mediator.emit('componentEvent', {
+                        type: 'playToggled',
+                        data: null,
+                        component: ui,
+                        callback: ui.componentEventCb,
+                    });
+                }
             } else if (keyMap[e.keyCode] === 'delete')
             {
                 if (ui.mediator)
