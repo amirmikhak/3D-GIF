@@ -56,7 +56,6 @@ var UIMediator = function UIMediator() {
     };
 
     this.removeComponent = function(key) {
-        // !TODO: verify UIMediator.removeComponent(key) works (untested)
         var keyIndex = _componentKeys.indexOf(key);
         if (keyIndex === -1)
         {
