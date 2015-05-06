@@ -194,11 +194,21 @@ var domMediator = new UIMediator({
             this.cursorPosition++;
         } else if (event.type === 'tileBackspaced')
         {
-            event.ctrl.removeTileByIndex.call(event.ctrl, event.data - 1);
-            this.cursorPosition--;
+            var tileIndex = event.data - 1;
+            if (tileIndex >= 0)
+            {
+                event.ctrl.removeTileByIndex.call(event.ctrl, tileIndex);
+                this.cursorPosition--;
+            }
         } else if (event.type === 'tileDeleted')
         {
-            event.ctrl.removeTileByIndex.call(event.ctrl, event.data);
+            if (event.data < event.ctrl.getTiles().length)
+            {
+                event.ctrl.removeTileByIndex.call(event.ctrl, event.data);
+            }
+        } else if (event.type === 'playToggled')
+        {
+            event.ctrl.togglePlaying();
         }
     },
     controllerEventCb: function(event) {
