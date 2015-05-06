@@ -191,7 +191,7 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
 
     function __documentKeypressListener(e) {
         var ui = uiPlaylistControls;
-        if (ui.mediator)
+        if (ui.inFocus && ui.mediator)
         {
             ui.mediator.emit('componentEvent', {
                 type: 'tileAdded',
