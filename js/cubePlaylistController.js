@@ -549,6 +549,13 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         return this;
     };
 
+    this.clearTiles = function() {
+        _tiles.splice(0, _tiles.length);
+        __updateForTileChange();
+        __emitTileChangeEvent();
+        return this;
+    };
+
     this.replaceTile = function(index, tile) {
         _tiles.splice(index, 1, tile);
         __updateForTileChange();
@@ -868,8 +875,13 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 CubePlaylistController.prototype = Object.create(CubeController.prototype);
 CubePlaylistController.prototype.constructor = CubePlaylistController;
 
-// !TODO: implement CubePlaylistController.clear() -- need to determine reasonable behavior
-CubePlaylistController.prototype.clear = function() {};
+CubePlaylistController.prototype.clear = function() {
+    this.stop();
+    this.clearTiles();
+    this.clearAnimationFrames();
+    this.cube.clear();
+    this.render();
+};
 
 CubePlaylistController.prototype.step = function(numSteps) {
     /**
