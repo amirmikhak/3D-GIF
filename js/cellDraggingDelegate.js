@@ -36,26 +36,6 @@ var CellDragStateTracker = function() {
         },
     });
 
-    this.applyOptions = function(newOpts) {
-        if (!(newOpts instanceof Object))
-        {
-            throw 'TypeError: CellDragListener options must be object';
-        }
-
-        var opts = Object.keys(newOpts);
-        for (var i = 0; i < opts.length; i++)
-        {
-            var key = opts[i];
-            if (this.hasOwnProperty(key))
-            {
-                this[key] = newOpts[key];
-            } else
-            {
-                console.error('Invalid option for CellDragListener:' + key);
-            }
-        }
-    };
-
 };
 
 var CellDraggingDelegate = (function() {

@@ -1,3 +1,13 @@
+@-webkit-keyframes blink {
+  0%     { opacity: 0 } 50% { opacity: 0 }
+  50.01% { opacity: 1 } 100% { opacity: 1 }
+}
+
+@-webkit-keyframes rendering {
+  0%     { color: #f00; } 50% { color: #f00; }
+  50.01% { color: inherit; } 100% { color: inherit; }
+}
+
 body {
     font-family: 'Helvetica Neue', sans-serif;
     font-size: 20px;
@@ -5,17 +15,12 @@ body {
     text-transform: uppercase;
 }
 
-#container {
-    /**
-     * This places the z=0 plane away from us, so the entire cube is in front of us;
-     * you can read more at https://developer.mozilla.org/en-US/docs/Web/CSS/perspective
-     */
+.container {
     perspective: 3000px;
-
     margin-top: 16px;
 }
 
-#cube-wrapper {
+.cube-wrapper {
     position: relative;
     height: 600px;
     width: 680px;
@@ -25,7 +30,13 @@ body {
 /**
  * Controls styling
  */
-#controls {
+.playback-controls {
+    position: relative;
+    width: 100%;
+    height: 70px;
+}
+
+.controls {
     position: absolute;
     bottom: -120px;
     width: 100%;
@@ -39,7 +50,7 @@ body {
     -webkit-user-select: none;
 }
 
-#controls > div {
+.controls > div {
 }
 
 .control-button:not(.radio-tab) {
@@ -71,88 +82,24 @@ body {
     text-align: center;
 }
 
-#play.playing {
-    background-color: #999;
-}
-
-.radio-tabs {
-    letter-spacing: 0.125em;
-
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    -webkit-user-select: none;
-}
-
-.radio-tabs.vertical {
-    flex-direction: column;
-    justify-content: center;
-}
-
-.radio-tabs.vertical.mini .radio-tab:not(:last-of-type) {
-    border-bottom: 1px solid #999;
-}
-
-.radio-tabs input[type="radio"] {
-    display: none;
-}
-
-.radio-tabs .radio-tab {
-    flex: 1;
-    font-size: 16px;
-}
-
-.radio-tabs.vertical.mini .radio-tab {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    margin: 0;
-    padding: 0;
-    font-size: 13px;
-    line-height: 1em;
-}
-
-.control-button.radio-tab {
-    padding: 12px 0;
-    margin: 0 2px;
-}
-
-.radio-tabs.vertical.mini .control-button.radio-tab:hover {
-    border-color: #aaa;
-}
-
-.radio-tabs.vertical.mini input[type="radio"]:checked + .control-button.radio-tab {
-    border-color: #999;
-}
-
-.radio-tabs.vertical.mini input[type="radio"]:checked + .control-button.radio-tab:active {
-    border-color: #999;
-}
-
-.radio-tabs input[type="radio"]:checked + .radio-tab {
-    background-color: #999;
-}
-
 /**
  * List styling
  */
 .shape-list,
 .color-list,
-.write-face-list {
+.face-list {
     display: block;
     width: 62px;
     height: auto;
     margin: 0;
     padding: 0;
     font-size: 0;
-
     -webkit-user-select: none;
 }
 
 .shape-list .swatch,
 .color-list .swatch,
-.write-face-list .swatch {
+.face-list .swatch {
     box-sizing: border-box;
     position: relative;
     display: inline-block;
@@ -161,6 +108,10 @@ body {
     height: 46px;
     cursor: pointer;
     box-shadow: 0 1px 5px #777;
+}
+
+.face-list .swatch {
+    cursor: default;
 }
 
 .shape-list .swatch {
@@ -176,20 +127,17 @@ body {
 }
 
 .color-list .swatch > div,
-.write-face-list .swatch > div {
+.face-list .swatch > div {
     box-sizing: border-box;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    cursor: pointer;
 }
 
-.color-list .swatch > div {
-    background-color: attr(data-color); /* someday this will work, but not yet. JS to the rescue! */
-}
-
-.write-face-list .swatch > div {
+.face-list .swatch > div {
     box-sizing: border-box;
     font-size: 9px;
     text-align: center;
@@ -199,16 +147,16 @@ body {
 }
 
 .color-list .swatch > input[type="radio"],
-.write-face-list .swatch > input[type="radio"] {
+.face-list .swatch > input[type="radio"] {
     display: none;
 }
 
 .color-list .swatch > input[type="radio"]:checked + div,
-.write-face-list .swatch > input[type="radio"]:checked + div {
+.face-list .swatch > input[type="radio"]:checked + div {
     border: 4px solid rgba(190, 190, 190, 1);
 }
 
-.write-face-list .swatch > input[type="radio"]:disabled + div {
+.face-list .swatch > input[type="radio"]:disabled + div {
     color: #ccc;
     cursor: default;
 }
@@ -217,7 +165,7 @@ body {
 /**
  * Cube and cell styling
  */
-#cube {
+.cube {
     position: relative;
     margin: 100px auto;
 }
@@ -230,7 +178,7 @@ body {
 }
 
 .cell:after {
-    /*
+    /**
      * Mimic the vertical "sticks" to which the LEDs are attached in the cube
      */
     content: '';    /* necessary to make the pseudo-element render */
@@ -243,36 +191,11 @@ body {
 }
 
 .cell:not([data-depth="0"])  {
-    /*
-     * The top row needs to cut the "stick" in half because it doesn't continue above
-     * the LED in the actual box.
-     */
      opacity: 0.2;
 }
 
 .cell[data-row="0"]:after  {
-    /*
-     * The top row needs to cut the "stick" in half because it doesn't continue above
-     * the LED in the actual box.
-     */
     top: 50%;
-}
-
-.cell[data-row="7"]:before  {
-    /*
-     * This style is an effort to make show a "base" for the cube, but it doesn't work.
-     * Instead, the rotateX(90deg) makes the element invisible from the front face, but
-     * is also not visible from the side or bottom. I'm not sure why elements seem not
-     * to have any depth...
-     */
-    transform: translateY(50%) rotateX(90deg);
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgba(50, 50, 50, 0.5);
 }
 
 .led {
@@ -282,12 +205,7 @@ body {
     border-radius: 50%;
     top: 50%;
     left: 50%;
-    /* Center the led vertically and horizontally in the cell; you can read more about the technique at http://zerosixthree.se/vertical-align-anything-with-just-3-lines-of-css/ */
     transform: translateY(-50%) translateX(-50%);
-
-    /*
-     * Show the LED "in front" of the "stick" that holds the LEDs.
-     */
     z-index: 1;
 }
 
@@ -296,200 +214,5 @@ body {
 }
 
 .led:not(.on) {
-    /* A selector for all LEDs which do _not_ have the class 'on', you can read more at https://developer.mozilla.org/en-US/docs/Web/CSS/:not */
-
     opacity: 0.25;
-}
-
-#playback-controls {
-    position: relative;
-    width: 100%;
-    height: 70px;
-}
-
-#playback-controls > div {
-    transition: opacity 300ms ease-in-out;
-}
-
-#realtime-controls {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
-
-/**
- * Playlist styling
- */
-
-#playlist-controls {
-    box-sizing: border-box;
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    border: 1px solid #ccc;
-    padding: 0 2px;
-    z-index: 2;
-
-    -webkit-user-select: none;
-}
-
-#playlist-controls .tile-tray {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    text-transform: uppercase;
-    overflow-y: hidden;
-    overflow-x: auto;
-    white-space: nowrap;
-    font-size: 0;
-    background: #fff;
-}
-
-#playlist-controls .mode-selector {
-    box-sizing: border-box;
-    position: absolute;
-    top: calc(50% - 37.5px);
-    left: calc(-1 * 120 * 1.1px);
-    width: 120px;
-    height: 75px;
-    font-size: 36px;
-    line-height: 48px;
-    text-align: center;
-
-    transition: left 300ms ease-in-out;
-}
-
-#playlist-controls .wrap-direction-selector {
-    box-sizing: border-box;
-    position: absolute;
-    top: calc(50% - 37.5px);
-    right: calc(100% + 12px);
-    width: 0;
-    height: 75px;
-    font-size: 36px;
-    line-height: 48px;
-    text-align: center;
-    overflow: hidden;
-
-    transition:
-        width 300ms ease-in-out;
-}
-
-#playlist-controls.show-direction-selector .mode-selector {
-    left: -182px;
-}
-
-#playlist-controls.show-direction-selector .wrap-direction-selector {
-    width: 50px;
-}
-
-#playlist-controls .loop-cb {
-    box-sizing: border-box;
-    position: absolute;
-    top: calc(50% - 25px);
-    right: calc(-1 * 50 * 1.25px);
-    border: 1px solid #ccc;
-    width: 50px;
-    height: 50px;
-    font-size: 36px;
-    line-height: 48px;
-    text-align: center;
-}
-
-#playlist-controls .loop-cb span {
-    display: block;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #fff;
-    color: #ccc;
-}
-
-#playlist-controls .loop-cb:hover span {
-    background: #fff;
-    color: #9f9;
-}
-
-#playlist-controls .loop-cb:active span {
-    background: #ccc;
-    color: #555;
-}
-
-#playlist-controls .loop-cb input {
-    z-index: -1;
-    opacity: 0.1;
-}
-
-#playlist-controls .loop-cb input[name="loop"]:checked + span {
-    background: #21C721;
-    color: #fff;
-}
-
-#playlist-controls .loop-cb:hover input[name="loop"]:checked + span {
-    color: #9f9;
-}
-
-#playlist-controls.focus {
-    border-color: #777;
-}
-
-#playlist-controls .tile {
-    box-sizing: border-box;
-    display: inline-block;
-    border: 1px solid #ccc;
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    margin: 4px;
-}
-
-#playlist-controls .tile img {
-    width: 100%;
-    height: 100%;
-}
-
-@-webkit-keyframes blink {
-  0%     { opacity: 0 } 50% { opacity: 0 }
-  50.01% { opacity: 1 } 100% { opacity: 1 }
-}
-
-#playlist-controls .cursor {
-    position: relative;
-    left: -4px;
-    width: 10px;
-    height: 42px;
-    display: none;
-}
-
-#playlist-controls.focus .cursor {
-    display: inline-block;
-    -webkit-animation: blink 700ms infinite linear alternate;
-    -webkit-font-smoothing: antialiased;
-}
-
-#playlist-controls .cursor:after,
-#playlist-controls .cursor:before {
-    position: absolute;
-    top: 5px;
-    left: 3px;
-    right: 0;
-    bottom: 0;
-    font-size: 48px;
-    line-height: 24px;
-    font-weight: 200;
-    content: ']';
-    color: #555;
-    text-align: center;
-}
-
-#playlist-controls .cursor:before {
-    perspective: 10px;
-    transform-style: preserve-3d;
-    transform-origin: 90% 50%;
-    transform: rotateY(180deg);
 }

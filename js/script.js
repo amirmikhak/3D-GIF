@@ -1,4 +1,6 @@
 var cube;
+var cubeUI;
+
 window.addEventListener('load', function() { // When everything is loaded
 
     // Define cell properties for passing into the Cube
@@ -12,26 +14,23 @@ window.addEventListener('load', function() { // When everything is loaded
     // Load the cube's typeface
     cube.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json');
 
-    // attach the cube itself to the DOM
-    cube.container = document.getElementById('cube-wrapper');
-
-    // Get a better perspective for seeing what's inside the cube
-    cube.xAngle = -30;
-    cube.yAngle = 30;
-
-    // add the color, shape, and start-face pickers that appear on the sides
-    cube.colorPicker = document.getElementById('color-picker');
-    cube.shapePicker = document.getElementById('shape-picker');
-    cube.writeFacePicker = document.getElementById('write-face-picker');
-
-    // attach buttons and other behaviors
-    cube.playbackModeButton = document.getElementById('playback-mode');
-    cube.prevStepButton = document.getElementById('prev-step');
-    cube.nextStepButton = document.getElementById('next-step');
-    cube.playButton = document.getElementById('play');
-    cube.clearButton = document.getElementById('clear');
-    cube.realtimeControls = document.getElementById('realtime-controls');
-    cube.playlistContainer = document.getElementById('playlist-controls');
+    // Build the UI for the cube
+    cubeUI = new CubeUI(cube, {
+        cubeContainer: document.getElementById('cube-wrapper'),
+        cubeXAngle: -30,
+        cubeYAngle: 30,
+        cubeTransitionTransforms: true,
+        playButton: document.getElementById('play'),
+        clearButton: document.getElementById('clear'),
+        prevStepButton: document.getElementById('prev-step'),
+        nextStepButton: document.getElementById('next-step'),
+        modeToggleButton: document.getElementById('playback-mode'),
+        realtimeUI: document.getElementById('realtime-controls'),
+        playlistUI: document.getElementById('playlist-controls'),
+        colorPicker: document.getElementById('color-picker'),
+        shapePicker: document.getElementById('shape-picker'),
+        writeFacePicker: document.getElementById('write-face-picker'),
+    });
 
     // Listen for keyboard shortcuts (except nudging)
     //  and for characters being pressed to display
