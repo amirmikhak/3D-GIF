@@ -311,19 +311,22 @@ CubeController.prototype.render = function(cubeData) {
     {
         this.renderer.render((cubeData instanceof Cube) ? cubeData : this.cube);
     }
+    return this;
 };
 
 CubeController.prototype.togglePlaying = function() {
-    this.playing = !this.playing;
+    return this[this.playing ? 'stop' : 'play']();
 };
 
 CubeController.prototype.stop = function() {
     this.playing = false;
+    return this;
 };
 
 CubeController.prototype.play = function(resetTimers) {
     this.stop();
     this.playing = true;
+    return this;
 };
 
 CubeController.prototype.clear = function() {};

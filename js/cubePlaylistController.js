@@ -43,6 +43,8 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     var __emptyTile = new EmptyCubeTile();
 
+    var __framesAreDirty = false;
+
     var _duration = 0;
 
     var __lastRenderedStrip = null;
@@ -212,7 +214,6 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         __updateAnimator();
         __updateAnimationCursorPosition();
         __updateAnimationColumnTouchers();
-        __generateAnimationFrames();
 
         if (cubePlaylistController.playing)
         {
@@ -228,10 +229,8 @@ var CubePlaylistController = function CubePlaylistController(opts) {
     }
 
     function __updateForTileChange() {
-        __updateTilesWithSpacing();
-        __updateTileStrip();
         __updateTileThumbs();
-        __generateAnimationFrames();
+        __framesAreDirty = true;
     }
 
     function __emitTileChangeEvent() {
@@ -669,6 +668,25 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         }
     });
 
+    Object.defineProperty(this, 'updateForPlayback', {
+        writable: false,
+        value: function() {
+            if (__framesAreDirty)
+            {
+                var that = this;
+                this.emit('renderingFrames', {state: 'busy'});
+                setTimeout(function() {
+                    __updateTilesWithSpacing();
+                    __updateTileStrip();
+                    __generateAnimationFrames();
+                    __framesAreDirty = false;
+                    that.emit('renderingFrames', {state: 'idle'});
+                    that.stop().play();
+                }, 0);
+            }
+        },
+    });
+
     Object.defineProperty(this, 'getRenderFrame', {
         writable: false,
         value: function getRenderFrame(renderTime) {
@@ -824,6 +842,9 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             __updateAnimationSettings();
             __updateGeneratedFrameValidTimes();
             __refreshAnimationFramesWithGenerated();
+        } else if (changeData.property === 'playing')
+        {
+            this.updateForPlayback();
         }
     });
 

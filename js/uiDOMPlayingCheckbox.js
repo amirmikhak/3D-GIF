@@ -79,15 +79,17 @@ var UIDOMPlayingCheckbox = function UIDOMPlayingCheckbox(opts) {
     };
 
     function __addStyles() {
-        __jss.insertRule('input', {
+        __jss.insertRule('&.playing', {
+            'background-color': '#999',
+        }).insertRule('&.rendering', {
+            '-webkit-animation': 'rendering 700ms infinite linear alternate',
+        }).insertRule('input', {
             'position': 'absolute',
             'opacity': '0',
             'z-index': '-1',
             'top': '0',
             'left': '0',
-        });
-
-        __jss.insertRule('label', {
+        }).insertRule('label', {
             'cursor': 'pointer',
         });
     }

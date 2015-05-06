@@ -267,6 +267,9 @@ var domMediator = new UIMediator({
         } else if (_eventPropertyChangedIs(event, 'activeController'))
         {
             _setPlaying.call(this, event.ctrl.playing);
+        } else if (event.type === 'renderingFrames')
+        {
+            this.containerEl.classList.toggle('rendering', (event.data.state === 'busy'));
         }
 
         function _setPlaying(newPlaying) {

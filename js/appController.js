@@ -73,6 +73,14 @@ var AppController = function AppController(opts) {
         });
     }
 
+    function __handleActiveControllerRenderingFrames(changeData) {
+        appCtrl.mediator.emit('mediatedEvent', {
+            origin: 'controller',
+            type: 'renderingFrames',
+            data: changeData,
+        });
+    }
+
     function __attachRendererToController(playAfterAttach) {
         if (_activeController)
         {
@@ -169,6 +177,7 @@ var AppController = function AppController(opts) {
                 if (_activeController)
                 {
                     _activeController.off('propertyChanged', __handleActiveControllerPropertyChanged);
+                    _activeController.off('renderingFrames', __handleActiveControllerRenderingFrames);
                 }
                 this.emit('propertyChanged', {
                     property: 'activeController',
@@ -188,10 +197,12 @@ var AppController = function AppController(opts) {
             if (_activeController)
             {
                 _activeController.off('propertyChanged', __handleActiveControllerPropertyChanged);
+                _activeController.off('renderingFrames', __handleActiveControllerRenderingFrames);
             }
             _activeControllerKey = newActiveControllerKey;
             _activeController = _loadedControllers[ctrlIndex];
             _activeController.on('propertyChanged', __handleActiveControllerPropertyChanged);
+            _activeController.on('renderingFrames', __handleActiveControllerRenderingFrames);
             __attachRendererToController(prevPlaying);
             this.emit('propertyChanged', {
                 property: 'activeController',
