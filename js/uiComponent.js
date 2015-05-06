@@ -2,7 +2,7 @@ var UIComponent = function UIComponent(opts) {
 
     var uiComponent = this;
 
-    Emitter(this);
+    CubeEventEmitter(this);
 
     var __fnNop = function() {};
 

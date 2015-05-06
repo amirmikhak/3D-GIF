@@ -1,6 +1,6 @@
 var CellRenderer = function CellRenderer(cell, opts) {
 
-    Emitter(this);
+    CubeEventEmitter(this);
 
     var __defaultOptions = {
         cell: cell,

@@ -2,7 +2,7 @@ var AppController = function AppController(opts) {
 
     var appCtrl = this;
 
-    Emitter(this);
+    CubeEventEmitter(this);
 
     var __defaultOptions = {
         renderer: null,

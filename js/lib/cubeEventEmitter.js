@@ -1,10 +1,10 @@
 /**
- * Initialize a new `Emitter`.
+ * Initialize a new `CubeEventEmitter`.
  *
  * @api public
  */
 
-function Emitter(obj) {
+function CubeEventEmitter(obj) {
   if (obj) return mixin(obj);
 };
 
@@ -17,8 +17,8 @@ function Emitter(obj) {
  */
 
 function mixin(obj) {
-  for (var key in Emitter.prototype) {
-    obj[key] = Emitter.prototype[key];
+  for (var key in CubeEventEmitter.prototype) {
+    obj[key] = CubeEventEmitter.prototype[key];
   }
   return obj;
 }
@@ -28,12 +28,12 @@ function mixin(obj) {
  *
  * @param {String} event
  * @param {Function} fn
- * @return {Emitter}
+ * @return {CubeEventEmitter}
  * @api public
  */
 
-Emitter.prototype.on =
-Emitter.prototype.addEventListener = function(event, fn){
+CubeEventEmitter.prototype.on =
+CubeEventEmitter.prototype.addEventListener = function(event, fn){
   this._callbacks = this._callbacks || {};
   (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
     .push(fn);
@@ -46,11 +46,11 @@ Emitter.prototype.addEventListener = function(event, fn){
  *
  * @param {String} event
  * @param {Function} fn
- * @return {Emitter}
+ * @return {CubeEventEmitter}
  * @api public
  */
 
-Emitter.prototype.once = function(event, fn){
+CubeEventEmitter.prototype.once = function(event, fn){
   function on() {
     this.off(event, on);
     fn.apply(this, arguments);
@@ -67,14 +67,14 @@ Emitter.prototype.once = function(event, fn){
  *
  * @param {String} event
  * @param {Function} fn
- * @return {Emitter}
+ * @return {CubeEventEmitter}
  * @api public
  */
 
-Emitter.prototype.off =
-Emitter.prototype.removeListener =
-Emitter.prototype.removeAllListeners =
-Emitter.prototype.removeEventListener = function(event, fn){
+CubeEventEmitter.prototype.off =
+CubeEventEmitter.prototype.removeListener =
+CubeEventEmitter.prototype.removeAllListeners =
+CubeEventEmitter.prototype.removeEventListener = function(event, fn){
   this._callbacks = this._callbacks || {};
 
   // all
@@ -110,17 +110,22 @@ Emitter.prototype.removeEventListener = function(event, fn){
  *
  * @param {String} event
  * @param {Mixed} ...
- * @return {Emitter}
+ * @return {CubeEventEmitter}
  */
 
-Emitter.prototype.emit = function(event){
+CubeEventEmitter.prototype.emit = function(event){
   this._callbacks = this._callbacks || {};
-  var args = [].slice.call(arguments, 1)
-    , callbacks = this._callbacks['$' + event];
+  var args = []
+    , callbacks = this._callbacks['$' + event]
+    , i = 0;
+  for (i; i < arguments.length; ++i)
+  {
+    args[i - 1] = arguments[i];
+  }
 
   if (callbacks) {
     callbacks = callbacks.slice(0);
-    for (var i = 0, len = callbacks.length; i < len; ++i) {
+    for (i = 0, len = callbacks.length; i < len; ++i) {
       callbacks[i].apply(this, args);
     }
   }
@@ -136,7 +141,7 @@ Emitter.prototype.emit = function(event){
  * @api public
  */
 
-Emitter.prototype.listeners = function(event){
+CubeEventEmitter.prototype.listeners = function(event){
   this._callbacks = this._callbacks || {};
   return this._callbacks['$' + event] || [];
 };
@@ -149,6 +154,6 @@ Emitter.prototype.listeners = function(event){
  * @api public
  */
 
-Emitter.prototype.hasListeners = function(event){
+CubeEventEmitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
