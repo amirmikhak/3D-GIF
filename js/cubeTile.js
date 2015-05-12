@@ -9,9 +9,9 @@ var CubeTile = function CubeTile(cells, cellOpts, shallow) {
 
     var __copyCell = function(originalCell, addlCellOpts, __shallow) {
         var mergedCellOptions = {
-            row: originalCell.row,
-            column: originalCell.column,
-            depth: originalCell.depth,
+            y: originalCell.y,
+            x: originalCell.x,
+            z: originalCell.z,
             on: originalCell.on,
             color: originalCell.color,
         };
@@ -82,12 +82,12 @@ var CubeTile = function CubeTile(cells, cellOpts, shallow) {
     this.reflectY = function() {
         var _reflectedCells = [];
 
-        for (var col = 0; col < 8; col++)
+        for (var x = 0; x < 8; x++)
         {
             var reflectedRow = [];
-            for (var row = 0; row < 8; row++)
+            for (var y = 0; y < 8; y++)
             {
-                reflectedRow.unshift(_cells[(col * 8) + row]);
+                reflectedRow.unshift(_cells[(x * 8) + y]);
             }
 
             _reflectedCells = _reflectedCells.concat(reflectedRow);
@@ -124,11 +124,11 @@ CubeTile.prototype.getPngData = function() {
     for (var idx = 0, numCells = this.cells.length; idx < numCells; idx++)
     {
         var cell = this.cells[idx];
-        cell.row = !isNaN(parseInt(cell.row, 10)) ? cell.row : Math.floor(idx % 8);
-        cell.column = !isNaN(parseInt(cell.column, 10)) ? cell.column : Math.floor(idx / 8);
+        cell.y = !isNaN(parseInt(cell.y, 10)) ? cell.y : Math.floor(idx % 8);
+        cell.x = !isNaN(parseInt(cell.x, 10)) ? cell.x : Math.floor(idx / 8);
 
-        var pixelOffsetX = cell.row * PIXEL_MULTIPLIER_W;
-        var pixelOffsetY = cell.column * PIXEL_MULTIPLIER_H;
+        var pixelOffsetX = cell.y * PIXEL_MULTIPLIER_W;
+        var pixelOffsetY = cell.x * PIXEL_MULTIPLIER_H;
 
         for (var subpixelCol = 0; subpixelCol < PIXEL_MULTIPLIER_W; subpixelCol++)
         {

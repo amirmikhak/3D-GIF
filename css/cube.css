@@ -190,11 +190,11 @@ body {
     border: 1px solid #ccc;
 }
 
-.cell:not([data-depth="0"])  {
+.cell:not([data-z="0"])  {
      opacity: 0.2;
 }
 
-.cell[data-row="0"]:after  {
+.cell[data-y="0"]:after  {
     top: 50%;
 }
 
