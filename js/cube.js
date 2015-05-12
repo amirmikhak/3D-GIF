@@ -117,6 +117,29 @@ Cube.prototype.getForAnimationFrame = function() {
     return retCube;
 };
 
+Cube.prototype.getForPhysicalCube = function() {
+    /**
+     * Converts the array of cells to be in the order that the physical cube's
+     * buffer expect them: origin is back bottom left, axis order: up, right,
+     * forward.
+     */
+    var outputCells = [];
+    for (var z = this._size - 1; z >= 0; z--)
+    {
+        for (var x = 0; x < this._size; x++)
+        {
+            for (var y = 0; y < this._size; y++)
+            {
+                outputCells.push(this.getCellAt(x, y, z));
+            }
+        }
+    }
+    return {
+        size: this._size,
+        cells: outputCells,
+    };
+};
+
 Cube.prototype.getNewValueForShift = function(cellPos, cubeSize, wrap, stepSize) {
     var cellPlusSize = cellPos + stepSize;
     if ((cellPlusSize >= 0) && (cellPlusSize < cubeSize))
