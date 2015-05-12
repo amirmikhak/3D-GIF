@@ -187,7 +187,7 @@ CubeAssetsStore.prototype.getCharacterRender = function(char, desiredColor) {
      */
     return new CubeTile(charPixels, {
         color: desiredColor,
-    });
+    }).reflectY();
 };
 
 CubeAssetsStore.prototype.getShapeRender = function(shapeName) {
@@ -198,5 +198,5 @@ CubeAssetsStore.prototype.getShapeRender = function(shapeName) {
         throw 'Invalid shape';
     }
 
-    return new CubeTile(this.activeShapeSetShapes[shapeName]);
+    return new CubeTile(this.activeShapeSetShapes[shapeName]).reflectY();
 };

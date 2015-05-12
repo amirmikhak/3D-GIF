@@ -426,10 +426,10 @@ CubeRealtimeUserController.prototype.getAnimationCb = function getAnimationCb() 
     if (this.action === 'slide')
     {
         return {
-            up: function() { that.cube.shiftPlane('X', that.stepSize, that.wrap); },
-            down: function() { that.cube.shiftPlane('X', -1 * that.stepSize, that.wrap); },
-            left: function() { that.cube.shiftPlane('Y', that.stepSize, that.wrap); },
-            right: function() { that.cube.shiftPlane('Y', -1 * that.stepSize, that.wrap); },
+            up: function() { that.cube.shiftPlane('Y', -1 * that.stepSize, that.wrap); },
+            down: function() { that.cube.shiftPlane('Y', that.stepSize, that.wrap); },
+            left: function() { that.cube.shiftPlane('X', that.stepSize, that.wrap); },
+            right: function() { that.cube.shiftPlane('X', -1 * that.stepSize, that.wrap); },
             forward: function() { that.cube.shiftPlane('Z', that.stepSize, that.wrap); },
             back: function() { that.cube.shiftPlane('Z', -1 * that.stepSize, that.wrap); },
         }[this.direction];

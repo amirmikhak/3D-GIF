@@ -198,7 +198,7 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         {
            var xformPieces = (
                'translateX(' + (_size * cell['x']) + 'px) ' +
-               'translateY(' + (_size * cell['y']) + 'px) ' +
+               'translateY(' + (-1 * _size * cell['y']) + 'px) ' +
                'translateZ(' + (-1 * _size * cell['z']) + 'px) '
            );
            if (hasRotation)
