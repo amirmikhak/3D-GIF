@@ -124,7 +124,7 @@ CubeTile.prototype.getPngData = function() {
     for (var idx = 0, numCells = this.cells.length; idx < numCells; idx++)
     {
         var cell = this.cells[idx];
-        cell.y = !isNaN(parseInt(cell.y, 10)) ? cell.y : Math.floor(idx % 8);
+        cell.y = !isNaN(parseInt(cell.y, 10)) ? cell.y : (7 - Math.floor(idx % 8));
         cell.x = !isNaN(parseInt(cell.x, 10)) ? cell.x : Math.floor(idx / 8);
 
         var pixelOffsetX = cell.y * PIXEL_MULTIPLIER_W;
