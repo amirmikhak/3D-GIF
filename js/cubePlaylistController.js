@@ -43,7 +43,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     var __emptyTile = new EmptyCubeTile();
 
-    var __framesAreDirty = false;
+    var __framesAreDirty = true;
 
     var _duration = 0;
 
@@ -674,10 +674,11 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
     Object.defineProperty(this, 'updateForPlayback', {
         writable: false,
-        value: function() {
+        value: function(doneCb) {
             if (__framesAreDirty)
             {
                 var that = this;
+                var wasPlaying = !!this.playing;
                 this.emit('renderingFrames', {state: 'busy'});
                 setTimeout(function() {
                     __updateTilesWithSpacing();
@@ -685,7 +686,11 @@ var CubePlaylistController = function CubePlaylistController(opts) {
                     __generateAnimationFrames();
                     __framesAreDirty = false;
                     that.emit('renderingFrames', {state: 'idle'});
-                    that.stop().play();
+                    (doneCb || function(){})();
+                    if (wasPlaying)
+                    {
+                        that.stop().play();
+                    }
                 }, 0);
             }
         },
@@ -824,6 +829,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
 
             var prevSpacing = _options['spacing'];
             _options['spacing'] = Math.max(0, parsed);   // must be int greater than or equal to 0
+            __updateAnimationSettings();
             __updateTilesWithSpacing();
             __updateTileStrip();
 
@@ -859,9 +865,7 @@ var CubePlaylistController = function CubePlaylistController(opts) {
         {
             if (changeData.newValue)
             {
-                this.updateForPlayback();
-                this.clearAnimationFrames();
-                this.repopulateAnimationFrames();
+                this.updateRegenerateAndRepopulateAnimationFrames();
             }
         }
     });
@@ -904,6 +908,15 @@ CubePlaylistController.prototype.step = function(numSteps) {
 };
 
 CubePlaylistController.prototype.update = function(frameValidStart, frameValidEnd) {};
+
+CubePlaylistController.prototype.updateRegenerateAndRepopulateAnimationFrames = function(doneCb) {
+    var that = this;
+    this.updateForPlayback(function() {
+        that.clearAnimationFrames();
+        that.repopulateAnimationFrames();
+        (doneCb || function(){})();
+    });
+};
 
 CubePlaylistController.prototype.repopulateAnimationFrames = function() {
     if (!this.currentAnimationFrame)

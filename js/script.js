@@ -3,9 +3,9 @@ var _eventPropertyChangedIs = function(e, p) {
 }
 
 var CubeAssets = new CubeAssetsStore();
-CubeAssets.loadFont('printChar21', '/js/assets/cube8PrintChar21Font.json');
+CubeAssets.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json');
 var loadShapes = new Promise(function(success, failure) {
-    CubeAssets.loadShapeSet('basic', '/js/assets/cube8BasicShapes.json', success);
+    CubeAssets.loadShapeSet('basic', 'js/assets/cube8BasicShapes.json', success);
 });
 
 var domMediator = new UIMediator({
@@ -253,6 +253,32 @@ var domMediator = new UIMediator({
             return;
         }
     },
+})).addComponent('sendButton', new UIDOMSendButton({
+    containerEl: document.getElementsByClassName('send')[0],
+    componentEventCb: function(event) {
+        var that = this;
+        var prevBgColor = this.containerEl.style.backgroundColor;
+        this.containerEl.style.backgroundColor = 'red';
+        event.ctrl.updateRegenerateAndRepopulateAnimationFrames(function() {
+            console.log('called back (b)');
+            $.ajax({
+                type: 'post',
+                url: '/api/animation',
+                data: {
+                    type: appCtrl.activeControllerKey,
+                    frames: JSON.stringify(event.ctrl.animationFrames.map(function(frame) {
+                        return {
+                            start: frame.start,
+                            end: frame.end,
+                            data: JSON.stringify(frame.data.getForPhysicalCubeAsBuffer()),
+                        };
+                    })),
+                },
+            }).done(function() {
+                that.containerEl.style.backgroundColor = prevBgColor;
+            });
+        });
+    },
 })).addComponent('playToggle', new UIDOMPlayingCheckbox({
     containerEl: document.getElementsByClassName('play')[0],
     controllerInitCb: function(appCtrl) {
@@ -343,6 +369,6 @@ loadShapes.then(function shapesLoaded() {
         CubeAssets.getShapeRender('square'),
     ]);
     console.log('done adding shape tiles!');
-    appCtrl.activeController = 'realtime';
-    appCtrl.playing = true;
+    // appCtrl.activeController = 'realtime';
+    // appCtrl.playing = true;
 });
