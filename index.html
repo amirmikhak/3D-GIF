@@ -5,36 +5,55 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
     <link rel="stylesheet" type="text/css" href="css/cube.css" />
-    <script type="text/javascript" src="js/lib/lodash.js"></script>
+    <script type="text/javascript" src="js/lib/cubeEventEmitter.js"></script>
     <script type="text/javascript" src="js/lib/dom-helpers.js"></script>
     <script type="text/javascript" src="js/lib/misc-helpers.js"></script>
+    <script type="text/javascript" src="js/lib/jsStyleSheet.js"></script>
 </head>
 
 <body class="l3d">
-    <div id="container">
-        <div id="cube-wrapper">
-            <div id="write-face-picker"></div>
-            <div id="color-picker"></div>
-            <div id="playback-controls">
-                <div id="realtime-controls"></div>
-                <div id="playlist-controls"></div>
+    <div class="container">
+        <div class="cube-wrapper">
+            <div class="write-face-picker"></div>
+            <div class="color-picker"></div>
+            <div class="playback-controls">
+                <div class="realtime-controls"></div>
+                <div class="playlist-controls"></div>
             </div>
-            <div id="controls">
-                <div id="playback-mode" class="control-button">--</div>
-                <div id="prev-step" class="control-button">Prev</div>
-                <div id="next-step" class="control-button">Next</div>
-                <div id="play" class="control-button">Play</div>
-                <div id="clear" class="control-button">Clear</div>
+            <div class="controls">
+                <div class="playback-mode control-button"></div>
+                <!-- <div class="prev-step control-button">Prev</div> -->
+                <!-- <div class="next-step control-button">Next</div> -->
+                <div class="play control-button"></div>
+                <div class="clear control-button"></div>
             </div>
-            <div id="shape-picker"></div>
+            <div class="shape-picker"></div>
         </div>
     </div>
-    <script src="js/cell-dragging-delegate.js"></script>
+    <script src="js/cellDraggingDelegate.js"></script>
     <script src="js/cell.js"></script>
-    <script src="js/tile.js"></script>
-    <script src="js/playlist.js"></script>
+    <script src="js/cellRenderer.js"></script>
+    <script src="js/cellDOMRenderer.js"></script>
+    <script src="js/cubeTile.js"></script>
+    <script src="js/emptyCubeTile.js"></script>
+    <script src="js/cubeAssetsStore.js"></script>
     <script src="js/cube.js"></script>
-    <script src="js/cube-ui.js"></script>
+    <script src="js/cubeRenderer.js"></script>
+    <script src="js/cubeDOMRenderer.js"></script>
+    <script src="js/cubeController.js"></script>
+    <script src="js/cubeRealtimeUserController.js"></script>
+    <script src="js/cubePlaylistController.js"></script>
+    <script src="js/uiMediator.js"></script>
+    <script src="js/uiComponent.js"></script>
+    <script src="js/uiDOMPlayingCheckbox.js"></script>
+    <script src="js/uiDOMLabelledButton.js"></script>
+    <script src="js/uiDOMClearButton.js"></script>
+    <script src="js/uiDOMFacePicker.js"></script>
+    <script src="js/uiDOMColorPicker.js"></script>
+    <script src="js/uiDOMShapePicker.js"></script>
+    <script src="js/uiDOMRealtimeControls.js"></script>
+    <script src="js/uiDOMPlaylistControls.js"></script>
+    <script src="js/appController.js"></script>
     <script src="js/script.js"></script>
 </body>
 
