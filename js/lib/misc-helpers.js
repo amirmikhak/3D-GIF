@@ -26,6 +26,7 @@ function applyOptions(newOpts) {
         } else
         {
             console.error('Invalid option for ' + this.constructor.name + ': ' + key);
+            console.trace();
         }
     }
 

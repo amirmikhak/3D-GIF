@@ -31,12 +31,9 @@ var i = 0
     , getMuhCube = function() {
         if (!muhCubes.length)
         {
-            // console.log('refilling cubes');
             getMoreCubesInto(muhCubes);
         }
-        var ret = muhCubes.length ? muhCubes.shift() : __emptyCube;
-        // console.log('tick', ret === __emptyCube);
-        return ret;
+        return muhCubes.length ? muhCubes.shift() : __emptyCube;
     };
 
 console.log('render loop starting');

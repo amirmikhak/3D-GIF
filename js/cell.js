@@ -1,8 +1,8 @@
 var Cell = function Cell(opts) {
     var __defaultOptions = {
-        row: null,
-        column: null,
-        depth: null,
+        y: null,
+        x: null,
+        z: null,
         color: [0, 0, 255],    // We'll store colors internally as an RGB array
         on: false,
         renderer: null,
@@ -25,27 +25,27 @@ var Cell = function Cell(opts) {
     return this;
 };
 
-Object.defineProperty(Cell.prototype, 'row', {
-    get: function() { return this._options['row']; },
+Object.defineProperty(Cell.prototype, 'y', {
+    get: function() { return this._options['y']; },
     set: function(newRow) {
-        this._options['row'] = newRow;
-        this.__coordAsString = this.column + ',' + this.row + ',' + this.depth;
+        this._options['y'] = newRow;
+        this.__coordAsString = this.x + ',' + this.y + ',' + this.z;
     },
 });
 
-Object.defineProperty(Cell.prototype, 'column', {
-    get: function() { return this._options['column']; },
+Object.defineProperty(Cell.prototype, 'x', {
+    get: function() { return this._options['x']; },
     set: function(newColumn) {
-        this._options['column'] = newColumn;
-        this.__coordAsString = this.column + ',' + this.row + ',' + this.depth;
+        this._options['x'] = newColumn;
+        this.__coordAsString = this.x + ',' + this.y + ',' + this.z;
     },
 });
 
-Object.defineProperty(Cell.prototype, 'depth', {
-    get: function() { return this._options['depth']; },
+Object.defineProperty(Cell.prototype, 'z', {
+    get: function() { return this._options['z']; },
     set: function(newDepth) {
-        this._options['depth'] = newDepth;
-        this.__coordAsString = this.column + ',' + this.row + ',' + this.depth;
+        this._options['z'] = newDepth;
+        this.__coordAsString = this.x + ',' + this.y + ',' + this.z;
     },
 });
 
@@ -89,9 +89,9 @@ Object.defineProperty(Cell.prototype, 'renderer', {
 Object.defineProperty(Cell.prototype, 'options', {
     get: function() {
         return {
-            'row': this.row,
-            'column': this.column,
-            'depth': this.depth,
+            'y': this.y,
+            'x': this.x,
+            'z': this.z,
             'on': this.on,
             'color': this.color,
         };

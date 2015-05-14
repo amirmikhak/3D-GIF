@@ -177,13 +177,14 @@ var CubeDOMRenderer = function CubeDOMRenderer(opts) {
             _html.style.transformStyle = 'preserve-3d';
             _html.style.transformOrigin = (
                 (cubeDOMRenderer.outerDimensions / 2) + 'px ' +
-                (cubeDOMRenderer.outerDimensions / 2) + 'px ' +
+                ((cubeDOMRenderer.outerDimensions / 2) * -1) + 'px ' +
                 ((cubeDOMRenderer.outerDimensions / 2) * -1) + 'px'
             );
         }
         if (__dirtyViewAngle)
         {
             _html.style.transform = (
+                'translateY(' + cubeDOMRenderer.outerDimensions + 'px) ' +
                 'rotateX(' + _options['xAngle'] + 'deg) ' +
                 'rotateY(' + _options['yAngle'] + 'deg)'
             );
