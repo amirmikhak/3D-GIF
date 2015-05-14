@@ -3,7 +3,9 @@ var _eventPropertyChangedIs = function(e, p) {
 }
 
 var CubeAssets = new CubeAssetsStore();
-CubeAssets.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json');
+var loadFonts = new Promise(function(success, failure) {
+    CubeAssets.loadFont('printChar21', 'js/assets/cube8PrintChar21Font.json', success);
+});
 var loadShapes = new Promise(function(success, failure) {
     CubeAssets.loadShapeSet('basic', 'js/assets/cube8BasicShapes.json', success);
 });
@@ -133,117 +135,6 @@ var domMediator = new UIMediator({
             }
         }
     },
-})).addComponent('playlistControls', new UIDOMPlaylistControls({
-    containerEl: document.getElementsByClassName('playlist-controls')[0],
-    controllerInitCb: function(appCtrl) {
-        var ctrl = appCtrl.activeController;
-        if (ctrl && ctrl.direction) {
-            this.selectedDirection = ctrl.direction;
-        }
-        if (ctrl && ctrl.wrapDirection) {
-            this.selectedWrapDirection = ctrl.wrapDirection;
-        }
-        if (ctrl && ctrl.fullTileData) {
-            this.tiles = ctrl.fullTileData;
-        }
-    },
-    componentEventCb: function(event) {
-        var enumProperties = ['wrapDirection', 'mode'];
-        enumProperties.forEach(function(prop) {
-            if (event.ctrl.hasOwnProperty(prop + 's') && event.ctrl[prop + 's'].indexOf(event.data) !== -1)
-            {
-                event.ctrl[prop] = event.data;
-            }
-        });
-        if (event.type === 'loopingChanged')
-        {
-            if (event.ctrl.hasOwnProperty('looping'))
-            {
-                event.ctrl.looping = !!event.data;
-            }
-        } else if (event.type === 'spacingChanged')
-        {   // !TODO: add handing for spacingChanged to UIDOMPlaylistControls
-        } else if (event.type === 'animationIntervalChanged')
-        {   // !TODO: add handing for animationIntervalChanged to UIDOMPlaylistControls
-        } else if (event.type === 'tileAdded')
-        {
-            if (!event.ctrl.can('insertTile'))
-            {
-                return;
-            }
-            var cubeTile;
-            if (event.data.tileType === 'raw')
-            {
-                cubeTile = event.data.tileData;
-            } else if (event.data.tileType === 'character')
-            {
-                var colorRGB = event.ctrl.cube.colors[event.ctrl.penColor];
-                cubeTile = CubeAssets.getCharacterRender(event.data.tileData, colorRGB);
-            } else if (event.data.tileType === 'shapeIndex')
-            {
-                var shapeName = Object.keys(CubeAssets.activeShapeSetShapes)[event.data.tileData];
-                if (shapeName)
-                {
-                    cubeTile = CubeAssets.getShapeRender(shapeName);
-                }
-            }
-            event.ctrl.insertTile.apply(event.ctrl, [
-                (cubeTile ? cubeTile : new EmptyCubeTile()),
-                event.data.tileIdx,
-            ]);
-            this.cursorPosition++;
-        } else if (event.type === 'tileBackspaced')
-        {
-            var tileIndex = event.data - 1;
-            if (tileIndex >= 0)
-            {
-                event.ctrl.removeTileByIndex.call(event.ctrl, tileIndex);
-                this.cursorPosition--;
-            }
-        } else if (event.type === 'tileDeleted')
-        {
-            if (event.data < event.ctrl.getTiles().length)
-            {
-                event.ctrl.removeTileByIndex.call(event.ctrl, event.data);
-            }
-        } else if (event.type === 'playToggled')
-        {
-            event.ctrl.togglePlaying();
-        }
-    },
-    controllerEventCb: function(event) {
-        if (_eventPropertyChangedIs(event, 'activeController'))
-        {
-            // !TODO: consider a more elegant way (not using instanceof) of determining whether this should be visible
-            if (event.ctrl instanceof CubePlaylistController)
-            {
-                this.selectedLooping = event.ctrl.looping;
-                this.selectedMode = event.ctrl.mode;
-                this.selectedWrapDirection = event.ctrl.wrapDirection;
-                this.tiles = event.ctrl.fullTileData;
-                // !TODO: add support for setting spacing from GUI
-                // this.selectedSpacing = event.ctrl.spacing;
-                // !TODO: add support for setting animationInterval from GUI
-                // this.selectedAnimationInterval = event.ctrl.animationInterval;
-                this.bringToFront();
-            } else
-            {
-                this.sendToBack();
-            }
-        } else if (_eventPropertyChangedIs(event, 'looping'))
-        {
-            this.selectedLooping = event.ctrl.looping;
-        } else if (_eventPropertyChangedIs(event, 'mode'))
-        {
-            this.selectedMode = event.ctrl.mode;
-        } else if (_eventPropertyChangedIs(event, 'wrapDirection'))
-        {
-            this.selectedWrapDirection = event.ctrl.wrapDirection;
-        } else if (_eventPropertyChangedIs(event, 'playlistTiles'))
-        {
-            this.tiles = event.ctrl.fullTileData;
-        }
-    },
 })).addComponent('clearButton', new UIDOMClearButton({
     containerEl: document.getElementsByClassName('clear')[0],
     componentEventCb: function(event) {
@@ -257,25 +148,34 @@ var domMediator = new UIMediator({
     containerEl: document.getElementsByClassName('send')[0],
     componentEventCb: function(event) {
         var that = this;
-        var prevBgColor = this.containerEl.style.backgroundColor;
         this.containerEl.style.backgroundColor = 'red';
         event.ctrl.updateRegenerateAndRepopulateAnimationFrames(function() {
-            console.log('called back (b)');
             $.ajax({
                 type: 'post',
-                url: '/api/animation',
+                url: 'http://' + that.containerEl.querySelector('input[type="text"]').value,
                 data: {
-                    type: appCtrl.activeControllerKey,
                     frames: JSON.stringify(event.ctrl.animationFrames.map(function(frame) {
-                        return {
-                            start: frame.start,
-                            end: frame.end,
-                            data: JSON.stringify(frame.data.getForPhysicalCubeAsBuffer()),
-                        };
+                        return frame.data.getForPhysicalCubeAsBuffer();
                     })),
                 },
+                /**
+                 * Code for POSTing frames to webserver from which L3D could
+                 * poll, but this isn't implemented on the L3D yet.
+                 *
+                 * // url: '/api/animation',
+                 * // data: {
+                 * //     type: appCtrl.activeControllerKey,
+                 * //     frames: JSON.stringify(event.ctrl.animationFrames.map(function(frame) {
+                 * //         return {
+                 * //             start: frame.start,
+                 * //             end: frame.end,
+                 * //             data: JSON.stringify(frame.data.getForPhysicalCubeAsBuffer()),
+                 * //         };
+                 * //     })),
+                 * // },
+                 */
             }).done(function() {
-                that.containerEl.style.backgroundColor = prevBgColor;
+                that.containerEl.style.backgroundColor = null;
             });
         });
     },
@@ -358,7 +258,127 @@ var appCtrl = new AppController({
     spacing: 0,
 }));
 
-loadShapes.then(function shapesLoaded() {
+loadFonts.then(function fontsLoaded() {
+    domRenderer.listenForKeyEvents = false;
+    domMediator.addComponent('playlistControls', new UIDOMPlaylistControls({
+        containerEl: document.getElementsByClassName('playlist-controls')[0],
+        controllerInitCb: function(appCtrl) {
+            var ctrl = appCtrl.activeController;
+            if (ctrl && ctrl.direction) {
+                this.selectedDirection = ctrl.direction;
+            }
+            if (ctrl && ctrl.wrapDirection) {
+                this.selectedWrapDirection = ctrl.wrapDirection;
+            }
+            if (ctrl && ctrl.fullTileData) {
+                this.tiles = ctrl.fullTileData;
+            }
+        },
+        componentEventCb: function(event) {
+            var enumProperties = ['wrapDirection', 'mode'];
+            enumProperties.forEach(function(prop) {
+                if (event.ctrl.hasOwnProperty(prop + 's') && event.ctrl[prop + 's'].indexOf(event.data) !== -1)
+                {
+                    event.ctrl[prop] = event.data;
+                }
+            });
+            if (event.type === 'loopingChanged')
+            {
+                if (event.ctrl.hasOwnProperty('looping'))
+                {
+                    event.ctrl.looping = !!event.data;
+                }
+            } else if (event.type === 'spacingChanged')
+            {
+                if (event.ctrl.hasOwnProperty('spacing'))
+                {
+                    event.ctrl.spacing = event.data;
+                }
+            } else if (event.type === 'animationIntervalChanged')
+            {   // !TODO: add handing for animationIntervalChanged to UIDOMPlaylistControls
+            } else if (event.type === 'tileAdded')
+            {
+                if (!event.ctrl.can('insertTile'))
+                {
+                    return;
+                }
+                var cubeTile;
+                if (event.data.tileType === 'raw')
+                {
+                    cubeTile = event.data.tileData;
+                } else if (event.data.tileType === 'character')
+                {
+                    var colorRGB = event.ctrl.cube.colors[event.ctrl.penColor];
+                    cubeTile = CubeAssets.getCharacterRender(event.data.tileData, colorRGB);
+                } else if (event.data.tileType === 'shapeIndex')
+                {
+                    var shapeName = Object.keys(CubeAssets.activeShapeSetShapes)[event.data.tileData];
+                    if (shapeName)
+                    {
+                        cubeTile = CubeAssets.getShapeRender(shapeName);
+                    }
+                }
+                event.ctrl.insertTile.apply(event.ctrl, [
+                    (cubeTile ? cubeTile : new EmptyCubeTile()),
+                    event.data.tileIdx,
+                ]);
+                this.cursorPosition++;
+            } else if (event.type === 'tileBackspaced')
+            {
+                var tileIndex = event.data - 1;
+                if (tileIndex >= 0)
+                {
+                    event.ctrl.removeTileByIndex.call(event.ctrl, tileIndex);
+                    this.cursorPosition--;
+                }
+            } else if (event.type === 'tileDeleted')
+            {
+                if (event.data < event.ctrl.getTiles().length)
+                {
+                    event.ctrl.removeTileByIndex.call(event.ctrl, event.data);
+                }
+            } else if (event.type === 'playToggled')
+            {
+                event.ctrl.togglePlaying();
+            }
+        },
+        controllerEventCb: function(event) {
+            if (_eventPropertyChangedIs(event, 'activeController'))
+            {
+                // !TODO: consider a more elegant way (not using instanceof) of determining whether this should be visible
+                if (event.ctrl instanceof CubePlaylistController)
+                {
+                    this.selectedLooping = event.ctrl.looping;
+                    this.selectedMode = event.ctrl.mode;
+                    this.selectedWrapDirection = event.ctrl.wrapDirection;
+                    this.tiles = event.ctrl.fullTileData;
+                    this.selectedSpacing = event.ctrl.spacing;
+                    // !TODO: add support for setting animationInterval from GUI
+                    // this.selectedAnimationInterval = event.ctrl.animationInterval;
+                    this.bringToFront();
+                } else
+                {
+                    this.sendToBack();
+                }
+            } else if (_eventPropertyChangedIs(event, 'looping'))
+            {
+                this.selectedLooping = event.ctrl.looping;
+            } else if (_eventPropertyChangedIs(event, 'mode'))
+            {
+                this.selectedMode = event.ctrl.mode;
+            } else if (_eventPropertyChangedIs(event, 'wrapDirection'))
+            {
+                this.selectedWrapDirection = event.ctrl.wrapDirection;
+            } else if (_eventPropertyChangedIs(event, 'playlistTiles'))
+            {
+                this.tiles = event.ctrl.fullTileData;
+            }
+        },
+    }));
+    domRenderer.listenForKeyEvents = true;
+});
+
+Promise.all([loadShapes, loadFonts]).then(function() {
     domMediator.getComponent('shapePicker').shapes = CubeAssets.activeShapeSetShapes;
     console.log('adding shape tiles to playlist...');
     appCtrl.activeController = 'playlist';

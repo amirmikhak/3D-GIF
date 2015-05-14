@@ -4,6 +4,8 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
 
     var uiPlaylistControls = this;
 
+    var MAX_SPACING = 8;
+
     var __defaultOptions = {
         wrapDirections: (new CubePlaylistController).wrapDirections,
         modes: (new CubePlaylistController).modes,
@@ -83,6 +85,16 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
         return radioElArray;
     }
 
+    function __setSpacingTile(newSpacing) {
+        var tileEl = uiPlaylistControls.containerEl ?
+            uiPlaylistControls.containerEl.querySelector('.spacing-selector .tile') :
+            null;
+        if (tileEl)
+        {
+            tileEl.src = CubeAssets.getCharacterRender(newSpacing.toString(), [80, 80, 80]).getPngData();
+        }
+    }
+
     function __setLoopingCheckboxChecked(newChecked) {
         var inputEl = uiPlaylistControls.containerEl ?
             uiPlaylistControls.containerEl.querySelector('.looping-cb input') :
@@ -99,7 +111,19 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
     }
 
     function __containerClickListener(e) {
-        uiPlaylistControls.inFocus = true;
+        var ui = uiPlaylistControls;
+        if (getClosest(e.target, '.spacing-selector'))
+        {
+            ui.selectedSpacing += 1;
+            ui.mediator.emit('componentEvent', {
+                type: 'spacingChanged',
+                data: ui.selectedSpacing,
+                component: ui,
+                callback: ui.componentEventCb,
+            });
+        }
+
+        ui.inFocus = true;
         e.stopImmediatePropagation();
     }
 
@@ -340,6 +364,20 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
         });
     });
 
+    Object.defineProperty(this, 'selectedSpacing', {
+        get: function() { return _options['spacing']; },
+        set: function(newSelectedSpacing) {
+            var prevSelectedSpacing = _options['spacing'];
+            _options['spacing'] = (parseInt(newSelectedSpacing, 10) % (MAX_SPACING + 1)) || 0;
+            __setSpacingTile(_options['spacing']);
+            this.emit('propertyChanged', {
+                property: 'selectedSpacing',
+                oldValue: prevSelectedSpacing,
+                newValue: newSelectedSpacing,
+            });
+        },
+    });
+
     Object.defineProperty(this, 'selectedLooping', {
         get: function() { return _options['looping']; },
         set: function(newSelectedLooping) {
@@ -452,8 +490,17 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
             return loopingCheckboxEl;
         },
         spacingIndicatorHTML: function() {
-            // !TODO: implement __buildSpacingIndicatorHTML()
-            return document.createDocumentFragment();
+            var labelEl = document.createElement('label');
+            labelEl.className = 'label';
+            labelEl.innerHTML = 'spacing';
+            var tileEl = document.createElement('img');
+            tileEl.className = 'tile';
+            tileEl.src = '';
+            var wrapperEl = document.createElement('div');
+            wrapperEl.className = 'spacing-selector';
+            wrapperEl.appendChild(labelEl);
+            wrapperEl.appendChild(tileEl);
+            return wrapperEl;
         },
         animationIntervalIndicatorHTML: function() {
             // !TODO: implement __buildAnimationIntervalIndicatorHTML()
@@ -551,6 +598,36 @@ var UIDOMPlaylistControls = function UIDOMPlaylistControls(opts) {
             'left': '-182px',
         }).insertRule('&.show-direction-selector .wrap-direction-selector', {
             'width': '50px',
+        }).insertRule('.spacing-selector', {
+            'box-sizing': 'border-box',
+            'position': 'absolute',
+            'top': 'calc(50% - 25px)',
+            'right': 'calc(-1 * 50 * 1.25px - 60px)',
+            'border': '1px solid #ccc',
+            'width': '50px',
+            'height': '50px',
+            'font-size': '0',
+            'cursor': 'pointer',
+            '-webkit-user-select': 'none',
+        }).insertRule('.spacing-selector label', {
+            'position': 'absolute',
+            'bottom': '-1.4em',
+            'left': '-5px',
+            'color': '#555',
+            'font-size': '12px',
+            'letter-spacing': '1.1px',
+        }).insertRule('.spacing-selector .tile', {
+            'display': 'block',
+            'position': 'absolute',
+            'top': '0',
+            'right': '0',
+            'bottom': '0',
+            'left': '0',
+            'margin': '0',
+            'padding': '0',
+            'border': 'none',
+            'width': '100%',
+            'height': '100%',
         }).insertRule('.looping-cb', {
             'box-sizing': 'border-box',
             'position': 'absolute',
