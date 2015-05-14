@@ -30,6 +30,49 @@ var UIDOMSendButton = function UIDOMSendButton(opts) {
     };
 
     // init
+    var __guid = 'x' + guid();  // prepend a non-numeric character to ensure class names are valid
+    var __jss = new JsStyleSheet(__guid);
+
+    __jss.insertRule('&', {
+        'position': 'relative',
+    });
+
+    __jss.insertRule('input[type="text"]', {
+        'position': 'absolute',
+        'top': '100%',
+        'left': '0',
+        'display': 'none',
+        'font-size': '16px',
+        'font-family': '"Andale Mono", monospace',
+        'width': '140px',
+        'height': '32px',
+        'border': '1px solid black',
+        'padding': '12px',
+    });
+
+    __jss.insertRule('&:hover input[type="text"]', {
+        'display': 'block',
+    });
+
+    var __stopPropagation = function(e) {
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+    };
+
+    var __preventDefault = function(e) {
+        e.preventDefault();
+    };
+
+    var inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.addEventListener('keydown', __stopPropagation);
+    inputEl.addEventListener('keyup', __stopPropagation);
+    inputEl.addEventListener('keypress', __stopPropagation);
+    inputEl.addEventListener('click', __stopPropagation);
+    inputEl.addEventListener('click', __preventDefault);
+    this.containerEl.classList.add(__guid);
+    this.containerEl.appendChild(inputEl);
+
     applyOptions.call(this, _options);
 
     return this;
