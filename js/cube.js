@@ -140,6 +140,33 @@ Cube.prototype.getForPhysicalCube = function() {
     };
 };
 
+Cube.prototype.getForPhysicalCubeAsBuffer = function() {
+    /**
+     * Extract the colors of the cells in the expected order (by the L3D) into
+     * a single long array.
+     */
+    var outputBuffer = [];
+    for (var z = this._size - 1; z >= 0; z--)
+    {
+        for (var x = 0; x < this._size; x++)
+        {
+            for (var y = 0; y < this._size; y++)
+            {
+                var cell = this.getCellAt(x, y, z);
+                var cellColor = (cell.on ?
+                    [cell.color[1], cell.color[0], cell.color[2]] :
+                    [0, 0, 0]
+                ).map(function(byte) {
+                    return Math.floor(byte / 16);
+                });
+                var spliceArgs = [outputBuffer.length, 0].concat(cellColor);
+                Array.prototype.splice.apply(outputBuffer, spliceArgs);
+            }
+        }
+    }
+    return outputBuffer;
+};
+
 Cube.prototype.getNewValueForShift = function(cellPos, cubeSize, wrap, stepSize) {
     var cellPlusSize = cellPos + stepSize;
     if ((cellPlusSize >= 0) && (cellPlusSize < cubeSize))
