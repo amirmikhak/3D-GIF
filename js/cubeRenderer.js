@@ -1,6 +1,6 @@
 var CubeRenderer = function CubeRenderer(opts) {
 
-    Emitter(this);
+    CubeEventEmitter(this);
 
     var __defaultOptions = {
         cube: null,

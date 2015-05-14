@@ -102,12 +102,12 @@ var CubePlaylistController = function CubePlaylistController(opts) {
             var cell = cubeCells[i];
 
             var shouldBeInteractive = {
-                front: (cell.depth === 0),
-                left: (cell.column === 0),
-                back: (cell.depth === 7),
-                right: (cell.column === 7),
-                top: (cell.row === 0),
-                bottom: (cell.row === 7),
+                front: (cell.z === 0),
+                left: (cell.x === 0),
+                back: (cell.z === 7),
+                right: (cell.x === 7),
+                top: (cell.y === 0),
+                bottom: (cell.y === 7),
             }[_options['writeFace']];
 
             if (shouldBeInteractive)

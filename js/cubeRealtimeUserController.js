@@ -49,12 +49,12 @@ var CubeRealtimeUserController = function CubeRealtimeUserController(opts) {
             var cell = cubeCells[i];
 
             var shouldBeInteractive = {
-                front: (cell.depth === 0),
-                left: (cell.column === 0),
-                back: (cell.depth === 7),
-                right: (cell.column === 7),
-                top: (cell.row === 0),
-                bottom: (cell.row === 7),
+                front: (cell.z === 0),
+                left: (cell.x === 0),
+                back: (cell.z === 7),
+                right: (cell.x === 7),
+                top: (cell.y === 0),
+                bottom: (cell.y === 7),
             }[_options['writeFace']];
 
             if (shouldBeInteractive)
@@ -426,10 +426,10 @@ CubeRealtimeUserController.prototype.getAnimationCb = function getAnimationCb() 
     if (this.action === 'slide')
     {
         return {
-            up: function() { that.cube.shiftPlane('X', that.stepSize, that.wrap); },
-            down: function() { that.cube.shiftPlane('X', -1 * that.stepSize, that.wrap); },
-            left: function() { that.cube.shiftPlane('Y', that.stepSize, that.wrap); },
-            right: function() { that.cube.shiftPlane('Y', -1 * that.stepSize, that.wrap); },
+            up: function() { that.cube.shiftPlane('Y', -1 * that.stepSize, that.wrap); },
+            down: function() { that.cube.shiftPlane('Y', that.stepSize, that.wrap); },
+            left: function() { that.cube.shiftPlane('X', that.stepSize, that.wrap); },
+            right: function() { that.cube.shiftPlane('X', -1 * that.stepSize, that.wrap); },
             forward: function() { that.cube.shiftPlane('Z', that.stepSize, that.wrap); },
             back: function() { that.cube.shiftPlane('Z', -1 * that.stepSize, that.wrap); },
         }[this.direction];

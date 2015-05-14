@@ -2,7 +2,7 @@ var UIMediator = function UIMediator() {
 
     var mediator = this;
 
-    Emitter(this);
+    CubeEventEmitter(this);
 
     var _componentKeys = [];
     var _components = [];

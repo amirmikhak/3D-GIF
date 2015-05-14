@@ -1,130 +1,113 @@
 var Cell = function Cell(opts) {
-
-    var cell = this; // 'this' can point to many, different things, so we grab an easy reference to the object
-
     var __defaultOptions = {
-        row: null,
-        column: null,
-        depth: null,
+        y: null,
+        x: null,
+        z: null,
         color: [0, 0, 255],    // We'll store colors internally as an RGB array
         on: false,
         renderer: null,
     };
 
+    this._options = {};
+    this.__colorAsString = '0,0,255';
+    this.__coordAsString = 'null,null,null';
+
     var _opts = opts || {};
-    var _options = {};
     var _optionKeys = Object.keys(__defaultOptions);
     for (var i = 0, numOpts = _optionKeys.length; i < numOpts; i++) {
-        _options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
+        this._options[_optionKeys[i]] = (_optionKeys[i] in _opts) ?
             _opts[_optionKeys[i]] :
             __defaultOptions[_optionKeys[i]];
     }
 
-    var __colorAsString = '0,0,255';
-    var __coordAsString = 'null,null,null';
-
-    function __invalidColor(colorArr) {
-        return (
-            !(colorArr instanceof Array) ||
-            (colorArr.length !== 3) ||
-            (colorArr[0] < 0) || (colorArr[0] > 255) ||
-            (colorArr[1] < 0) || (colorArr[1] > 255) ||
-            (colorArr[2] < 0) || (colorArr[2] > 255)
-        );
-    };
-
-    Object.defineProperty(this, 'row', {
-        get: function() { return _options['row']; },
-        set: function(newRow) {
-            _options['row'] = newRow;
-            __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
-            return _options['row'];
-        },
-    });
-
-    Object.defineProperty(this, 'column', {
-        get: function() { return _options['column']; },
-        set: function(newColumn) {
-            _options['column'] = newColumn;
-            __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
-            return _options['column'];
-        },
-    });
-
-    Object.defineProperty(this, 'depth', {
-        get: function() { return _options['depth']; },
-        set: function(newDepth) {
-            _options['depth'] = newDepth;
-            __coordAsString = _options['column'] + ',' + _options['row'] + ',' + _options['depth'];
-            return _options['depth'];
-        },
-    });
-
-    Object.defineProperty(this, 'coordAsString', {
-        get: function() { return __coordAsString; },
-    });
-
-    Object.defineProperty(this, 'on', {
-        get: function() { return _options['on']; },
-        set: function(turnOn) { return _options['on'] = !!turnOn; },
-    });
-
-    Object.defineProperty(this, 'color', {
-        get: function() { return _options['color']; },
-        set: function(newColor) {
-            if (__invalidColor(newColor)) {
-                console.error('Invalid color for Cell: ' + newColor);
-                throw 'Invalid color for Cell';
-            }
-            _options['color'] = newColor;
-            __colorAsString = (_options['color'][0] + ',' + _options['color'][1] + ',' + _options['color'][2]);
-            return _options['color'];
-        },
-    });
-
-    Object.defineProperty(this, 'colorAsString', {
-        get: function() { return __colorAsString; },
-    });
-
-    Object.defineProperty(this, 'renderer', {
-        get: function() { return _options['renderer']; },
-        set: function(newRenderer) {
-            if (newRenderer && !newRenderer.can('render'))
-            {
-                console.error('Invalid renderer: must implement render()');
-                throw 'Invalid renderer for Cell';
-            }
-
-            return _options['renderer'] = newRenderer;
-        },
-    });
-
-    Object.defineProperty(this, 'options', {
-        get: function() {
-            return {
-                'row': _options['row'],
-                'column': _options['column'],
-                'depth': _options['depth'],
-                'on': _options['on'],
-                'color': _options['color'],
-            };
-        },
-    });
-
-    Object.defineProperty(this, 'simpleOptions', {
-        get: function() {
-            return {
-                'on': _options['on'] ? 1 : 0,
-                'color': __colorAsString,
-                'coord': __coordAsString,
-            };
-        },
-    });
-
-    applyOptions.call(this, _options);
+    applyOptions.call(this, this._options);
 
     return this;
 };
+
+Object.defineProperty(Cell.prototype, 'y', {
+    get: function() { return this._options['y']; },
+    set: function(newRow) {
+        this._options['y'] = newRow;
+        this.__coordAsString = this.x + ',' + this.y + ',' + this.z;
+    },
+});
+
+Object.defineProperty(Cell.prototype, 'x', {
+    get: function() { return this._options['x']; },
+    set: function(newColumn) {
+        this._options['x'] = newColumn;
+        this.__coordAsString = this.x + ',' + this.y + ',' + this.z;
+    },
+});
+
+Object.defineProperty(Cell.prototype, 'z', {
+    get: function() { return this._options['z']; },
+    set: function(newDepth) {
+        this._options['z'] = newDepth;
+        this.__coordAsString = this.x + ',' + this.y + ',' + this.z;
+    },
+});
+
+Object.defineProperty(Cell.prototype, 'coordAsString', {
+    get: function() { return this.__coordAsString; },
+});
+
+Object.defineProperty(Cell.prototype, 'on', {
+    get: function() { return this._options['on']; },
+    set: function(turnOn) { this._options['on'] = !!turnOn; },
+});
+
+Object.defineProperty(Cell.prototype, 'color', {
+    get: function() { return this._options['color']; },
+    set: function(newColor) {
+        if (invalidColorArr(newColor)) {
+            console.error('Invalid color for Cell: ' + newColor);
+            throw 'Invalid color for Cell';
+        }
+        this._options['color'] = newColor;
+        this.__colorAsString = this.color[0] + ',' + this.color[1] + ',' + this.color[2];
+    },
+});
+
+Object.defineProperty(Cell.prototype, 'colorAsString', {
+    get: function() { return this.__colorAsString; },
+});
+
+Object.defineProperty(Cell.prototype, 'renderer', {
+    get: function() { return this._options['renderer']; },
+    set: function(newRenderer) {
+        if (newRenderer && !newRenderer.can('render'))
+        {
+            console.error('Invalid renderer: must implement render()');
+            throw 'Invalid renderer for Cell';
+        }
+        this._options['renderer'] = newRenderer;
+    },
+});
+
+Object.defineProperty(Cell.prototype, 'options', {
+    get: function() {
+        return {
+            'y': this.y,
+            'x': this.x,
+            'z': this.z,
+            'on': this.on,
+            'color': this.color,
+        };
+    },
+});
+
+Object.defineProperty(Cell.prototype, 'simpleOptions', {
+    get: function() {
+        return {
+            'on': this.on ? 1 : 0,
+            'color': this.__colorAsString,
+            'coord': this.__coordAsString,
+        };
+    },
+});
+
 
 Cell.prototype.toJSON = function() {
     return this.options;

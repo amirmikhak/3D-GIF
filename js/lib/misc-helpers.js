@@ -26,11 +26,21 @@ function applyOptions(newOpts) {
         } else
         {
             console.error('Invalid option for ' + this.constructor.name + ': ' + key);
+            console.trace();
         }
     }
 
     return this;
 }
+
+function invalidColorArr(colorArr) {
+    return (
+        !colorArr.length || (colorArr.length !== 3) ||
+        (colorArr[0] < 0) || (colorArr[0] > 255) ||
+        (colorArr[1] < 0) || (colorArr[1] > 255) ||
+        (colorArr[2] < 0) || (colorArr[2] > 255)
+    );
+};
 
 function sloppyOptionsAreEqual(a, b) {
     // a function for comparing simple and more complex types such as arrays

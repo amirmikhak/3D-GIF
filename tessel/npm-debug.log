@@ -1,0 +1,67 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node',
+1 verbose cli   '/Users/germ/.node/bin/npm',
+1 verbose cli   'install',
+1 verbose cli   '--save',
+1 verbose cli   'renderer' ]
+2 info using npm@2.1.16
+3 info using node@v0.12.1
+4 verbose node symlink /usr/local/bin/node
+5 warn package.json amirmikhak-l3d@0.1.0 No repository field.
+6 warn package.json amirmikhak-l3d@0.1.0 No README data
+7 warn package.json renderer@0.0.1 No repository field.
+8 warn package.json renderer@0.0.1 No README data
+9 silly cache add args [ 'renderer@0.0.1', null ]
+10 verbose cache add spec renderer@0.0.1
+11 silly cache add parsed spec { raw: 'renderer@0.0.1',
+11 silly cache add   scope: null,
+11 silly cache add   name: 'renderer',
+11 silly cache add   rawSpec: '0.0.1',
+11 silly cache add   spec: '0.0.1',
+11 silly cache add   type: 'version' }
+12 verbose addNamed renderer@0.0.1
+13 silly addNamed semver.valid 0.0.1
+14 silly addNamed semver.validRange 0.0.1
+15 silly mapToRegistry name renderer
+16 silly mapToRegistry using default registry
+17 silly mapToRegistry registry https://registry.npmjs.org/
+18 silly mapToRegistry uri https://registry.npmjs.org/renderer
+19 verbose addNameVersion registry:https://registry.npmjs.org/renderer not in flight; fetching
+20 verbose request uri https://registry.npmjs.org/renderer
+21 verbose request no auth needed
+22 info attempt registry request try #1 at 15:57:14
+23 verbose request id 6198a8eb35cb776a
+24 http request GET https://registry.npmjs.org/renderer
+25 http 200 https://registry.npmjs.org/renderer
+26 silly get cb [ 200,
+26 silly get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+26 silly get     etag: '"DZ8RQJA6CL3TI79LQQ8G49H65"',
+26 silly get     'content-type': 'application/json',
+26 silly get     'cache-control': 'max-age=60',
+26 silly get     'content-length': '8013',
+26 silly get     'accept-ranges': 'bytes',
+26 silly get     date: 'Thu, 07 May 2015 19:57:14 GMT',
+26 silly get     via: '1.1 varnish',
+26 silly get     age: '0',
+26 silly get     connection: 'close',
+26 silly get     'x-served-by': 'cache-atl6222-ATL',
+26 silly get     'x-cache': 'MISS',
+26 silly get     'x-cache-hits': '0',
+26 silly get     'x-timer': 'S1431028634.153884,VS0,VE33',
+26 silly get     vary: 'Accept' } ]
+27 verbose stack Error: version not found: renderer@0.0.1
+27 verbose stack     at setData (/Users/germ/.node/lib/node_modules/npm/lib/cache/add-named.js:122:12)
+27 verbose stack     at RES (/Users/germ/.node/lib/node_modules/npm/node_modules/inflight/inflight.js:23:14)
+27 verbose stack     at f (/Users/germ/.node/lib/node_modules/npm/node_modules/once/once.js:17:25)
+27 verbose stack     at saved (/Users/germ/.node/lib/node_modules/npm/lib/cache/caching-client.js:163:7)
+27 verbose stack     at FSReqWrap.oncomplete (fs.js:99:15)
+28 verbose statusCode 404
+29 verbose cwd /Users/germ/Documents/_edu/harvard_extension/2015_01spring/dgmde15/git/3D-GIF/tessel
+30 error Darwin 14.3.0
+31 error argv "node" "/Users/germ/.node/bin/npm" "install" "--save" "renderer"
+32 error node v0.12.1
+33 error npm  v2.1.16
+34 error version not found: renderer@0.0.1
+35 error If you need help, you may report this error at:
+35 error     <http://github.com/npm/npm/issues>
+36 verbose exit [ 1, true ]

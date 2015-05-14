@@ -1,0 +1,16 @@
+{
+  "name": "amirmikhak-l3d",
+  "version": "0.1.0",
+  "description": "such desc.",
+  "main": "example.js",
+  "dependencies": {
+    "neopixels": "0.0.5",
+    "renderer": "0.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

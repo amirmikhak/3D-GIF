@@ -1,6 +1,6 @@
 var CubeController = function CubeController(opts) {
 
-    Emitter(this);
+    CubeEventEmitter(this);
 
     var controller = this;
 

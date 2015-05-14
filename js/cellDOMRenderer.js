@@ -164,17 +164,17 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         // apply cell data attributes
         if (dirtyOptions['coord'])
         {
-            if (html.dataset.row !== cell['row'])
+            if (html.dataset.y !== cell['y'])
             {
-                html.dataset.row = cell['row'];
+                html.dataset.y = cell['y'];
             }
-            if (html.dataset.column !== cell['column'])
+            if (html.dataset.x !== cell['x'])
             {
-                html.dataset.column = cell['column'];
+                html.dataset.x = cell['x'];
             }
-            if (html.dataset.depth !== cell['depth'])
+            if (html.dataset.z !== cell['z'])
             {
-                html.dataset.depth = cell['depth'];
+                html.dataset.z = cell['z'];
             }
         }
 
@@ -197,9 +197,9 @@ var CellDOMRenderer = function CellDOMRenderer(cell, opts) {
         if (dirtyOptions['size'] || dirtyOptions['coord'] || dirtyOptions['rotation'])
         {
            var xformPieces = (
-               'translateX(' + (_size * cell['column']) + 'px) ' +
-               'translateY(' + (_size * cell['row']) + 'px) ' +
-               'translateZ(' + (-1 * _size * cell['depth']) + 'px) '
+               'translateX(' + (_size * cell['x']) + 'px) ' +
+               'translateY(' + (-1 * _size * cell['y']) + 'px) ' +
+               'translateZ(' + (-1 * _size * cell['z']) + 'px) '
            );
            if (hasRotation)
            {   // if we need to rotate the cell...
