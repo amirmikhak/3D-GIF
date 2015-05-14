@@ -339,12 +339,10 @@ loadShapes.then(function shapesLoaded() {
     appCtrl.activeController.insertTiles([
         CubeAssets.getShapeRender('smile'),
         CubeAssets.getShapeRender('battleaxe'),
-        CubeAssets.getShapeRender('battleaxe'),
-        CubeAssets.getShapeRender('battleaxe'),
-        CubeAssets.getShapeRender('battleaxe'),
-        CubeAssets.getShapeRender('battleaxe'),
         CubeAssets.getShapeRender('frown'),
         CubeAssets.getShapeRender('square'),
     ]);
     console.log('done adding shape tiles!');
+    appCtrl.activeController = 'realtime';
+    appCtrl.playing = true;
 });

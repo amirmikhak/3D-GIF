@@ -2,17 +2,13 @@ var Cube = function Cube(size, opts) {
     this._size = size || 0;
     this._cells = [];
 
-    for (var depth = 0; depth < this._size; depth++) {
-        // Iterate over each Z-plane
-        for (var row = 0; row < this._size; row++) {
-            // Iterate over each row
-            for (var column = 0; column < this._size; column++) {
-                // Iterate over each column
+    for (var x = 0; x < this._size; x++) {
+        for (var y = 0; y < this._size; y++) {
+            for (var z = 0; z < this._size; z++) {
                 this._cells.push(new Cell({
-                    cube: this,
-                    column: column,
-                    row: row,
-                    depth: depth,
+                    x: x,
+                    y: y,
+                    z: z,
                 }));
             }
         }
@@ -66,9 +62,9 @@ Object.defineProperty(Cube.prototype, 'colorNames', {
 Object.defineProperty(Cube.prototype, 'shiftedCoordsFns', {
     writable: false,
     value: {
-        X: function(cell, cubeSize, wrap, stepSize) { /* console.log('shiftedCoordsFns X', this); */ return [this.getNewValueForShift(cell['row'], cubeSize, wrap, stepSize), cell['column'], cell['depth']]; },
-        Y: function(cell, cubeSize, wrap, stepSize) { /* console.log('shiftedCoordsFns Y', this); */ return [cell['row'], this.getNewValueForShift(cell['column'], cubeSize, wrap, stepSize), cell['depth']]; },
-        Z: function(cell, cubeSize, wrap, stepSize) { /* console.log('shiftedCoordsFns Z', this); */ return [cell['row'], cell['column'], this.getNewValueForShift(cell['depth'], cubeSize, wrap, stepSize)]; },
+        X: function(cell, cubeSize, wrap, stepSize) { return [Cube.prototype.getNewValueForShift(cell['x'], cubeSize, wrap, stepSize), cell['y'], cell['z']]; },
+        Y: function(cell, cubeSize, wrap, stepSize) { return [cell['x'], Cube.prototype.getNewValueForShift(cell['y'], cubeSize, wrap, stepSize), cell['z']]; },
+        Z: function(cell, cubeSize, wrap, stepSize) { return [cell['x'], cell['y'], Cube.prototype.getNewValueForShift(cell['z'], cubeSize, wrap, stepSize)]; },
     }
 });
 
@@ -121,6 +117,56 @@ Cube.prototype.getForAnimationFrame = function() {
     return retCube;
 };
 
+Cube.prototype.getForPhysicalCube = function() {
+    /**
+     * Converts the array of cells to be in the order that the physical cube's
+     * buffer expect them: origin is back bottom left, axis order: up, right,
+     * forward.
+     */
+    var outputCells = [];
+    for (var z = this._size - 1; z >= 0; z--)
+    {
+        for (var x = 0; x < this._size; x++)
+        {
+            for (var y = 0; y < this._size; y++)
+            {
+                outputCells.push(this.getCellAt(x, y, z));
+            }
+        }
+    }
+    return {
+        size: this._size,
+        cells: outputCells,
+    };
+};
+
+Cube.prototype.getForPhysicalCubeAsBuffer = function() {
+    /**
+     * Extract the colors of the cells in the expected order (by the L3D) into
+     * a single long array.
+     */
+    var outputBuffer = [];
+    for (var z = this._size - 1; z >= 0; z--)
+    {
+        for (var x = 0; x < this._size; x++)
+        {
+            for (var y = 0; y < this._size; y++)
+            {
+                var cell = this.getCellAt(x, y, z);
+                var cellColor = (cell.on ?
+                    [cell.color[1], cell.color[0], cell.color[2]] :
+                    [0, 0, 0]
+                ).map(function(byte) {
+                    return Math.floor(byte / 16);
+                });
+                var spliceArgs = [outputBuffer.length, 0].concat(cellColor);
+                Array.prototype.splice.apply(outputBuffer, spliceArgs);
+            }
+        }
+    }
+    return outputBuffer;
+};
+
 Cube.prototype.getNewValueForShift = function(cellPos, cubeSize, wrap, stepSize) {
     var cellPlusSize = cellPos + stepSize;
     if ((cellPlusSize >= 0) && (cellPlusSize < cubeSize))
@@ -148,12 +194,12 @@ Cube.prototype.shiftPlane = function(axis, stepSize, wrap) {
     {
         // We want to calculate the coordinates of the 'previous' cell along various directions
         var shiftedCoords = this.shiftedCoordsFns[axis].apply(this, [this._cells[i], this._size, _wrap, _stepSize]);
-        var shiftedCell = this.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]);
+        var sourceCell = this.getCellAt(shiftedCoords[0], shiftedCoords[1], shiftedCoords[2]);
 
         // Once we have it, grab its on status and color and return it
         nextState.push({
-            on: shiftedCell.on,
-            color: shiftedCell.color
+            on: sourceCell.on,
+            color: sourceCell.color,
         });
     }
 
@@ -173,15 +219,15 @@ Cube.prototype.dimensionOutOfBounds = function(dimValue) {
     return (dimValue < 0) || (dimValue >= this._size);
 }
 
-Cube.prototype.invalidCoord = function(r, c, d) {
+Cube.prototype.invalidCoord = function(x, y, z) {
     return (
-        this.dimensionOutOfBounds(r) ||
-        this.dimensionOutOfBounds(c) ||
-        this.dimensionOutOfBounds(d)
+        this.dimensionOutOfBounds(x) ||
+        this.dimensionOutOfBounds(y) ||
+        this.dimensionOutOfBounds(z)
     );
 };
 
-Cube.prototype.getCellAt = function(row, column, depth) {
+Cube.prototype.getCellAt = function(x, y, z) {
     /**
      * Returns the cell for a given coordinate. If the coordinate is invalid,
      * return a Cell that is off and has no color. Note that this Cell does not
@@ -191,39 +237,39 @@ Cube.prototype.getCellAt = function(row, column, depth) {
      * properties that are copied between cells.
      */
 
-    if (this.invalidCoord(row, column, depth))
+    if (this.invalidCoord(x, y, z))
     {
         return this.__offCell;
     }
 
-    var cellIndex = (depth * this._size * this._size) + (row * this._size) + column;
+    var cellIndex = (x * this._size * this._size) + (y * this._size) + z;
     return this._cells[cellIndex];
 };
 
-Cube.prototype.setCellAt = function(row, column, depth, newCell) {
+Cube.prototype.setCellAt = function(x, y, z, newCell) {
     /**
      * Apply newCell's state to a cell at a given coordinate.
      *
-     * Throws "Invalid coordinate" if the coordinate is impossible.
+     * Thys "Invalid coordinate" if the coordinate is impossible.
      */
 
-    if (this.invalidCoord(row, column, depth))
+    if (this.invalidCoord(x, y, z))
     {
-        console.error('Invalid Coord', row, column, depth, newCell);
+        console.error('Invalid Coord', x, y, z, newCell);
         throw 'Invalid coordinate';
     }
 
-    return this.getCellAt(row, column, depth).setFromCell(newCell);
+    return this.getCellAt(x, y, z).setFromCell(newCell);
 };
 
 Cube.prototype.applyCell = function(newCell) {
     /**
-     * Convenience function for cube.setCellAt(). Expects a cell whose row,
-     * column, and depth are all set. This may be useful for programatically
+     * Convenience function for cube.setCellAt(). Expects a cell whose y,
+     * x, and z are all set. This may be useful for programatically
      * created Cell objects.
      */
 
-    return this.setCellAt(newCell.row, newCell.column, newCell.depth, newCell);
+    return this.setCellAt(newCell.x, newCell.y, newCell.z, newCell);
 };
 
 Cube.prototype.clear = function() {
@@ -244,48 +290,48 @@ Cube.prototype.clear = function() {
  * SLICE MANIPULATION FUNCTIONS
  */
 
-Cube.prototype.affectXSlice = function(column, fn) {
+Cube.prototype.affectXSlice = function(x, fn) {
     /**
      * Call a function on each cell within a given X slice starting from the left
      */
 
-    for (var depth = this._size - 1; depth >= 0; depth--)
+    for (var z = this._size - 1; z >= 0; z--)
     {
-        for (var row = 0; row < this._size; row++)
+        for (var y = 0; y < this._size; y++)
         {
-            fn.apply(this, [row, column, depth]);
+            fn.apply(this, [x, y, z]);
         }
     }
 
     return this;
 };
 
-Cube.prototype.affectYSlice = function(row, fn) {
+Cube.prototype.affectYSlice = function(y, fn) {
     /**
      * Call a function on each cell within a given Y slice starting from the top
      */
 
-    for (var column = 0; column < this._size; column++)
+    for (var x = 0; x < this._size; x++)
     {
-        for (var depth = this._size - 1; depth >= 0; depth--)
+        for (var z = this._size - 1; z >= 0; z--)
         {
-            fn.apply(this, [row, column, depth]);
+            fn.apply(this, [x, y, z]);
         }
     }
 
     return this;
 };
 
-Cube.prototype.affectZSlice = function(depth, fn) {
+Cube.prototype.affectZSlice = function(z, fn) {
     /**
      * Call a function on each cell within a given Z slice starting from the front
      */
 
-    for (var column = 0; column < this._size; column++)
+    for (var x = 0; x < this._size; x++)
     {
-        for (var row = 0; row < this._size; row++)
+        for (var y = 0; y < this._size; y++)
         {
-            fn.apply(this, [row, column, depth]);
+            fn.apply(this, [x, y, z]);
         }
     }
 
@@ -312,7 +358,7 @@ Cube.prototype.readSlice = function(face, offset, output) {
     offset = (typeof offset !== 'undefined') ?
         Math.max(0, Math.min(parseInt(offset, 10), this._size - 1)) :
         0;
-    face = (typeof face !== 'undefined') && (this.faceNames.indexOf(face) !== -1) ?
+    face = (typeof face !== 'undefined') && (Cube.prototype.faceNames.indexOf(face) !== -1) ?
         face :
         this.writeFace;
     output = (typeof output !== 'undefined') && (validOutputs.indexOf(output) !== -1) ?
@@ -321,14 +367,14 @@ Cube.prototype.readSlice = function(face, offset, output) {
 
     var cellsRead = [];
 
-    function captureCell(r, c, d) {
+    function captureCell(x, y, z) {
         /**
          * Callback, called for each cell, for getting the cell data in the
          * correct format and gathering them into a single data structure.
          */
         var cell = (output === 'object-deep') ?
-            _.cloneDeep(this.getCellAt(r, c, d)) :
-            this.getCellAt(r, c, d);
+            _.cloneDeep(this.getCellAt(x, y, z)) :
+            this.getCellAt(x, y, z);
         cellsRead.push(cell);
     }
 
@@ -337,16 +383,16 @@ Cube.prototype.readSlice = function(face, offset, output) {
      */
     if ((face === 'front') || (face === 'back'))
     {
-        var depth = (face === 'back') ? (this._size - 1) - offset : offset;
-        this.affectZSlice(depth, captureCell);
+        var z = (face === 'back') ? (this._size - 1) - offset : offset;
+        this.affectZSlice(z, captureCell);
     } else if ((face === 'top') || (face === 'bottom'))
     {
-        var row = (face === 'bottom') ? (this._size - 1) - offset : offset;
-        this.affectYSlice(row, captureCell);
+        var y = (face === 'bottom') ? (this._size - 1) - offset : offset;
+        this.affectYSlice(y, captureCell);
     } else if ((face === 'left') || (face === 'right'))
     {
-        var column = (face === 'right') ? (this._size - 1) - offset : offset;
-        this.affectXSlice(column, captureCell);
+        var x = (face === 'right') ? (this._size - 1) - offset : offset;
+        this.affectXSlice(x, captureCell);
     }
 
     if (output === 'json')
@@ -375,7 +421,7 @@ Cube.prototype.writeSlice = function(data, face, offset) {
         new CubeTile(tryJSON(data, this.sliceValidator.bind(this)));
 
     var facesToReflectX = ['back', 'right'];
-    var facesToReflectY = ['bottom'];
+    var facesToReflectY = ['top'];
 
     if (facesToReflectX.indexOf(face) !== -1)
     {
@@ -389,23 +435,23 @@ Cube.prototype.writeSlice = function(data, face, offset) {
 
     var cellsToWrite = dataTile.cells;
 
-    function writeCellFromData(r, c, d) {
+    function writeCellFromData(x, y, z) {
         var cell = cellsToWrite.shift();
-        this.setCellAt(r, c, d, cell);
+        this.setCellAt(x, y, z, cell);
     };
 
     if ((face === 'front') || (face === 'back'))
     {
-        var depth = (face === 'back') ? (this._size - 1) - offset : offset;
-        this.affectZSlice(depth, writeCellFromData);
+        var z = (face === 'back') ? (this._size - 1) - offset : offset;
+        this.affectZSlice(z, writeCellFromData);
     } else if ((face === 'top') || (face === 'bottom'))
     {
-        var row = (face === 'bottom') ? (this._size - 1) - offset : offset;
-        this.affectYSlice(row, writeCellFromData);
+        var y = (face === 'top') ? (this._size - 1) - offset : offset;
+        this.affectYSlice(y, writeCellFromData);
     } else if ((face === 'left') || (face === 'right'))
     {
-        var column = (face === 'right') ? (this._size - 1) - offset : offset;
-        this.affectXSlice(column, writeCellFromData);
+        var x = (face === 'right') ? (this._size - 1) - offset : offset;
+        this.affectXSlice(x, writeCellFromData);
     }
 
     return this;
@@ -433,19 +479,19 @@ Cube.prototype.affectCol = function(dims, dim1, dim2, cb) {
     {
         for (idx = 0; idx < this._size; idx++)
         {
-            cb.apply(this, [idx, dim1, dim2, idx]);
+            cb.apply(this, [dim1, idx, dim2, idx]);
         }
     } else if (dims === 'xy')
     {   // not tested
         for (idx = 0; idx < this._size; idx++)
         {
-            cb.apply(this, [dim1, dim2, idx, idx]);
+            cb.apply(this, [dim2, dim1, idx, idx]);
         }
     } else if (dims === 'yz')
     {   // not tested
         for (idx = 0; idx < this._size; idx++)
         {
-            cb.apply(this, [dim1, idx, dim2, idx]);
+            cb.apply(this, [idx, dim1, dim2, idx]);
         }
     } else
     {
@@ -455,8 +501,8 @@ Cube.prototype.affectCol = function(dims, dim1, dim2, cb) {
 
 Cube.prototype.writeXZCol = function(x, z, cells) {
     var cube = this;
-    this.affectCol('xz', x, z, function(r, c, d, idx) {
-        this.setCellAt(r, c, d, cells[idx]);
+    this.affectCol('xz', x, z, function(x, y, z, idx) {
+        this.setCellAt(x, y, z, cells[idx]);
     });
     return this;
 };
@@ -464,8 +510,8 @@ Cube.prototype.writeXZCol = function(x, z, cells) {
 Cube.prototype.readXZCol = function(x, z) {
     var cube = this;
     var strip = [];
-    this.affectCol('xz', x, z, function(r, c, d, idx) {
-        strip.push(cube.getCellAt(r, c, d));
+    this.affectCol('xz', x, z, function(x, y, z, idx) {
+        strip.push(cube.getCellAt(x, y, z));
     });
     return strip;
 };
@@ -473,8 +519,8 @@ Cube.prototype.readXZCol = function(x, z) {
 Cube.prototype.writeXYCol = function(x, y, cells) {
     // NOT TESTED
     var cube = this;
-    this.affectCol('xy', x, y, function(r, c, d, idx) {
-        this.setCellAt(r, c, d, cells[idx]);
+    this.affectCol('xy', x, y, function(x, y, z, idx) {
+        this.setCellAt(x, y, z, cells[idx]);
     });
     return this;
 };
@@ -483,8 +529,8 @@ Cube.prototype.readXYCol = function(x, y) {
     // NOT TESTED
     var cube = this;
     var strip = [];
-    this.affectCol('xy', x, y, function(r, c, d, idx) {
-        strip.push(cube.getCellAt(r, c, d));
+    this.affectCol('xy', x, y, function(x, y, z, idx) {
+        strip.push(cube.getCellAt(x, y, z));
     });
     return strip;
 };
@@ -492,8 +538,8 @@ Cube.prototype.readXYCol = function(x, y) {
 Cube.prototype.writeYZCol = function(y, z, cells) {
     // NOT TESTED
     var cube = this;
-    this.affectCol('yz', y, z, function(r, c, d, idx) {
-        this.setCellAt(r, c, d, cells[idx]);
+    this.affectCol('yz', y, z, function(x, y, z, idx) {
+        this.setCellAt(x, y, z, cells[idx]);
     });
     return this;
 };
@@ -502,8 +548,8 @@ Cube.prototype.readYZCol = function(y, z) {
     // NOT TESTED
     var cube = this;
     var strip = [];
-    this.affectCol('yz', y, z, function(r, c, d, idx) {
-        strip.push(cube.getCellAt(r, c, d));
+    this.affectCol('yz', y, z, function(x, y, z, idx) {
+        strip.push(cube.getCellAt(x, y, z));
     });
     return strip;
 };
