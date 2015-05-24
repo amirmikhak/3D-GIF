@@ -1,6 +1,6 @@
 var http = require('http');
-var Renderer = require('renderer');
-var Cube = require('renderer/lib/cube');
+var Renderer = require('amirmikhak-l3d-renderer');
+var Cube = require('amirmikhak-l3d-renderer/lib/cube');
 var data = require('./data/sample-01');
 
 var __emptyCube = new Cube(4);

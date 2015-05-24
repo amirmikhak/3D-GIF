@@ -1,9 +1,9 @@
 console.log('requiring...');
 
 console.log('\trenderer');
-var Renderer = require('renderer');
+var Renderer = require('amirmikhak-l3d-renderer');
 console.log('\tcube');
-var Cube = require('renderer/lib/cube');
+var Cube = require('amirmikhak-l3d-renderer/lib/cube');
 console.log('\tdata');
 var loadDataT0 = new Date().getTime();
 var data = require('./data/sample-07');
