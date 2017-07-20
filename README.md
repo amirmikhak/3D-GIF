@@ -12,12 +12,15 @@ Run these commands from the terminal while inside the root directory of the repo
     npm install -g http-server
     http-server . -a 127.0.0.1 -p 9001
 
+Note
+----
+Performs best on Chrome. Safari is sluggish for reasons I haven't yet looked into. Firefox hasn't been tested in ages. MS Edge is yet untested.
+
 
 View on S3:
 ----------
 
 [https://s3.amazonaws.com/dgmde15-amirmikhak/l3d/index.html](https://s3.amazonaws.com/dgmde15-amirmikhak/l3d/index.html)
-
 
 
 Keyboard Actions
